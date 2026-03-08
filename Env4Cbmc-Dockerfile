@@ -1,0 +1,22 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+RUN echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections; \
+    echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections; \
+    apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
+    cmake \
+    make \
+    ninja-build \
+    gcc \
+    g++ \
+    maven \
+    flex \
+    bison \
+    libxml2-utils \
+    patch \
+    gdb \
+    gdbserver
+
+CMD ["bash", "-c", "tail -f /dev/null"]

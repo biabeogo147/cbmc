@@ -1,0 +1,121 @@
+================ GOTO-PROGRAM =================
+
+ASSIGN alloc=ARRAY_OF(0);
+
+ASSIGN is_dynamic=ARRAY_OF(0);
+
+ASSIGN alloc_size={ 0 };
+
+ASSIGN rounding_mode=0;
+
+ASSIGN brake_request=0;
+
+ASSIGN safety_ok=0;
+
+ASSIGN brake_applied=0;
+
+ASSIGN infotainment_tick=0;
+
+ASSIGN log_counter=0;
+
+ASSIGN atexit_count=0;
+
+ASSIGN stdlib_atexit_key={ { .atexit_func = 0 } };
+
+ASSIGN num_total_threads=0;
+
+ASSIGN num_threads_running=0;
+
+FUNCTION_CALL:  pthread_start_main_hook()
+
+// Labels: __ESBMC_HIDE
+FUNCTION_CALL:  yield()
+
+ATOMIC_BEGIN
+
+ASSIGN num_total_threads=num_total_threads + 1;
+
+ASSIGN num_threads_running=num_threads_running + 1;
+
+ATOMIC_END
+
+END_FUNCTION // __ESBMC_pthread_start_main_hook
+
+FUNCTION_CALL:  main()
+
+FUNCTION_CALL:  activation_task(&"controller"[0], (void (*)())(&controller))
+
+RETURN: 0
+
+END_FUNCTION // main
+
+ASSIGN brake_request=1;
+
+FUNCTION_CALL:  activation_task(&"infotainment"[0], (void (*)())(&infotainment))
+
+FUNCTION_CALL:  activation_task(&"safety"[0], (void (*)())(&safety_check))
+
+FUNCTION_CALL:  activation_task(&"actuator"[0], (void (*)())(&brake_actuator))
+
+IF !(_Bool)brake_applied THEN GOTO 1
+
+ASSERT safety_ok == 1 // assertion safety_ok == 1
+
+1: END_FUNCTION // controller
+
+ASSERT brake_request == 1 // assertion brake_request == 1
+
+ASSIGN safety_ok=1;
+
+ASSERT brake_applied == 0 || brake_applied == 1 // assertion brake_applied == 0 || brake_applied == 1
+
+FUNCTION_CALL:  activation_task(&"logger"[0], (void (*)())(&infotainment))
+
+END_FUNCTION // safety_check
+
+ASSERT safety_ok == 1 // assertion safety_ok == 1
+
+ASSIGN brake_applied=1;
+
+ASSERT brake_request == 1 // assertion brake_request == 1
+
+END_FUNCTION // brake_actuator
+
+DECL signed int i;
+
+ASSIGN i=0;
+
+1: IF !(i < 5) THEN GOTO 2
+
+ASSIGN infotainment_tick=infotainment_tick + 1;
+
+DECL signed int i;
+
+ASSIGN i=0;
+
+1: IF !(i < 5) THEN GOTO 2
+
+ASSIGN infotainment_tick=infotainment_tick + 1;
+
+===============================================
+
+
+================ Configuration File ===========
+{
+  "tasks": {
+    "controller": 50,
+    "safety": 40,
+    "actuator": 20,
+    "infotainment": 1,
+    "logger": 1
+  }
+}
+===============================================
+
+
+================ Result =======================
+
+VERIFICATION SUCCESSFUL
+
+===============================================
+

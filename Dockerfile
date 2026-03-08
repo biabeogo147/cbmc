@@ -21,7 +21,12 @@ RUN echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections; \
     patch
 COPY . /tmp/cbmc
 WORKDIR /tmp/cbmc
-RUN cmake -S . -Bbuild -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ && cd build; ninja -j2
+
+# Build Release
+# RUN cmake -S . -Bbuild -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ && cd build; ninja -j2
+
+# Build Debug (thêm tag -DCMAKE_C_COMPILER=/usr/bin/gcc nếu muốn full symbol và macro info)
+RUN cmake -S . -Bbuild -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ && cd build; ninja -j2
 
 FROM ubuntu:20.04 as runner
 COPY --from=builder /tmp/cbmc/build/bin/* /usr/local/bin/
