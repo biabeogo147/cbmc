@@ -13,6 +13,7 @@ src/goto-analyzer/taint_driver_scripts/.idea/*
 /*.files
 /*.idea
 /*.includes
+cmake-build-debug-docker/
 # Eclipse
 .cproject
 .project

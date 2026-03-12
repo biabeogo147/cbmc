@@ -4,7 +4,7 @@
 bool enable_irq = true;
 int x = 0;
 
-void *isr1(void *arg) {
+void *isr2(void *arg) {
   __CPROVER_atomic_begin();
   if (enable_irq) {
     ++x;
@@ -21,7 +21,7 @@ void task2() {
 }
 
 int main() {
-  __CPROVER_ASYNC_0: isr1(0);
+  __CPROVER_ASYNC_0: isr2(0);
 
   task1();
   task2();

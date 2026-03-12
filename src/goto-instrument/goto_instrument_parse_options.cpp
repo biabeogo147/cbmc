@@ -109,6 +109,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "accelerate/accelerate.h"
 
+#include "isr_written_vars.h"
+
 /// invoke main modules
 int goto_instrument_parse_optionst::doit()
 {
@@ -559,6 +561,13 @@ int goto_instrument_parse_optionst::doit()
       std::cout << rw_set_functiont(
         value_set_analysis, goto_model, main, ui_message_handler);
       return CPROVER_EXIT_SUCCESS;
+    }
+
+    if(cmdline.isset("show-isr-writes"))
+    {
+      std::string target_func = cmdline.get_value("show-isr-writes");
+      show_isr_written_vars(goto_model, ui_message_handler, target_func);
+      return 0; // Dừng lại sau khi in ra để dễ quan sát
     }
 
     if(cmdline.isset("show-symbol-table"))
