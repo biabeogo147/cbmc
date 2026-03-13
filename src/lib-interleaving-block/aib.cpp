@@ -1,10 +1,6 @@
 /// \file
 /// Command-line tool for adding nondeterministic interleaving call blocks.
 
-#include <util/message.h>
-
-#include <json/json_parser.h>
-
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -12,7 +8,6 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace
@@ -25,6 +20,18 @@ std::string trim(const std::string &s)
 
   const auto last = s.find_last_not_of(" \t\r\n");
   return s.substr(first, last - first + 1);
+}
+
+bool read_file(const std::string &file, std::string &content)
+{
+  std::ifstream in(file);
+  if(!in)
+    return false;
+
+  std::ostringstream buffer;
+  buffer << in.rdbuf();
+  content = buffer.str();
+  return true;
 }
 
 std::string
@@ -43,60 +50,91 @@ call_suffix_for(const std::string &name, const std::string &source_content)
   return "(0)";
 }
 
+bool parse_line_number_list(
+  const std::string &list_content,
+  const std::string &name,
+  std::map<std::size_t, std::vector<std::string>> &line_to_names)
+{
+  const std::regex number_regex("[0-9]+");
+  auto begin = std::sregex_iterator(
+    list_content.begin(), list_content.end(), number_regex);
+  const auto end = std::sregex_iterator();
+
+  if(begin == end)
+  {
+    std::cerr << "error: line_added_block must contain at least one line for "
+              << name << '\n';
+    return false;
+  }
+
+  for(auto it = begin; it != end; ++it)
+  {
+    const std::size_t line_number =
+      static_cast<std::size_t>(std::stoull((*it).str()));
+    if(line_number == 0)
+    {
+      std::cerr << "error: line numbers are 1-based and must be > 0\n";
+      return false;
+    }
+
+    line_to_names[line_number].push_back(name);
+  }
+
+  return true;
+}
+
 bool parse_line_additions(
   const std::string &json_file,
   std::map<std::size_t, std::vector<std::string>> &line_to_names)
 {
-  ui_message_handlert message_handler;
-  jsont json;
-
-  if(parse_json(json_file, message_handler, json))
+  std::string json;
+  if(!read_file(json_file, json))
   {
-    std::cerr << "error: unable to parse json file: " << json_file << '\n';
+    std::cerr << "error: unable to open json file: " << json_file << '\n';
     return false;
   }
 
-  if(!json.is_array())
+  const std::regex object_regex("\\{[^{}]*\\}");
+  auto begin = std::sregex_iterator(json.begin(), json.end(), object_regex);
+  const auto end = std::sregex_iterator();
+
+  if(begin == end)
   {
-    std::cerr << "error: expected top-level JSON array in: " << json_file
+    std::cerr << "error: expecting json array of objects in " << json_file
               << '\n';
     return false;
   }
 
-  for(const auto &entry : to_json_array(json))
+  for(auto it = begin; it != end; ++it)
   {
-    if(!entry.is_object())
+    const std::string object_text = (*it).str();
+
+    const std::regex name_regex("\"name\"\\s*:\\s*\"([^\"]+)\"");
+    std::smatch name_match;
+    if(
+      !std::regex_search(object_text, name_match, name_regex) ||
+      name_match.size() < 2)
     {
-      std::cerr << "error: each json entry must be an object\n";
+      std::cerr << "error: each object must include string field \"name\"\n";
       return false;
     }
 
-    const std::string name = entry["name"].value;
-    const auto &line_blocks = entry["line_added_block"];
+    const std::string name = name_match[1].str();
 
-    if(name.empty() || !line_blocks.is_array())
+    const std::regex line_block_regex(
+      "\"line_added_block\"\\s*:\\s*\\[([^\\]]*)\\]");
+    std::smatch line_block_match;
+    if(
+      !std::regex_search(object_text, line_block_match, line_block_regex) ||
+      line_block_match.size() < 2)
     {
-      std::cerr << "error: each entry must have name and line_added_block[]\n";
+      std::cerr << "error: each object must include array field "
+                   "\"line_added_block\"\n";
       return false;
     }
 
-    for(const auto &line : to_json_array(line_blocks))
-    {
-      if(!line.is_number())
-      {
-        std::cerr << "error: line_added_block values must be numbers\n";
-        return false;
-      }
-
-      const auto line_number = static_cast<std::size_t>(line.value);
-      if(line_number == 0)
-      {
-        std::cerr << "error: line numbers are 1-based and must be > 0\n";
-        return false;
-      }
-
-      line_to_names[line_number].push_back(name);
-    }
+    if(!parse_line_number_list(line_block_match[1].str(), name, line_to_names))
+      return false;
   }
 
   return true;
