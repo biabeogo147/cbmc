@@ -118,6 +118,7 @@ add_subdirectory(goto-synthesizer)
 add_subdirectory(symtab2gb)
 add_subdirectory(libcprover-cpp)
 add_subdirectory(goto-bmc)
+add_subdirectory(lib-interleaving-block)
 
 if(WITH_MEMORY_ANALYZER)
 add_subdirectory(memory-analyzer)
