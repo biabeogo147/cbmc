@@ -2,6 +2,7 @@ $ProjectFileDir$
 
 goto-cc check-src/t_isr.c -o check-src/t_isr.out
 goto-instrument --show-isr-writes isr2 check-src/t_isr.out dummy.out
+goto-instrument --show-isr-writes isr1,isr2 check-src/t_isr.out t_isr_optimized.out
 
 ```
 Reading GOTO program from 'check-src/t_isr.out'

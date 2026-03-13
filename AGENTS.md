@@ -64,18 +64,30 @@ cbmc/
 ├── .github/                # GitHub configuration and workflows
 │   ├── workflows/          # CI/CD workflow definitions
 │   │   ├── build-and-test-Linux.yaml    # Main Linux build and test
+│   │   ├── build-and-test-Xen.yaml      # Xen integration build
+│   │   ├── bsd.yaml                     # BSD build
 │   │   ├── pull-request-checks.yaml     # PR validation checks
 │   │   ├── coverage.yaml                # Code coverage reporting
 │   │   ├── syntax-checks.yaml           # Code style and linting
 │   │   ├── codeql-analysis.yml          # Security analysis
 │   │   ├── performance.yaml             # Performance benchmarking
-│   │   └── release-packages.yaml        # Release automation
+│   │   ├── csmith.yaml                  # Random CSmith test generation
+│   │   ├── doxygen-check.yaml           # Doxygen doc validation
+│   │   ├── pull-request-check-rust-api.yaml  # Rust API CI
+│   │   ├── regular-release.yaml         # Automated tag-based release
+│   │   └── release-packages.yaml        # Release artifact packaging
 │   └── dependabot.yml      # Dependency update automation
 ├── CODING_STANDARD.md      # Coding conventions
 ├── COMPILING.md            # Build instructions
 ├── TOOLS_OVERVIEW.md       # Overview of all tools
 └── README.md               # Main readme
 ```
+
+> **This workspace also contains the following local-only directories (not part of upstream CBMC):**
+> - `check-src/` - Local test programs for ISR/concurrency analysis (t_isr.c, t_thread.c, etc.)
+> - `analysis-files/` - Scratch C programs for quick CBMC experiments
+> - `cmake-build-debug/` - CLion CMake Debug build output (equivalent to upstream `build/`)
+> - `cmake-build-debug-docker/` - Docker-based CMake build output
 
 ---
 
@@ -135,6 +147,9 @@ The source is organized into modular directories by functionality:
 - **`solvers/`** - Decision procedures
   - SAT/SMT solver interfaces
   - Bit-blasting and encoding
+  - **`smt2_incremental/`** - Solver-agnostic incremental SMT backend
+    - Use via `--incremental-smt2-solver '<cmd>'` (e.g., `'z3 -smt2 -in'` or `'cvc5 --lang=smtlib2.6 --incremental'`)
+    - Supports integers, pointers; floats and structs not yet supported
 
 #### **Tools (Executables)**
 
@@ -145,14 +160,25 @@ The source is organized into modular directories by functionality:
 - **`goto-diff/`** - Diff tool for GOTO programs
 - **`goto-harness/`** - Test harness generation
 - **`goto-bmc/`** - Bounded model checking
+- **`goto-inspect/`** - All-purpose goto binary inspection tool (properties, functions, etc.)
+- **`goto-synthesizer/`** - Loop contract synthesis via CEGIS (counter-example guided)
 - **`memory-analyzer/`** - Memory analysis with gdb
 - **`symtab2gb/`** - Symbol table to GOTO binary
+- **`crangler/`** - C source code mangling and transformation tool
+- **`cprover/`** - Experimental CHC (Constrained Horn Clause) encoding for C programs
 
 #### **Other Components**
 
 - **`json/`** - JSON handling
 - **`xmllang/`** - XML support
 - **`assembler/`** - Assembly support
+- **`json-symtab-language/`** - JSON-based symbol table language frontend
+- **`statement-list/`** - Siemens Statement List (STL/PLC) language frontend
+- **`libcprover-cpp/`** - Stable C++ API for direct linking to CProver verification pipeline
+  - Headers: `api.h`, `api_options.h`, `verification_result.h`
+  - Produces `libcprover-api.a`; usage example in `regression/libcprover-cpp/call_bmc.cpp`
+- **`libcprover-rust/`** - Rust API wrapping `libcprover-cpp` (requires `CBMC_LIB_DIR`, `CBMC_INCLUDE_DIR`, `CBMC_VERSION` env vars; build with `cargo build`)
+- **`miniz/`** - ZIP compression library (used in `src/` as well as `jbmc/`)
 
 ### `jbmc/` - Java Bounded Model Checker
 
@@ -180,9 +206,18 @@ Extensive test suites organized by tool and feature:
 - **`cbmc/`** - Main CBMC tests
 - **`goto-instrument/`** - Instrumentation tests
 - **`goto-analyzer/`** - Analysis tests
-- **`contracts/`** - Contract tests
+- **`contracts/`** and **`contracts-dfcc/`** - Contract tests
 - **`cbmc-cpp/`** - C++ specific tests
-- **`smt2_solver/`** - SMT solver tests
+- **`smt2_solver/`** and **`smt2_strings/`** - SMT solver tests
+- **`crangler/`** - Crangler tool tests
+- **`cprover/`** - CHC encoding tests
+- **`goto-inspect/`** - goto-inspect tests
+- **`goto-synthesizer/`** - Loop contract synthesis tests
+- **`libcprover-cpp/`** - C++ API integration tests
+- **`linking-goto-binaries/`** - Multi-file linking tests
+- **`snapshot-harness/`** - Snapshot harness tests
+- **`statement-list/`** - Siemens STL language tests
+- **`systemc/`** - SystemC tests
 - Many more specialized test directories
 
 See `regression/README.md` for test tags and categories.
@@ -844,6 +879,53 @@ To understand how data flows through CBMC:
 - Expression/type casting with `expr_cast.h`
 - Visitors for traversing expressions/instructions
 
+### Local Workspace Custom Additions
+
+This workspace has custom extensions **not present in upstream CBMC**:
+
+#### ISR Analysis Pass (`--show-isr-writes`)
+
+Files:
+- `src/goto-instrument/isr_written_vars.h` / `isr_written_vars.cpp`
+
+**Purpose:** Analyses Interrupt Service Routines (ISRs) in a GOTO binary, maps
+which globals they write, then instruments every non-ISR function by injecting
+non-deterministic ISR call sites before any instruction that touches those globals.
+
+**Usage:**
+```bash
+goto-cc check-src/t_isr.c -o check-src/t_isr.out
+goto-instrument --show-isr-writes isr2 check-src/t_isr.out dummy.out
+```
+
+The option accepts one ISR name at a time (parsed from `cmdline.get_value()`).
+Internally `show_isr_written_vars` accepts `std::vector<std::string>` so
+multiple ISRs can be analysed in a single pass.
+
+**Key test files in `check-src/`:**
+
+| File | Purpose |
+|------|---------|
+| `t_isr.c` | ISR + shared variable (`x`) accessed from tasks |
+| `t_thread.c` | Pthread-based race condition demo |
+| `t_assert.c` | Simple failing assertion |
+| `t_overflow.c` | Integer overflow checks |
+| `t_uaf.c` | Use-after-free scenario |
+| `t_nondet.c` | Non-determinism example |
+| `t_interleaving.c` | Thread interleaving checks |
+| `activation_task/` | Priority-scheduler tests (separate `task_priorities.json` config) |
+
+**`analysis-files/`** contains scratch `.c` programs used for ad-hoc CBMC experiments.
+
+#### CLion Build Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `cmake-build-debug/` | CLion CMake Debug build (replaces upstream `build/`) |
+| `cmake-build-debug-docker/` | Docker-based build; pre-built binaries are in `cmake-build-debug-docker/bin/` |
+
+When running local commands, replace `build/bin/` with `cmake-build-debug/bin/` or use the Docker build.
+
 ---
 
 ## Important Links
@@ -951,7 +1033,7 @@ goto-programs → util → big-int
 
 ---
 
-**Last Updated:** 2026-01-19
+**Last Updated:** 2026-03-12
 
 This guide is maintained to help AI coding assistants work effectively with
 CBMC. For questions or updates, refer to the main documentation or ask the

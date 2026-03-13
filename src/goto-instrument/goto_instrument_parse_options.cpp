@@ -110,6 +110,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "accelerate/accelerate.h"
 
 #include "isr_written_vars.h"
+#include <sstream>
 
 /// invoke main modules
 int goto_instrument_parse_optionst::doit()
@@ -565,9 +566,24 @@ int goto_instrument_parse_optionst::doit()
 
     if(cmdline.isset("show-isr-writes"))
     {
-      std::string target_func = cmdline.get_value("show-isr-writes");
-      show_isr_written_vars(goto_model, ui_message_handler, target_func);
-      return 0; // Dừng lại sau khi in ra để dễ quan sát
+      std::string isr_list_str = cmdline.get_value("show-isr-writes");
+      std::vector<std::string> isr_names;
+
+      // Cắt chuỗi dựa trên dấu phẩy (,)
+      std::stringstream ss(isr_list_str);
+      std::string item;
+      while (std::getline(ss, item, ',')) {
+        if (!item.empty()) {
+          isr_names.push_back(item);
+        }
+      }
+
+      // Gọi hàm phân tích và chèn mã
+      show_isr_written_vars(goto_model, ui_message_handler, isr_names);
+
+      // LƯU Ý: Không dùng "return 0;" ở đây nữa!
+      // Việc này cho phép luồng chạy tiếp tục đi xuống dưới cùng của hàm doit()
+      // để nó tự động gọi lệnh ghi goto_model ra file đích.
     }
 
     if(cmdline.isset("show-symbol-table"))
