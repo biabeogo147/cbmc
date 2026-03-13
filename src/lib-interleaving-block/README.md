@@ -21,6 +21,17 @@ cmake -S . -B cmake-build-debug-docker
 cmake --build cmake-build-debug-docker --target aib
 ```
 
+
+If CLion reload does not show `aib` (usually due missing CBMC dependencies such as
+`flex`/`bison` in the selected toolchain), use a dedicated CMake profile with:
+
+```bash
+cmake -S . -B cmake-build-debug-docker -DAIB_ONLY=ON
+cmake --build cmake-build-debug-docker --target aib
+```
+
+This config builds only `aib` and skips the full CBMC tree.
+
 Expected binary path in that setup:
 
 ```bash

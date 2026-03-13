@@ -103,6 +103,8 @@ endif()
 
 set(enable_cbmc_tests on CACHE BOOL "Whether CBMC tests should be enabled")
 
+option(AIB_ONLY "Build only the standalone aib tool" OFF)
+
 set(sat_impl "minisat2" CACHE STRING
     "This setting controls the SAT library which is used. Valid values are
     'minisat2', 'glucose', 'cadical', 'ipasir-cadical' or 'ipasir-custom'"
@@ -221,6 +223,12 @@ endif()
 
 option(WITH_MEMORY_ANALYZER
   "build the memory analyzer" ${WITH_MEMORY_ANALYZER_DEFAULT})
+
+if(AIB_ONLY)
+  add_subdirectory(src/lib-interleaving-block)
+  cprover_default_properties(aib)
+  return()
+endif()
 
 add_subdirectory(src)
 add_subdirectory(regression)
