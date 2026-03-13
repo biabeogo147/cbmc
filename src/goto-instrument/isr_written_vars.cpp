@@ -3,6 +3,7 @@
 #include <util/std_code.h>
 #include <util/std_expr.h>
 #include <util/std_types.h>
+#include <util/pointer_expr.h>
 
 #include <pointer-analysis/value_set_analysis.h>
 
@@ -125,7 +126,8 @@ void show_isr_written_vars(
       // TIẾN HÀNH CHÈN LỆNH
       if(!isrs_to_inject.empty())
       {
-        const std::string line_num = id2string(it->source_location().get_line());
+        const std::string line_num =
+          id2string(it->source_location().get_line());
 
         for(const auto &isr_to_call : isrs_to_inject)
         {
@@ -133,7 +135,16 @@ void show_isr_written_vars(
 
           std::cout << " -> Chèn gọi " << id2string(isr_to_call)
                     << " trước dòng " << line_num << "\n";
-          json_added_lines[isr_str].insert(std::stoi(line_num)); // Lưu vào dữ liệu JSON
+          if(!line_num.empty())
+          {
+            try
+            {
+              json_added_lines[isr_str].insert(std::stoi(line_num));
+            }
+            catch(const std::exception &)
+            {
+            }
+          }
 
           const symbolt *isr_sym = nullptr;
           if(ns.lookup(isr_to_call, isr_sym))
@@ -144,8 +155,25 @@ void show_isr_written_vars(
           }
 
           const source_locationt &loc = it->source_location();
+          code_function_callt::argumentst call_arguments;
+          const auto &isr_type = to_code_type(isr_sym->type);
+          for(const auto &parameter : isr_type.parameters())
+          {
+            const auto &parameter_type = parameter.type();
+            if(parameter_type.id() == ID_pointer)
+            {
+              call_arguments.push_back(
+                null_pointer_exprt(to_pointer_type(parameter_type)));
+            }
+            else
+            {
+              call_arguments.push_back(
+                side_effect_expr_nondett(parameter_type, loc));
+            }
+          }
+
           code_function_callt call_code(
-            nil_exprt(), isr_sym->symbol_expr(), code_function_callt::argumentst{});
+            nil_exprt(), isr_sym->symbol_expr(), std::move(call_arguments));
           call_code.add_source_location() = loc;
 
           goto_programt new_code;
