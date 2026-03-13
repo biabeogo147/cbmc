@@ -1,9 +1,14 @@
 #include "isr_written_vars.h"
-#include "rw_set.h"
-#include <pointer-analysis/value_set_analysis.h>
+
 #include <util/std_code.h>
 #include <util/std_expr.h>
 #include <util/std_types.h>
+
+#include <pointer-analysis/value_set_analysis.h>
+
+#include "rw_set.h"
+
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
@@ -15,6 +20,12 @@ void show_isr_written_vars(
 {
   namespacet ns(goto_model.symbol_table);
   value_set_analysist value_sets(ns);
+
+  // --- CẤU TRÚC LƯU TRỮ CHO FILE JSON ---
+  // Lưu danh sách biến mà mỗi ISR tác động (Set giúp lọc trùng lặp)
+  std::map<std::string, std::set<std::string>> json_write_vars;
+  // Lưu danh sách các dòng đã chèn ngắt (Set giúp tự động sắp xếp tăng dần và không trùng)
+  std::map<std::string, std::set<int>> json_added_lines;
 
   // Map lưu trữ: Tên ISR -> Danh sách các biến bị ISR đó GHI (Write)
   std::map<irep_idt, std::set<irep_idt>> isr_write_map;
@@ -39,10 +50,12 @@ void show_isr_written_vars(
       rw_set_loct rw_set(ns, value_sets, target_isr, it, message_handler);
       for(const auto &entry : rw_set.w_entries)
       {
-        if(id2string(entry.first).find('$') == std::string::npos)
+        std::string var_name = id2string(entry.first);
+        if(var_name.find('$') == std::string::npos)
         {
           isr_write_map[target_isr].insert(entry.first);
-          std::cout << " -> Ghi biến: " << id2string(entry.first) << "\n";
+          json_write_vars[isr_name].insert(var_name); // Lưu vào dữ liệu JSON
+          std::cout << " -> Ghi biến: " << var_name << "\n";
         }
       }
     }
@@ -116,8 +129,11 @@ void show_isr_written_vars(
 
         for(const auto &isr_to_call : isrs_to_inject)
         {
+          std::string isr_str = id2string(isr_to_call);
+
           std::cout << " -> Chèn gọi " << id2string(isr_to_call)
                     << " trước dòng " << line_num << "\n";
+          json_added_lines[isr_str].insert(std::stoi(line_num)); // Lưu vào dữ liệu JSON
 
           const symbolt *isr_sym = nullptr;
           if(ns.lookup(isr_to_call, isr_sym))
@@ -162,5 +178,45 @@ void show_isr_written_vars(
 
     // Cập nhật lại các đích nhảy (jump targets) bên trong hàm sau khi bị thay đổi cấu trúc
     func.body.update();
+  }
+
+  // --- PHẦN 4: XUẤT FILE JSON ---
+  std::ofstream json_file("interleaving_adding.json");
+  if(json_file.is_open()) {
+    json_file << "[\n";
+    bool first_isr = true;
+    for(const auto &isr_name : isr_names) {
+      if(!first_isr) json_file << ",\n";
+      first_isr = false;
+
+      json_file << "  {\n";
+      json_file << "    \"name\": \"" << isr_name << "\",\n";
+
+      // Ghi danh sách biến (write_var)
+      json_file << "    \"write_var\": [";
+      bool first_var = true;
+      for(const auto &var : json_write_vars[isr_name]) {
+        if(!first_var) json_file << ", ";
+        json_file << "\"" << var << "\"";
+        first_var = false;
+      }
+      json_file << "],\n";
+
+      // Ghi danh sách dòng đã chèn (line_added_block)
+      json_file << "    \"line_added_block\": [";
+      bool first_line = true;
+      for(int line : json_added_lines[isr_name]) {
+        if(!first_line) json_file << ", ";
+        json_file << line;
+        first_line = false;
+      }
+      json_file << "]\n";
+      json_file << "  }";
+    }
+    json_file << "\n]\n";
+    json_file.close();
+    std::cout << "\n[POR] Đã lưu thông tin ngắt vào file: interleaving_adding.json\n";
+  } else {
+    std::cout << "\n[Lỗi] Không thể tạo file interleaving_adding.json\n";
   }
 }
