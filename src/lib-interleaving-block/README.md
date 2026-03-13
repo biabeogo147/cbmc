@@ -13,8 +13,24 @@ cmake -S . -B build
 cmake --build build --target aib
 ```
 
+If you use CLion with Docker toolchain, build in CLion's Docker build directory
+(the workspace in this environment uses `cmake-build-debug-docker/`):
+
+```bash
+cmake -S . -B cmake-build-debug-docker
+cmake --build cmake-build-debug-docker --target aib
+```
+
+Expected binary path in that setup:
+
+```bash
+./cmake-build-debug-docker/bin/aib
+```
+
 Usage:
 
 ```bash
-aib file.c file.json new_file.c
+./cmake-build-debug-docker/bin/aib file.c file.json new_file.c
+# or
+./build/bin/aib file.c file.json new_file.c
 ```
