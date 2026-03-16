@@ -109,7 +109,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "accelerate/accelerate.h"
 
-#include "isr_written_vars.h"
+#include "read_written_variable_checking.h"
 #include <sstream>
 
 /// invoke main modules
@@ -579,7 +579,7 @@ int goto_instrument_parse_optionst::doit()
       }
 
       // Gọi hàm phân tích và chèn mã
-      show_isr_written_vars(goto_model, ui_message_handler, isr_names);
+      show_read_written_variables(goto_model, ui_message_handler, isr_names);
 
       // LƯU Ý: Không dùng "return 0;" ở đây nữa!
       // Việc này cho phép luồng chạy tiếp tục đi xuống dưới cùng của hàm doit()

@@ -886,7 +886,7 @@ This workspace has custom extensions **not present in upstream CBMC**:
 #### ISR Analysis Pass (`--show-isr-writes`)
 
 Files:
-- `src/goto-instrument/isr_written_vars.h` / `isr_written_vars.cpp`
+- `src/goto-instrument/read_written_variable_checking.h` / `read_written_variable_checking.cpp`
 
 **Purpose:** Analyses Interrupt Service Routines (ISRs) in a GOTO binary, maps
 which globals they write, then instruments every non-ISR function by injecting
