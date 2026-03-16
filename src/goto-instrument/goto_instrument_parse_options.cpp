@@ -565,9 +565,9 @@ int goto_instrument_parse_optionst::doit()
       return CPROVER_EXIT_SUCCESS;
     }
 
-    if(cmdline.isset("show-isr-writes"))
+    if(cmdline.isset("show-interleaving-checking"))
     {
-      std::string isr_list_str = cmdline.get_value("show-isr-writes");
+      std::string isr_list_str = cmdline.get_value("show-interleaving-checking");
       std::vector<std::string> isr_names;
 
       // Split comma-separated ISR names.

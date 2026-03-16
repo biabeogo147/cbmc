@@ -128,7 +128,7 @@ Author: Daniel Kroening, kroening@kroening.com
   OPT_NONDET_VOLATILE \
   "(ensure-one-backedge-per-target)" \
   OPT_CONFIG_LIBRARY \
-  "(show-isr-writes):" \
+  "(show-interleaving-checking):" \
   // empty last line
 
 // clang-format on
