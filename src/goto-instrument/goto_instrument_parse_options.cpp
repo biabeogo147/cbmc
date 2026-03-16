@@ -121,7 +121,8 @@ int goto_instrument_parse_optionst::doit()
     return CPROVER_EXIT_SUCCESS;
   }
 
-  if(cmdline.args.size()!=1 && cmdline.args.size()!=2)
+  if(cmdline.args.size()!=1 && cmdline.args.size()!=2 &&
+     cmdline.args.size()!=3)
   {
     help();
     return CPROVER_EXIT_USAGE_ERROR;
@@ -569,21 +570,24 @@ int goto_instrument_parse_optionst::doit()
       std::string isr_list_str = cmdline.get_value("show-isr-writes");
       std::vector<std::string> isr_names;
 
-      // Cắt chuỗi dựa trên dấu phẩy (,)
+      // Split comma-separated ISR names.
       std::stringstream ss(isr_list_str);
       std::string item;
-      while (std::getline(ss, item, ',')) {
-        if (!item.empty()) {
+      while(std::getline(ss, item, ','))
+      {
+        if(!item.empty())
           isr_names.push_back(item);
-        }
       }
 
-      // Gọi hàm phân tích và chèn mã
-      show_read_written_variables(goto_model, ui_message_handler, isr_names);
+      const std::string json_output_path =
+        cmdline.args.size() == 3 ? cmdline.args[2] : "interleaving_adding.json";
 
-      // LƯU Ý: Không dùng "return 0;" ở đây nữa!
-      // Việc này cho phép luồng chạy tiếp tục đi xuống dưới cùng của hàm doit()
-      // để nó tự động gọi lệnh ghi goto_model ra file đích.
+      // Run analysis/instrumentation and export metadata JSON.
+      show_read_written_variables(
+        goto_model, ui_message_handler, isr_names, json_output_path);
+
+      // Do not return here; flow continues so transformed goto-model can still
+      // be written to the requested output binary.
     }
 
     if(cmdline.isset("show-symbol-table"))
@@ -943,7 +947,7 @@ int goto_instrument_parse_optionst::doit()
     }
 
     // write new binary?
-    if(cmdline.args.size()==2)
+    if(cmdline.args.size() >= 2)
     {
       log.status() << "Writing GOTO program to '" << cmdline.args[1] << "'"
                    << messaget::eom;
@@ -953,13 +957,13 @@ int goto_instrument_parse_optionst::doit()
       else
         return CPROVER_EXIT_SUCCESS;
     }
-    else if(cmdline.args.size() < 2)
+    else
     {
       throw invalid_command_line_argument_exceptiont(
         "Invalid number of positional arguments passed",
-        "[in] [out]",
-        "goto-instrument needs one input and one output file, aside from other "
-        "flags");
+        "[in] [out] [json-out]",
+        "goto-instrument needs an input file and optionally supports output "
+        "binary and JSON metadata file, aside from other flags");
     }
 
     help();

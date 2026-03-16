@@ -14,21 +14,22 @@
 void show_read_written_variables(
   goto_modelt &goto_model,
   message_handlert &message_handler,
-  const std::vector<std::string> &function_name)
+  const std::vector<std::string> &function_name,
+  const std::string &json_output_path)
 {
   namespacet ns(goto_model.symbol_table);
   value_set_analysist value_sets(ns);
 
-  // --- CẤU TRÚC LƯU TRỮ CHO FILE JSON ---
-  // Lưu danh sách biến mà mỗi Function tác động (Set giúp lọc trùng lặp)
+  // --- Storage for JSON output ---
+  // Store variables touched by each function (set deduplicates entries).
   std::map<std::string, std::set<std::string>> json_write_vars;
-  // Lưu danh sách các dòng đã chèn ngắt (Set giúp tự động sắp xếp tăng dần và không trùng)
+  // Store line numbers where ISR calls are added (sorted + unique).
   std::map<std::string, std::set<int>> json_added_lines;
 
-  // Map lưu trữ: Tên Function -> Danh sách các biến bị Function đó GHI (Write)
+  // Map: function name -> variables written by that function.
   std::map<irep_idt, std::set<irep_idt>> function_write_map;
 
-  std::cout << "\n[POR] --- BƯỚC 1: TẠO BẢN ĐỒ BIẾN TỪ CÁC Function ---\n";
+  std::cout << "\n[POR] --- STEP 1: BUILD WRITE-VARIABLE MAP FROM FUNCTIONS ---\n";
   for(const auto &interleaving_function_name : function_name)
   {
     const irep_idt target_interleaving_function = interleaving_function_name;
@@ -36,11 +37,11 @@ void show_read_written_variables(
 
     if(f_it == goto_model.goto_functions.function_map.end())
     {
-      std::cout << " [Cảnh báo] Không tìm thấy hàm Function: " << interleaving_function_name << "\n";
+      std::cout << " [Warning] Function not found: " << interleaving_function_name << "\n";
       continue;
     }
 
-    std::cout << "Phân tích Function: " << interleaving_function_name << "\n";
+    std::cout << "Analyzing function: " << interleaving_function_name << "\n";
     for(auto it = f_it->second.body.instructions.begin();
         it != f_it->second.body.instructions.end();
         ++it)
@@ -52,14 +53,14 @@ void show_read_written_variables(
         if(var_name.find('$') == std::string::npos)
         {
           function_write_map[target_interleaving_function].insert(entry.first);
-          json_write_vars[interleaving_function_name].insert(var_name); // Lưu vào dữ liệu JSON
-          std::cout << " -> Ghi biến: " << var_name << "\n";
+          json_write_vars[interleaving_function_name].insert(var_name); // Save to JSON data structures
+          std::cout << " -> Writes variable: " << var_name << "\n";
         }
       }
     }
   }
 
-  std::cout << "\n[POR] --- BƯỚC 2 & 3: QUÉT LUỒNG CHÍNH VÀ CHÈN NGẮT ---\n";
+  std::cout << "\n[POR] --- STEPS 2 & 3: SCAN MAIN FLOW AND ADD INTERRUPTS ---\n";
 
   for(auto &func_pair : goto_model.goto_functions.function_map)
   {
@@ -67,7 +68,7 @@ void show_read_written_variables(
     auto &func = func_pair.second;
     const std::string name_str = id2string(func_name);
 
-    // Bỏ qua các hàm nội bộ và các hàm Function
+    // Skip internal functions and the ISR functions themselves.
     bool is_an_interleaving_function = false;
     for(const auto &interleaving_function : function_name)
     {
@@ -82,16 +83,16 @@ void show_read_written_variables(
       continue;
     }
 
-    std::cout << "Quét hàm: " << name_str << "\n";
+    std::cout << "Scanning function: " << name_str << "\n";
 
-    // Sử dụng iterator cơ bản thay vì macro để dễ dàng thao tác chèn lệnh
+    // Use a basic iterator to keep insertion logic explicit.
     for(auto it = func.body.instructions.begin();
         it != func.body.instructions.end();)
     {
       rw_set_loct rw_set(ns, value_sets, func_name, it, message_handler);
-      std::vector<irep_idt> interleaving_functions_to_inject; // Danh sách Function cần chèn trước lệnh này
+      std::vector<irep_idt> interleaving_functions_to_inject; // ISR functions to inject before this instruction.
 
-      // Kiểm tra xem lệnh này có chạm vào biến của Function nào không
+      // Check whether this instruction touches any ISR-written variable.
       for(const auto &map_pair : function_write_map)
       {
         const irep_idt current_interleaving_function = map_pair.first;
@@ -120,7 +121,7 @@ void show_read_written_variables(
         }
       }
 
-      // TIẾN HÀNH CHÈN LỆNH
+      // PERFORM INSTRUMENTATION
       if(!interleaving_functions_to_inject.empty())
       {
         const std::string line_num = id2string(it->source_location().get_line());
@@ -129,54 +130,61 @@ void show_read_written_variables(
         {
           std::string interleaving_function_str = id2string(interleaving_function_to_call);
 
-          std::cout << " -> Chèn gọi " << id2string(interleaving_function_to_call)
-                    << " trước dòng " << line_num << "\n";
-          json_added_lines[interleaving_function_str].insert(std::stoi(line_num)); // Lưu vào dữ liệu JSON
+          std::cout << " -> Inject call to " << id2string(interleaving_function_to_call)
+                    << " before line " << line_num << "\n";
+          json_added_lines[interleaving_function_str].insert(std::stoi(line_num)); // Save to JSON data structures.
 
           const symbolt *interleaving_function_sym = nullptr;
           if(ns.lookup(interleaving_function_to_call, interleaving_function_sym))
           {
-            std::cout << " [Cảnh báo] Không tìm thấy symbol Function: "
+            std::cout << " [Warning] Function symbol not found: "
                       << id2string(interleaving_function_to_call) << "\n";
           }
         }
       }
 
-      // Chuyển sang lệnh gốc tiếp theo
+      // Move to the next original instruction.
       ++it;
     }
 
-    // Cập nhật lại các đích nhảy (jump targets) bên trong hàm sau khi bị thay đổi cấu trúc
+    // Refresh jump targets after structural changes in the function body.
     func.body.update();
   }
 
-  // --- PHẦN 4: XUẤT FILE JSON ---
-  std::ofstream json_file("interleaving_adding.json");
-  if(json_file.is_open()) {
+  // --- STEP 4: WRITE JSON FILE ---
+  std::ofstream json_file(json_output_path);
+  if(json_file.is_open())
+  {
     json_file << "[\n";
     bool first_interleaving_function = true;
-    for(const auto &interleaving_function_name : function_name) {
-      if(!first_interleaving_function) json_file << ",\n";
+    for(const auto &interleaving_function_name : function_name)
+    {
+      if(!first_interleaving_function)
+        json_file << ",\n";
       first_interleaving_function = false;
 
       json_file << "  {\n";
       json_file << "    \"name\": \"" << interleaving_function_name << "\",\n";
 
-      // Ghi danh sách biến (write_var)
+      // Emit write_var array.
       json_file << "    \"write_var\": [";
       bool first_var = true;
-      for(const auto &var : json_write_vars[interleaving_function_name]) {
-        if(!first_var) json_file << ", ";
+      for(const auto &var : json_write_vars[interleaving_function_name])
+      {
+        if(!first_var)
+          json_file << ", ";
         json_file << "\"" << var << "\"";
         first_var = false;
       }
       json_file << "],\n";
 
-      // Ghi danh sách dòng đã chèn (line_added_block)
+      // Emit line_added_block array.
       json_file << "    \"line_added_block\": [";
       bool first_line = true;
-      for(int line : json_added_lines[interleaving_function_name]) {
-        if(!first_line) json_file << ", ";
+      for(int line : json_added_lines[interleaving_function_name])
+      {
+        if(!first_line)
+          json_file << ", ";
         json_file << line;
         first_line = false;
       }
@@ -185,8 +193,12 @@ void show_read_written_variables(
     }
     json_file << "\n]\n";
     json_file.close();
-    std::cout << "\n[POR] Đã lưu thông tin ngắt vào file: interleaving_adding.json\n";
-  } else {
-    std::cout << "\n[Lỗi] Không thể tạo file interleaving_adding.json\n";
+    std::cout << "\n[POR] Saved interrupt metadata to: " << json_output_path
+              << "\n";
+  }
+  else
+  {
+    std::cout << "\n[Error] Failed to create JSON file: " << json_output_path
+              << "\n";
   }
 }

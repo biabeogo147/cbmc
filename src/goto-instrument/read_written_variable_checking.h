@@ -6,11 +6,21 @@
 #include <string>
 #include <vector>
 
-// Hàm phân tích và in ra các biến bị ghi (write) trong ISR
+// Analyze and print variables written by ISR functions.
 void show_read_written_variables(
   goto_modelt &goto_model,
   message_handlert &message_handler,
-  const std::vector<std::string> &function_name);
+  const std::vector<std::string> &function_name,
+  const std::string &json_output_path);
+
+inline void show_read_written_variables(
+  goto_modelt &goto_model,
+  message_handlert &message_handler,
+  const std::vector<std::string> &function_name)
+{
+  show_read_written_variables(
+    goto_model, message_handler, function_name, "interleaving_adding.json");
+}
 
 inline void show_read_written_variables(
   goto_modelt &goto_model,
@@ -20,7 +30,8 @@ inline void show_read_written_variables(
   show_read_written_variables(
     goto_model,
     message_handler,
-    std::vector<std::string>{function_name});
+    std::vector<std::string>{function_name},
+    "interleaving_adding.json");
 }
 
 #endif
