@@ -567,16 +567,16 @@ int goto_instrument_parse_optionst::doit()
 
     if(cmdline.isset("show-interleaving-checking"))
     {
-      std::string isr_list_str = cmdline.get_value("show-interleaving-checking");
-      std::vector<std::string> isr_names;
+      std::string interleaving_list_str = cmdline.get_value("show-interleaving-checking");
+      std::vector<std::string> function_names;
 
-      // Split comma-separated ISR names.
-      std::stringstream ss(isr_list_str);
+      // Split comma-separated interleaving names.
+      std::stringstream ss(interleaving_list_str);
       std::string item;
       while(std::getline(ss, item, ','))
       {
         if(!item.empty())
-          isr_names.push_back(item);
+          function_names.push_back(item);
       }
 
       const std::string json_output_path =
@@ -584,7 +584,7 @@ int goto_instrument_parse_optionst::doit()
 
       // Run analysis/instrumentation and export metadata JSON.
       show_read_written_variables(
-        goto_model, ui_message_handler, isr_names, json_output_path);
+        goto_model, ui_message_handler, function_names, json_output_path);
 
       // Do not return here; flow continues so transformed goto-model can still
       // be written to the requested output binary.
