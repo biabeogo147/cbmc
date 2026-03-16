@@ -1,12 +1,12 @@
-#ifndef CPROVER_GOTO_INSTRUMENT_READ_WRITTEN_VARIABLE_H
-#define CPROVER_GOTO_INSTRUMENT_READ_WRITTEN_VARIABLE_H
+#ifndef CPROVER_GOTO_INSTRUMENT_READ_WRITTEN_VARIABLE_CHECKING_H
+#define CPROVER_GOTO_INSTRUMENT_READ_WRITTEN_VARIABLE_CHECKING_H
 
 #include <goto-programs/goto_model.h>
 #include <util/message.h>
 #include <string>
 #include <vector>
 
-// Analyze and print variables written by ISR functions.
+// Analyze and print variables written by interleaving functions.
 void show_read_written_variables(
   goto_modelt &goto_model,
   message_handlert &message_handler,
