@@ -14,9 +14,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_expr.h>
 #include <util/std_code.h>
 
-#include <linking/static_lifetime_init.h>
+#include <interleaving-analysis/rw_set.h>
 
-#include <goto-instrument/rw_set.h>
+#include <linking/static_lifetime_init.h>
 
 #include "fence.h"
 

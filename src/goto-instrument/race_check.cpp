@@ -19,7 +19,7 @@ Date: February 2006
 
 #include <linking/static_lifetime_init.h>
 
-#include "rw_set.h"
+#include <interleaving-analysis/rw_set.h>
 
 #ifdef LOCAL_MAY
 #include <analyses/local_may_alias.h>

@@ -74,6 +74,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <pointer-analysis/show_value_sets.h>
 #include <pointer-analysis/value_set_analysis.h>
 
+#include <interleaving-analysis/interleaving_analysis.h>
+#include <interleaving-analysis/rw_set.h>
+
 #include "alignment_checks.h"
 #include "branch.h"
 #include "call_sequences.h"
@@ -93,7 +96,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "points_to.h"
 #include "race_check.h"
 #include "remove_function.h"
-#include "rw_set.h"
 #include "show_locations.h"
 #include "skip_loops.h"
 #include "splice_call.h"
@@ -106,11 +108,44 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream> // IWYU pragma: keep
 #include <iostream>
 #include <memory>
+#include <optional>
 
 #include "accelerate/accelerate.h"
 
-#include "read_written_variable_checking.h"
 #include <sstream>
+
+namespace
+{
+std::vector<std::string> split_interleaving_names(const std::string &value)
+{
+  std::vector<std::string> function_names;
+  std::stringstream ss(value);
+  std::string item;
+  while(std::getline(ss, item, ','))
+  {
+    if(!item.empty())
+      function_names.push_back(item);
+  }
+  return function_names;
+}
+
+std::optional<interleaving_configt> get_interleaving_config(
+  const cmdlinet &cmdline,
+  messaget &)
+{
+  if(!cmdline.isset("interleaving-checking"))
+    return {};
+
+  interleaving_configt config;
+  const std::string function_list = cmdline.get_value("interleaving-checking");
+  config.function_names = split_interleaving_names(function_list);
+
+  if(cmdline.isset("interleaving-output"))
+    config.json_output_path = cmdline.get_value("interleaving-output");
+
+  return config;
+}
+} // namespace
 
 /// invoke main modules
 int goto_instrument_parse_optionst::doit()
@@ -121,8 +156,7 @@ int goto_instrument_parse_optionst::doit()
     return CPROVER_EXIT_SUCCESS;
   }
 
-  if(cmdline.args.size()!=1 && cmdline.args.size()!=2 &&
-     cmdline.args.size()!=3)
+  if(cmdline.args.size()!=1 && cmdline.args.size()!=2)
   {
     help();
     return CPROVER_EXIT_USAGE_ERROR;
@@ -565,29 +599,10 @@ int goto_instrument_parse_optionst::doit()
       return CPROVER_EXIT_SUCCESS;
     }
 
-    if(cmdline.isset("show-interleaving-checking"))
+    if(const auto interleaving_config = get_interleaving_config(cmdline, log))
     {
-      std::string interleaving_list_str = cmdline.get_value("show-interleaving-checking");
-      std::vector<std::string> function_names;
-
-      // Split comma-separated interleaving names.
-      std::stringstream ss(interleaving_list_str);
-      std::string item;
-      while(std::getline(ss, item, ','))
-      {
-        if(!item.empty())
-          function_names.push_back(item);
-      }
-
-      const std::string json_output_path =
-        cmdline.args.size() == 3 ? cmdline.args[2] : "interleaving_adding.json";
-
-      // Run analysis/instrumentation and export metadata JSON.
-      show_read_written_variables(
-        goto_model, ui_message_handler, function_names, json_output_path);
-
-      // Do not return here; flow continues so transformed goto-model can still
-      // be written to the requested output binary.
+      run_interleaving_analysis(
+        goto_model, ui_message_handler, *interleaving_config);
     }
 
     if(cmdline.isset("show-symbol-table"))
@@ -961,9 +976,9 @@ int goto_instrument_parse_optionst::doit()
     {
       throw invalid_command_line_argument_exceptiont(
         "Invalid number of positional arguments passed",
-        "[in] [out] [json-out]",
-        "goto-instrument needs an input file and optionally supports output "
-        "binary and JSON metadata file, aside from other flags");
+        "[in] [out]",
+        "goto-instrument needs an input file and optionally supports an "
+        "output binary, aside from other flags");
     }
 
     help();
@@ -1988,6 +2003,10 @@ void goto_instrument_parse_optionst::help()
     " the body of {ucaller}\n"
     " {y--check-call-sequence} {useq} \t instruments checks to assert that all"
     " call sequences match {useq}\n"
+    " {y--interleaving-checking} {uf1,f2} \t analyze interleaving functions and"
+    " emit metadata JSON\n"
+    " {y--interleaving-output} {ufile} \t write interleaving metadata to {ufile}"
+    " (default: interleaving_adding.json)\n"
     " {y--undefined-function-is-assume-false} \t convert each call to an"
     " undefined function to assume(false)\n"
     HELP_INSERT_FINAL_ASSERT_FALSE

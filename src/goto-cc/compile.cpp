@@ -23,6 +23,8 @@ Date: June 2006
 #include <util/unicode.h>
 #include <util/version.h>
 
+#include <interleaving-analysis/interleaving_analysis.h>
+
 #include <goto-programs/name_mangler.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/write_goto_binary.h>
@@ -40,6 +42,8 @@ Date: June 2006
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <vector>
 
 #define DOTGRAPHSETTINGS  "color=black;" \
                           "orientation=portrait;" \
@@ -47,6 +51,22 @@ Date: June 2006
                           "compound=true;"\
                           "size=\"30,40\";"\
                           "ratio=compress;"
+
+namespace
+{
+std::vector<std::string> split_interleaving_names(const std::string &value)
+{
+  std::vector<std::string> function_names;
+  std::stringstream ss(value);
+  std::string item;
+  while(std::getline(ss, item, ','))
+  {
+    if(!item.empty())
+      function_names.push_back(item);
+  }
+  return function_names;
+}
+} // namespace
 
 /// reads and source and object files, compiles and links them into goto program
 /// objects.
@@ -357,6 +377,19 @@ bool compilet::link(std::optional<symbol_tablet> &&symbol_table)
     function_name_manglert<file_name_manglert> mangler(
       log.get_message_handler(), goto_model, file_local_mangle_suffix);
     mangler.mangle();
+  }
+
+  if(cmdline.isset("interleaving-checking"))
+  {
+    interleaving_configt interleaving_config;
+    interleaving_config.function_names =
+      split_interleaving_names(cmdline.get_value("interleaving-checking"));
+    if(cmdline.isset("interleaving-output"))
+      interleaving_config.json_output_path =
+        cmdline.get_value("interleaving-output");
+
+    run_interleaving_analysis(
+      goto_model, log.get_message_handler(), interleaving_config);
   }
 
   if(write_bin_object_file(output_file_executable, goto_model))

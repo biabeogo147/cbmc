@@ -17,12 +17,12 @@ Date: 2012
 #include <string>
 #include <fstream>
 
+#include <interleaving-analysis/rw_set.h>
+
 #include <util/options.h>
 #include <util/prefix.h>
 
 #include <linking/static_lifetime_init.h>
-
-#include <goto-instrument/rw_set.h>
 
 #include "fence.h"
 

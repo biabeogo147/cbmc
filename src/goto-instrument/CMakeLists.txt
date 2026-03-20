@@ -12,6 +12,7 @@ target_link_libraries(goto-instrument-lib
     cpp
     linking
     big-int
+    interleaving-analysis-lib
     goto-programs
     goto-symex
     assembler
@@ -27,7 +28,7 @@ target_link_libraries(goto-instrument-lib
 add_if_library(goto-instrument-lib glpk)
 
 # Executable
-add_executable(goto-instrument goto_instrument_main.cpp read_written_variable_checking.cpp)
+add_executable(goto-instrument goto_instrument_main.cpp)
 target_link_libraries(goto-instrument goto-instrument-lib)
 install(TARGETS goto-instrument DESTINATION ${CMAKE_INSTALL_BINDIR})
 

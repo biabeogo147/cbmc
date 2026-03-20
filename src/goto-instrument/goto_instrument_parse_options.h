@@ -128,7 +128,8 @@ Author: Daniel Kroening, kroening@kroening.com
   OPT_NONDET_VOLATILE \
   "(ensure-one-backedge-per-target)" \
   OPT_CONFIG_LIBRARY \
-  "(show-interleaving-checking):" \
+  "(interleaving-checking):" \
+  "(interleaving-output):" \
   // empty last line
 
 // clang-format on

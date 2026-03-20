@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 #include <util/symbol_table_base.h>
 
+#include <goto-programs/goto_functions.h>
 #include <goto-programs/goto_program.h>
 
 #include "wmm.h"
@@ -21,7 +22,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <set>
 
-class goto_functionst;
 class messaget;
 class value_setst;
 

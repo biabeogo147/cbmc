@@ -105,6 +105,7 @@ add_subdirectory(pointer-analysis)
 add_subdirectory(solvers)
 add_subdirectory(statement-list)
 add_subdirectory(util)
+add_subdirectory(interleaving-analysis)
 
 add_subdirectory(cbmc)
 add_subdirectory(cprover)

@@ -25,11 +25,11 @@ Date: September 2011
 
 #include <util/fresh_symbol.h>
 
+#include <interleaving-analysis/rw_set.h>
+
 #include <goto-programs/remove_skip.h>
 
 #include <linking/static_lifetime_init.h>
-
-#include <goto-instrument/rw_set.h>
 
 #include "shared_buffers.h"
 #include "goto2graph.h"

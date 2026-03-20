@@ -9,6 +9,7 @@ generic_includes(goto-cc-lib)
 
 target_link_libraries(goto-cc-lib
     big-int
+    interleaving-analysis-lib
     goto-programs
     util
     json

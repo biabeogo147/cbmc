@@ -11,12 +11,12 @@ Date: February 2006
 /// \file
 /// Race Detection for Threaded Goto Programs
 
-#ifndef CPROVER_GOTO_INSTRUMENT_RW_SET_H
-#define CPROVER_GOTO_INSTRUMENT_RW_SET_H
+#ifndef CPROVER_INTERLEAVING_ANALYSIS_RW_SET_H
+#define CPROVER_INTERLEAVING_ANALYSIS_RW_SET_H
 
 #include <iosfwd>
-#include <vector>
 #include <set>
+#include <vector>
 
 #include <util/std_expr.h>
 
@@ -28,8 +28,6 @@ Date: February 2006
 
 class message_handlert;
 class value_setst;
-
-// a container for read/write sets
 
 class rw_set_baset
 {
@@ -79,12 +77,12 @@ public:
 
   bool has_w_entry(irep_idt object) const
   {
-    return w_entries.find(object)!=w_entries.end();
+    return w_entries.find(object) != w_entries.end();
   }
 
   bool has_r_entry(irep_idt object) const
   {
-    return r_entries.find(object)!=r_entries.end();
+    return r_entries.find(object) != r_entries.end();
   }
 
   void output(std::ostream &out) const;
@@ -92,25 +90,26 @@ public:
 protected:
   virtual void track_deref(const entryt &, bool read)
   {
-    (void)read; // unused parameter
+    (void)read;
   }
-  virtual void set_track_deref() {}
-  virtual void reset_track_deref() {}
+  virtual void set_track_deref()
+  {
+  }
+  virtual void reset_track_deref()
+  {
+  }
 
   const namespacet &ns;
   message_handlert &message_handler;
 };
 
-inline std::ostream &operator<<(
-  std::ostream &out, const rw_set_baset &rw_set)
+inline std::ostream &operator<<(std::ostream &out, const rw_set_baset &rw_set)
 {
   rw_set.output(out);
   return out;
 }
 
-// a producer of read/write sets
-
-class _rw_set_loct:public rw_set_baset
+class _rw_set_loct : public rw_set_baset
 {
 public:
 #ifdef LOCAL_MAY
@@ -177,7 +176,7 @@ protected:
     const exprt::operandst &guard_conjuncts);
 };
 
-class rw_set_loct:public _rw_set_loct
+class rw_set_loct : public _rw_set_loct
 {
 public:
 #ifdef LOCAL_MAY
@@ -209,9 +208,7 @@ public:
   }
 };
 
-// another producer, this time for entire functions
-
-class rw_set_functiont:public rw_set_baset
+class rw_set_functiont : public rw_set_baset
 {
 public:
   rw_set_functiont(
@@ -235,19 +232,10 @@ protected:
   void compute_rec(const exprt &function);
 };
 
-/* rw_set_loc keeping track of the dereference path */
-
-class rw_set_with_trackt:public _rw_set_loct
+class rw_set_with_trackt : public _rw_set_loct
 {
 public:
-  // NOTE: combine this with entriest to avoid double copy
-  /* keeps track of who is dereferenced from who.
-     E.g., y=&z; x=*y;
-     reads(x=*y;)={y,z}
-     dereferenced_from={z|->y} */
   std::map<const irep_idt, const irep_idt> dereferenced_from;
-
-  /* is var a read or write */
   std::set<irep_idt> set_reads;
 
 #ifdef LOCAL_MAY
@@ -281,7 +269,6 @@ public:
   }
 
 protected:
-  /* flag and variable in the expression, from which we dereference */
   bool dereferencing;
   std::vector<entryt> dereferenced;
 
@@ -300,14 +287,14 @@ protected:
 
   void set_track_deref()
   {
-    dereferencing=true;
+    dereferencing = true;
   }
 
   void reset_track_deref()
   {
-    dereferencing=false;
+    dereferencing = false;
     dereferenced.clear();
   }
 };
 
-#endif // CPROVER_GOTO_INSTRUMENT_RW_SET_H
+#endif // CPROVER_INTERLEAVING_ANALYSIS_RW_SET_H

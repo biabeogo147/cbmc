@@ -22,7 +22,7 @@ Date: September 2011
 #include <analyses/local_may_alias.h>
 #endif
 
-#include "rw_set.h"
+#include <interleaving-analysis/rw_set.h>
 
 static bool potential_race_on_read(
   const rw_set_baset &code_rw_set,

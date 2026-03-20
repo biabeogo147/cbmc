@@ -72,6 +72,10 @@ void goto_cc_modet::help()
     "name-mangle and export file-local symbols\n"
     " {y--mangle-suffix} {usuffix} \t append suffix to exported file-local "
     "symbols\n"
+    " {y--interleaving-checking} {uf1,f2} \t analyze the linked goto model and "
+    "emit interleaving metadata\n"
+    " {y--interleaving-output} {ufile} \t write interleaving metadata JSON to "
+    "{ufile}\n"
     " {y--print-rejected-preprocessed-source} {ufile} \t "
     "copy failing (preprocessed) source to file\n"
     "\n");
