@@ -1,0 +1,11 @@
+services:
+  preprocessor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    tty: true
+    stdin_open: true
+    command: bash -lc "tail -f /dev/null"

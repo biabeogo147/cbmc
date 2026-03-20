@@ -1,0 +1,12 @@
+[
+  {
+    "name": "isr1",
+    "write_var": ["enable_irq_1", "x"],
+    "line_added_block": [32, 35, 50]
+  },
+  {
+    "name": "isr2",
+    "write_var": ["enable_irq_2", "x"],
+    "line_added_block": [32, 35, 50]
+  }
+]
