@@ -128,7 +128,8 @@ Author: Daniel Kroening, kroening@kroening.com
   OPT_NONDET_VOLATILE \
   "(ensure-one-backedge-per-target)" \
   OPT_CONFIG_LIBRARY \
-  "(interleaving-checking):" \
+  "(interleaving-project-root):" \
+  "(interleaving-source-files):" \
   "(interleaving-output):" \
   // empty last line
 

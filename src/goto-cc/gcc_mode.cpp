@@ -446,8 +446,12 @@ int gcc_modet::doit()
   if(cmdline.isset('M') ||
      cmdline.isset("MM") ||
      cmdline.isset('E') ||
-     !cmdline.have_infile_arg())
+     (!cmdline.have_infile_arg() &&
+      !cmdline.isset("interleaving-project-root") &&
+      !cmdline.isset("interleaving-source-files")))
+  {
     return run_gcc(compiler); // exit!
+  }
 
   // get configuration
   config.set(cmdline);
@@ -814,9 +818,13 @@ int gcc_modet::doit()
   // Revert to gcc in case there is no source to compile
   // and no binary to link.
 
-  if(compiler.source_files.empty() &&
-     compiler.object_files.empty())
+  if(
+    compiler.source_files.empty() && compiler.object_files.empty() &&
+    !cmdline.isset("interleaving-project-root") &&
+    !cmdline.isset("interleaving-source-files"))
+  {
     return run_gcc(compiler); // exit!
+  }
 
   if(compiler.mode==compilet::ASSEMBLE_ONLY)
     return asm_output(act_as_bcc, compiler.source_files, compiler);

@@ -1,12 +1,12 @@
 [
   {
     "name": "isr1",
-    "write_var": ["enable_irq_1", "x"],
-    "line_added_block": [27, 31, 38]
+    "write_global_var": ["enable_irq_1", "x"],
+    "line_added_block_with_file": [{ "file": "t_isr.c", "line": [27, 31, 38] }]
   },
   {
     "name": "isr2",
-    "write_var": ["enable_irq_2", "x"],
-    "line_added_block": [27, 31, 38]
+    "write_global_var": ["enable_irq_2", "x"],
+    "line_added_block_with_file": [{ "file": "t_isr.c", "line": [27, 31, 38] }]
   }
 ]

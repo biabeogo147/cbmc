@@ -42,6 +42,7 @@ Date: June 2006
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -54,17 +55,24 @@ Date: June 2006
 
 namespace
 {
-std::vector<std::string> split_interleaving_names(const std::string &value)
+std::vector<std::string> split_csv_values(const std::string &value)
 {
-  std::vector<std::string> function_names;
+  std::vector<std::string> values;
   std::stringstream ss(value);
   std::string item;
   while(std::getline(ss, item, ','))
   {
     if(!item.empty())
-      function_names.push_back(item);
+      values.push_back(item);
   }
-  return function_names;
+  return values;
+}
+
+std::string normalize_input_path(const std::string &path)
+{
+  return std::filesystem::absolute(std::filesystem::path(path))
+    .lexically_normal()
+    .generic_string();
 }
 } // namespace
 
@@ -74,11 +82,64 @@ std::vector<std::string> split_interleaving_names(const std::string &value)
 bool compilet::doit()
 {
   add_compiler_specific_defines();
+  std::set<std::string> added_input_paths;
+
+  if(
+    cmdline.isset("interleaving-project-root") &&
+    !cmdline.isset("interleaving-source-files"))
+  {
+    log.error() << "--interleaving-source-files is required for interleaving "
+                   "analysis"
+                << messaget::eom;
+    return true;
+  }
 
   // Parse command line for source and object file names
   for(const auto &arg : cmdline.args)
+  {
+    if(arg != "-")
+      added_input_paths.insert(normalize_input_path(arg));
+
     if(add_input_file(arg))
       return true;
+  }
+
+  if(
+    cmdline.isset("interleaving-source-files") &&
+    cmdline.isset("interleaving-project-root"))
+  {
+    const auto project_sources = collect_interleaving_project_sources(
+      cmdline.get_value("interleaving-project-root"));
+
+    if(project_sources.empty())
+    {
+      log.error() << "no .c source files found under interleaving project root '"
+                  << cmdline.get_value("interleaving-project-root") << "'"
+                  << messaget::eom;
+      return true;
+    }
+
+    for(const auto &source_file : project_sources)
+    {
+      if(added_input_paths.insert(source_file).second && add_input_file(source_file))
+        return true;
+    }
+  }
+
+  if(cmdline.isset("interleaving-source-files"))
+  {
+    for(const auto &source_file :
+        split_csv_values(cmdline.get_value("interleaving-source-files")))
+    {
+      const std::string normalized_source_file = normalize_input_path(source_file);
+      if(
+        added_input_paths.insert(normalized_source_file).second &&
+        add_input_file(normalized_source_file))
+      {
+        return true;
+      }
+    }
+  }
 
   for(const auto &library : libraries)
   {
@@ -379,11 +440,23 @@ bool compilet::link(std::optional<symbol_tablet> &&symbol_table)
     mangler.mangle();
   }
 
-  if(cmdline.isset("interleaving-checking"))
+  if(cmdline.isset("interleaving-source-files"))
   {
     interleaving_configt interleaving_config;
-    interleaving_config.function_names =
-      split_interleaving_names(cmdline.get_value("interleaving-checking"));
+    if(cmdline.isset("interleaving-project-root"))
+    {
+      interleaving_config.project_root_path =
+        normalize_input_path(cmdline.get_value("interleaving-project-root"));
+    }
+    if(cmdline.isset("interleaving-source-files"))
+    {
+      for(const auto &source_file :
+          split_csv_values(cmdline.get_value("interleaving-source-files")))
+      {
+        interleaving_config.interleaving_source_files.push_back(
+          normalize_input_path(source_file));
+      }
+    }
     if(cmdline.isset("interleaving-output"))
       interleaving_config.json_output_path =
         cmdline.get_value("interleaving-output");

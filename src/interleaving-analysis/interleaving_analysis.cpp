@@ -4,16 +4,237 @@
 
 #include "rw_set.h"
 
+#include <util/namespace.h>
+#include <util/symbol.h>
+
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
+#include <sstream>
 
 namespace
 {
 using function_write_mapt = std::map<irep_idt, std::set<irep_idt>>;
+using normalized_pathst = std::set<std::string>;
+
+std::string normalize_path(const std::string &path)
+{
+  return std::filesystem::absolute(std::filesystem::path(path))
+    .lexically_normal()
+    .generic_string();
+}
+
+bool is_c_source_file(const std::string &path)
+{
+  return std::filesystem::path(path).extension() == ".c";
+}
+
+normalized_pathst normalize_paths(const std::vector<std::string> &paths)
+{
+  normalized_pathst result;
+  for(const auto &path : paths)
+  {
+    if(!path.empty())
+      result.insert(normalize_path(path));
+  }
+  return result;
+}
+
+bool path_matches_or_is_within(
+  const std::string &candidate_path,
+  const std::string &root_path)
+{
+  if(root_path.empty())
+    return true;
+
+  const std::string normalized_candidate = normalize_path(candidate_path);
+  const std::string normalized_root = normalize_path(root_path);
+
+  if(normalized_candidate == normalized_root)
+    return true;
+
+  if(normalized_candidate.size() <= normalized_root.size())
+    return false;
+
+  return
+    normalized_candidate.compare(0, normalized_root.size(), normalized_root) ==
+      0 &&
+    normalized_candidate[normalized_root.size()] == '/';
+}
+
+std::string relative_report_path(
+  const std::string &path,
+  const std::string &project_root_path)
+{
+  const auto normalized_path =
+    std::filesystem::path(normalize_path(path)).lexically_normal();
+
+  if(project_root_path.empty())
+    return normalized_path.generic_string();
+
+  const auto normalized_root =
+    std::filesystem::path(normalize_path(project_root_path)).lexically_normal();
+  const auto relative_path = normalized_path.lexically_relative(normalized_root);
+
+  if(relative_path.empty())
+    return normalized_path.generic_string();
+
+  return relative_path.generic_string();
+}
+
+std::string json_escape(const std::string &value)
+{
+  std::ostringstream escaped;
+  for(char ch : value)
+  {
+    switch(ch)
+    {
+    case '\\':
+      escaped << "\\\\";
+      break;
+    case '"':
+      escaped << "\\\"";
+      break;
+    case '\n':
+      escaped << "\\n";
+      break;
+    case '\r':
+      escaped << "\\r";
+      break;
+    case '\t':
+      escaped << "\\t";
+      break;
+    default:
+      escaped << ch;
+      break;
+    }
+  }
+
+  return escaped.str();
+}
+
+std::string function_source_file(
+  const goto_modelt &goto_model,
+  const irep_idt &function_id,
+  const goto_functiont &function)
+{
+  if(const symbolt *function_symbol = goto_model.symbol_table.lookup(function_id))
+  {
+    const auto &symbol_file = function_symbol->location.get_file();
+    if(!symbol_file.empty())
+      return id2string(symbol_file);
+  }
+
+  for(const auto &instruction : function.body.instructions)
+  {
+    const auto &instruction_file = instruction.source_location().get_file();
+    if(!instruction_file.empty())
+      return id2string(instruction_file);
+  }
+
+  return "";
+}
+
+std::vector<irep_idt> resolve_target_function_ids(
+  const goto_modelt &goto_model,
+  message_handlert &message_handler,
+  const interleaving_configt &config)
+{
+  std::vector<irep_idt> target_functions;
+  std::set<irep_idt> seen_functions;
+  normalized_pathst interleaving_source_files =
+    normalize_paths(config.interleaving_source_files);
+
+  if(interleaving_source_files.empty())
+    return target_functions;
+
+  messaget log(message_handler);
+  log.status() << "[interleaving] discovering target functions from source files"
+               << messaget::eom;
+
+  for(const auto &function_entry : goto_model.goto_functions.function_map)
+  {
+    const irep_idt &function_id = function_entry.first;
+    const auto &function = function_entry.second;
+
+    if(!function.body_available())
+      continue;
+
+    const std::string source_file =
+      function_source_file(goto_model, function_id, function);
+    if(source_file.empty())
+      continue;
+
+    if(interleaving_source_files.count(normalize_path(source_file)) != 0)
+    {
+      if(seen_functions.insert(function_id).second)
+        target_functions.push_back(function_id);
+    }
+  }
+
+  std::sort(target_functions.begin(), target_functions.end());
+  return target_functions;
+}
+
+bool is_global_written_symbol(
+  const namespacet &ns,
+  const irep_idt &identifier)
+{
+  const symbolt *symbol = nullptr;
+  if(ns.lookup(identifier, symbol))
+    return false;
+
+  return
+    symbol->is_static_lifetime && symbol->location.get_function().empty() &&
+    !symbol->is_type && !symbol->is_auxiliary && symbol->type.id() != ID_code;
+}
+
+bool should_skip_candidate_function(
+  const goto_modelt &goto_model,
+  const irep_idt &function_id,
+  const goto_functiont &function,
+  const std::set<irep_idt> &interleaving_function_ids,
+  const normalized_pathst &interleaving_source_files)
+{
+  const std::string function_name = id2string(function_id);
+  if(
+    !function.body_available() || function_name.find("__CPROVER") == 0 ||
+    interleaving_function_ids.count(function_id) != 0)
+  {
+    return true;
+  }
+
+  if(interleaving_source_files.empty())
+    return false;
+
+  const std::string source_file =
+    function_source_file(goto_model, function_id, function);
+  return
+    !source_file.empty() &&
+    interleaving_source_files.count(normalize_path(source_file)) != 0;
+}
+
+bool should_record_candidate_location(
+  const std::string &source_file,
+  const interleaving_configt &config)
+{
+  if(source_file.empty())
+    return false;
+
+  if(!config.project_root_path.empty())
+  {
+    return
+      is_c_source_file(source_file) &&
+      path_matches_or_is_within(source_file, config.project_root_path);
+  }
+
+  return true;
+}
 
 function_write_mapt build_function_write_map(
   goto_modelt &goto_model,
   message_handlert &message_handler,
-  const std::vector<std::string> &function_names,
+  const std::vector<irep_idt> &function_ids,
   interleaving_resultt &result)
 {
   namespacet ns(goto_model.symbol_table);
@@ -25,11 +246,10 @@ function_write_mapt build_function_write_map(
                   "functions"
                << messaget::eom;
 
-  for(const auto &interleaving_function_name : function_names)
+  for(const auto &function_id : function_ids)
   {
-    const irep_idt function_id = interleaving_function_name;
     auto &function_result = result.functions[function_id];
-    function_result.display_name = interleaving_function_name;
+    function_result.display_name = id2string(function_id);
 
     const auto f_it =
       goto_model.goto_functions.function_map.find(function_id);
@@ -37,7 +257,7 @@ function_write_mapt build_function_write_map(
     if(f_it == goto_model.goto_functions.function_map.end())
     {
       log.warning() << "[interleaving] function not found: "
-                    << interleaving_function_name << messaget::eom;
+                    << id2string(function_id) << messaget::eom;
       continue;
     }
 
@@ -50,10 +270,10 @@ function_write_mapt build_function_write_map(
       for(const auto &entry : rw_set.w_entries)
       {
         const irep_idt &variable_id = entry.first;
-        if(id2string(variable_id).find('$') == std::string::npos)
+        if(is_global_written_symbol(ns, variable_id))
         {
           function_write_map[function_id].insert(variable_id);
-          function_result.written_variables.insert(variable_id);
+          function_result.written_global_variables.insert(variable_id);
         }
       }
     }
@@ -65,14 +285,17 @@ function_write_mapt build_function_write_map(
 void record_candidate_lines(
   goto_modelt &goto_model,
   message_handlert &message_handler,
-  const std::vector<std::string> &function_names,
+  const interleaving_configt &config,
+  const std::vector<irep_idt> &function_ids,
   const function_write_mapt &function_write_map,
   interleaving_resultt &result)
 {
   namespacet ns(goto_model.symbol_table);
   value_set_analysist value_sets(ns);
   std::set<irep_idt> interleaving_function_ids(
-    function_names.begin(), function_names.end());
+    function_ids.begin(), function_ids.end());
+  normalized_pathst interleaving_source_files =
+    normalize_paths(config.interleaving_source_files);
 
   messaget log(message_handler);
   log.status() << "[interleaving] scanning for candidate interleaving points"
@@ -82,11 +305,13 @@ void record_candidate_lines(
   {
     const irep_idt &func_name = func_pair.first;
     auto &func = func_pair.second;
-    const std::string name_str = id2string(func_name);
 
-    if(
-      !func.body_available() || name_str.find("__CPROVER") == 0 ||
-      interleaving_function_ids.count(func_name) != 0)
+    if(should_skip_candidate_function(
+         goto_model,
+         func_name,
+         func,
+         interleaving_function_ids,
+         interleaving_source_files))
     {
       continue;
     }
@@ -129,10 +354,17 @@ void record_candidate_lines(
         {
           const std::string line_num =
             id2string(instruction->source_location().get_line());
-          if(!line_num.empty())
+          const std::string source_file =
+            id2string(instruction->source_location().get_file());
+
+          if(!line_num.empty() && should_record_candidate_location(source_file, config))
           {
-            result.functions[interleaving_function_id].candidate_lines.insert(
-              std::stoi(line_num));
+            const int line_number = std::stoi(line_num);
+            auto &function_result = result.functions[interleaving_function_id];
+            function_result
+              .candidate_lines_by_file[relative_report_path(
+                source_file, config.project_root_path)]
+              .insert(line_number);
           }
         }
       }
@@ -141,19 +373,49 @@ void record_candidate_lines(
 }
 } // namespace
 
+std::vector<std::string>
+collect_interleaving_project_sources(const std::string &project_root_path)
+{
+  std::vector<std::string> source_files;
+  if(project_root_path.empty())
+    return source_files;
+
+  const auto root_path = std::filesystem::path(project_root_path);
+  if(
+    !std::filesystem::exists(root_path) ||
+    !std::filesystem::is_directory(root_path))
+  {
+    return source_files;
+  }
+
+  for(const auto &entry : std::filesystem::recursive_directory_iterator(root_path))
+  {
+    if(entry.is_regular_file() && is_c_source_file(entry.path().generic_string()))
+      source_files.push_back(normalize_path(entry.path().generic_string()));
+  }
+
+  std::sort(source_files.begin(), source_files.end());
+  return source_files;
+}
+
 interleaving_resultt analyze_interleavings(
   goto_modelt &goto_model,
   message_handlert &message_handler,
   const interleaving_configt &config)
 {
   interleaving_resultt result;
+  const auto target_function_ids =
+    resolve_target_function_ids(goto_model, message_handler, config);
+  result.function_order = target_function_ids;
+
   auto function_write_map = build_function_write_map(
-    goto_model, message_handler, config.function_names, result);
+    goto_model, message_handler, target_function_ids, result);
 
   record_candidate_lines(
     goto_model,
     message_handler,
-    config.function_names,
+    config,
+    target_function_ids,
     function_write_map,
     result);
 
@@ -176,9 +438,8 @@ bool write_interleaving_report(
 
   json_file << "[\n";
   bool first_interleaving_function = true;
-  for(const auto &function_name : config.function_names)
+  for(const auto &function_id : result.function_order)
   {
-    const irep_idt function_id = function_name;
     auto result_it = result.functions.find(function_id);
 
     if(!first_interleaving_function)
@@ -186,32 +447,44 @@ bool write_interleaving_report(
     first_interleaving_function = false;
 
     json_file << "  {\n";
-    json_file << "    \"name\": \"" << function_name << "\",\n";
+    json_file << "    \"name\": \"" << json_escape(id2string(function_id))
+              << "\",\n";
 
-    json_file << "    \"write_var\": [";
+    json_file << "    \"write_global_var\": [";
     bool first_var = true;
     if(result_it != result.functions.end())
     {
-      for(const auto &var : result_it->second.written_variables)
+      for(const auto &var : result_it->second.written_global_variables)
       {
         if(!first_var)
           json_file << ", ";
-        json_file << "\"" << id2string(var) << "\"";
+        json_file << "\"" << json_escape(id2string(var)) << "\"";
         first_var = false;
       }
     }
     json_file << "],\n";
 
-    json_file << "    \"line_added_block\": [";
-    bool first_line = true;
+    json_file << "    \"line_added_block_with_file\": [";
+    bool first_file = true;
     if(result_it != result.functions.end())
     {
-      for(const int line : result_it->second.candidate_lines)
+      for(const auto &file_entry : result_it->second.candidate_lines_by_file)
       {
-        if(!first_line)
+        if(!first_file)
           json_file << ", ";
-        json_file << line;
-        first_line = false;
+
+        json_file << "{ \"file\": \"" << json_escape(file_entry.first)
+                  << "\", \"line\": [";
+        bool first_line = true;
+        for(const int line : file_entry.second)
+        {
+          if(!first_line)
+            json_file << ", ";
+          json_file << line;
+          first_line = false;
+        }
+        json_file << "] }";
+        first_file = false;
       }
     }
     json_file << "]\n";

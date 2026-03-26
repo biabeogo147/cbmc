@@ -29,7 +29,8 @@ const char *goto_cc_options_with_separated_argument[]=
   "--native-linker",
   "--print-rejected-preprocessed-source",
   "--mangle-suffix",
-  "--interleaving-checking",
+  "--interleaving-project-root",
+  "--interleaving-source-files",
   "--interleaving-output",
   nullptr
 };

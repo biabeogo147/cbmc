@@ -106,6 +106,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "value_set_fi_fp_removal.h"
 
 #include <fstream> // IWYU pragma: keep
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -116,29 +117,61 @@ Author: Daniel Kroening, kroening@kroening.com
 
 namespace
 {
-std::vector<std::string> split_interleaving_names(const std::string &value)
+std::vector<std::string> split_csv_values(const std::string &value)
 {
-  std::vector<std::string> function_names;
+  std::vector<std::string> values;
   std::stringstream ss(value);
   std::string item;
   while(std::getline(ss, item, ','))
   {
     if(!item.empty())
-      function_names.push_back(item);
+      values.push_back(item);
   }
-  return function_names;
+  return values;
+}
+
+std::string normalize_input_path(const std::string &path)
+{
+  return std::filesystem::absolute(std::filesystem::path(path))
+    .lexically_normal()
+    .generic_string();
 }
 
 std::optional<interleaving_configt> get_interleaving_config(
   const cmdlinet &cmdline,
-  messaget &)
+  messaget &log)
 {
-  if(!cmdline.isset("interleaving-checking"))
+  if(
+    !cmdline.isset("interleaving-project-root") &&
+    !cmdline.isset("interleaving-source-files"))
+  {
     return {};
+  }
+
+  if(!cmdline.isset("interleaving-source-files"))
+  {
+    log.error() << "--interleaving-source-files is required for interleaving "
+                   "analysis"
+                << messaget::eom;
+    return {};
+  }
 
   interleaving_configt config;
-  const std::string function_list = cmdline.get_value("interleaving-checking");
-  config.function_names = split_interleaving_names(function_list);
+  if(cmdline.isset("interleaving-project-root"))
+  {
+    config.project_root_path =
+      normalize_input_path(cmdline.get_value("interleaving-project-root"));
+  }
+
+  if(cmdline.isset("interleaving-source-files"))
+  {
+    for(const auto &source_file :
+        split_csv_values(cmdline.get_value("interleaving-source-files")))
+    {
+      config.interleaving_source_files.push_back(
+        normalize_input_path(source_file));
+    }
+  }
 
   if(cmdline.isset("interleaving-output"))
     config.json_output_path = cmdline.get_value("interleaving-output");
@@ -2003,8 +2036,10 @@ void goto_instrument_parse_optionst::help()
     " the body of {ucaller}\n"
     " {y--check-call-sequence} {useq} \t instruments checks to assert that all"
     " call sequences match {useq}\n"
-    " {y--interleaving-checking} {uf1,f2} \t analyze interleaving functions and"
-    " emit metadata JSON\n"
+    " {y--interleaving-project-root} {udir} \t restrict project-mode metadata "
+    "to recursive .c files under {udir}\n"
+    " {y--interleaving-source-files} {uf1.c,f2.c} \t source files defining "
+    "interleaving functions\n"
     " {y--interleaving-output} {ufile} \t write interleaving metadata to {ufile}"
     " (default: interleaving_adding.json)\n"
     " {y--undefined-function-is-assume-false} \t convert each call to an"

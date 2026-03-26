@@ -1,12 +1,12 @@
 [
   {
     "name": "isr1",
-    "write_var": ["enable_irq_1", "x"],
-    "line_added_block": [32, 35, 50]
+    "write_global_var": ["enable_irq_1", "x"],
+    "line_added_block_with_file": [{ "file": "harness.c", "line": [10] }, { "file": "task_define/task.c", "line": [5, 9] }]
   },
   {
     "name": "isr2",
-    "write_var": ["enable_irq_2", "x"],
-    "line_added_block": [32, 35, 50]
+    "write_global_var": ["enable_irq_2", "x"],
+    "line_added_block_with_file": [{ "file": "harness.c", "line": [10] }, { "file": "task_define/task.c", "line": [5, 9] }]
   }
 ]
