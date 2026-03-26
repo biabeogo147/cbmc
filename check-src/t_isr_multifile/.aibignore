@@ -1,0 +1,12 @@
+# generated or derived source artifacts
+harness.i
+harness_added_ileave.i
+harness_unity.c
+
+# environment-specific project scaffolding
+Dockerfile
+docker-compose.yml
+t_isr_multifile.out
+
+# the effective manifest will be rewritten into output_root
+interleaving_harness.json

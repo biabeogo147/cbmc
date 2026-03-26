@@ -50,16 +50,28 @@ Usage:
 example:
 
 ```json
-[
-  {
-    "name": "isr1",
-    "write_global_var": ["enable_irq_1", "x"],
-    "line_added_block_with_file": [
-      { "file": "harness.c", "line": [10] },
-      { "file": "task_define/task.c", "line": [5, 9] }
+{
+  "project": {
+    "project_root": "check-src/t_isr_multifile",
+    "interleaving_source_files": ["isr_define/isr.c"],
+    "translation_units": [
+      "harness.c",
+      "harness_unity.c",
+      "isr_define/isr.c",
+      "task_define/task.c"
     ]
-  }
-]
+  },
+  "interleaving": [
+    {
+      "name": "isr1",
+      "write_global_var": ["enable_irq_1", "x"],
+      "line_added_block_with_file": [
+        { "file": "harness.c", "line": [10] },
+        { "file": "task_define/task.c", "line": [5, 9] }
+      ]
+    }
+  ]
+}
 ```
 
 The tool copies the entire project tree from `project_root` to `output_root`.
@@ -78,6 +90,57 @@ Example:
   check-src/t_isr_multifile \
   check-src/t_isr_multifile/interleaving_harness.json \
   out/t_isr_multifile_injected
+```
+
+`aib` validates that the CLI `project_root` matches `project.project_root` in
+the config.
+
+The input manifest is not modified in place. After a successful run, `aib`
+writes an effective manifest to `output_root/<config_basename>`. Downstream
+compile/check steps should use that output manifest, because it reflects the
+rewritten tree after `.aibignore` filtering.
+
+`.aibignore` is optional. If present, it must live at
+`<project_root>/.aibignore`. Matched paths are:
+- not copied to `output_root`
+- not eligible for injection
+- not used during helper scans such as prototype detection for deciding between
+  `isr()` and `isr(0)`
+
+Rules are matched against relative paths under `project_root`.
+Supported first-version syntax:
+- blank lines
+- comments starting with `#`
+- exact file paths such as `harness.i`
+- directory prefixes with a trailing slash such as `tmp_ignore/`
+
+Unsupported in this version:
+- negation rules such as `!foo.c`
+- wildcard matching such as `*.i`
+- gitignore-compatible semantics
+
+If the manifest references a file that is ignored by `.aibignore`, `aib` fails
+fast instead of silently skipping it.
+
+If the manifest references an interleaving source file that is ignored by
+`.aibignore`, `aib` also fails fast. Ignored `translation_units` are filtered
+out of the effective manifest written to `output_root`.
+
+Example `.aibignore`:
+
+```text
+# generated or derived source artifacts
+harness.i
+harness_added_ileave.i
+harness_unity.c
+
+# environment-specific project scaffolding
+Dockerfile
+docker-compose.yml
+t_isr_multifile.out
+
+# the effective manifest will be rewritten into output_root
+interleaving_harness.json
 ```
 
 `output_root` must not already exist.

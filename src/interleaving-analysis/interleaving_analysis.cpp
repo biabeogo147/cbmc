@@ -82,6 +82,20 @@ std::string relative_report_path(
   return relative_path.generic_string();
 }
 
+std::vector<std::string> relative_report_paths(
+  const std::vector<std::string> &paths,
+  const std::string &project_root_path)
+{
+  std::vector<std::string> result;
+  result.reserve(paths.size());
+
+  for(const auto &path : paths)
+    result.push_back(relative_report_path(path, project_root_path));
+
+  std::sort(result.begin(), result.end());
+  return result;
+}
+
 std::string json_escape(const std::string &value)
 {
   std::ostringstream escaped;
@@ -404,6 +418,13 @@ interleaving_resultt analyze_interleavings(
   const interleaving_configt &config)
 {
   interleaving_resultt result;
+  result.project.project_root = config.project_root_path;
+  result.project.interleaving_source_files = relative_report_paths(
+    config.interleaving_source_files, config.project_root_path);
+  result.project.translation_units = relative_report_paths(
+    collect_interleaving_project_sources(config.project_root_path),
+    config.project_root_path);
+
   const auto target_function_ids =
     resolve_target_function_ids(goto_model, message_handler, config);
   result.function_order = target_function_ids;
@@ -436,7 +457,35 @@ bool write_interleaving_report(
     return true;
   }
 
-  json_file << "[\n";
+  json_file << "{\n";
+  json_file << "  \"project\": {\n";
+  json_file << "    \"project_root\": \""
+            << json_escape(result.project.project_root) << "\",\n";
+
+  json_file << "    \"interleaving_source_files\": [";
+  bool first_interleaving_source_file = true;
+  for(const auto &source_file : result.project.interleaving_source_files)
+  {
+    if(!first_interleaving_source_file)
+      json_file << ", ";
+    json_file << "\"" << json_escape(source_file) << "\"";
+    first_interleaving_source_file = false;
+  }
+  json_file << "],\n";
+
+  json_file << "    \"translation_units\": [";
+  bool first_translation_unit = true;
+  for(const auto &translation_unit : result.project.translation_units)
+  {
+    if(!first_translation_unit)
+      json_file << ", ";
+    json_file << "\"" << json_escape(translation_unit) << "\"";
+    first_translation_unit = false;
+  }
+  json_file << "]\n";
+  json_file << "  },\n";
+
+  json_file << "  \"interleaving\": [\n";
   bool first_interleaving_function = true;
   for(const auto &function_id : result.function_order)
   {
@@ -490,7 +539,8 @@ bool write_interleaving_report(
     json_file << "]\n";
     json_file << "  }";
   }
-  json_file << "\n]\n";
+  json_file << "\n  ]\n";
+  json_file << "}\n";
   json_file.close();
 
   messaget log(message_handler);

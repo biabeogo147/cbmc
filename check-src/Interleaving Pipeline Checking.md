@@ -31,26 +31,43 @@ goto-instrument \
   check-src/t_isr_multifile/t_isr_multifile_optimized.out
 ```
 
-Project-mode JSON groups candidate insertion lines by file and excludes the
-interleaving source files themselves from insertion candidates:
+Project-mode JSON is now a manifest object with:
+- `project.project_root`
+- `project.interleaving_source_files`
+- `project.translation_units`
+- `interleaving`
+
+The `interleaving` section still groups candidate insertion lines by file and
+excludes the interleaving source files themselves from insertion candidates:
 
 ```json
-[
-  {
-    "name": "isr1",
-    "write_global_var": ["x", "flag"],
-    "line_added_block_with_file": [
-      { "file": "src/main.c", "line": [27, 36] },
-      { "file": "src/task.c", "line": [31, 44] }
+{
+  "project": {
+    "project_root": "check-src/t_isr_multifile",
+    "interleaving_source_files": ["isr_define/isr.c"],
+    "translation_units": [
+      "harness.c",
+      "harness_unity.c",
+      "isr_define/isr.c",
+      "task_define/task.c"
     ]
-  }
-]
+  },
+  "interleaving": [
+    {
+      "name": "isr1",
+      "write_global_var": ["x", "flag"],
+      "line_added_block_with_file": [
+        { "file": "src/main.c", "line": [27, 36] },
+        { "file": "src/task.c", "line": [31, 44] }
+      ]
+    }
+  ]
+}
 ```
 
 ## Project-mode injection with `aib`
 
-`aib` now consumes the grouped-by-file JSON above and rewrites a full project
-tree.
+`aib` now consumes the manifest above and rewrites a full project tree.
 
 Usage:
 
@@ -66,7 +83,15 @@ This command:
 - copies the whole `check-src/t_isr_multifile` tree to
   `check-src/t_isr_multifile_injected`
 - injects `ileave_block` only into files listed in
-  `line_added_block_with_file`
+  `interleaving[*].line_added_block_with_file`
+- validates that `project.project_root` matches the CLI `project_root`
+- if `check-src/t_isr_multifile/.aibignore` exists, excludes matched paths from
+  copy, injection, and helper scans such as interleaving call prototype
+  detection
+- writes an effective manifest to
+  `check-src/t_isr_multifile_injected/interleaving_harness.json`
+  so downstream compile/check steps can use metadata that matches the rewritten
+  tree
 
 The injected block is a sequence of nondeterministic interleaving calls placed
 immediately before each target line:
@@ -86,6 +111,52 @@ The ISR source file is copied unchanged:
 `output_root` must not already exist. `aib` fails early if that directory is
 already present.
 
+## Optional `.aibignore`
+
+`aib` looks for an optional file at `<project_root>/.aibignore`.
+
+Rules are matched relative to `project_root`.
+Supported first-version syntax:
+- blank lines
+- comment lines starting with `#`
+- exact file paths such as `harness.i`
+- directory-prefix rules with a trailing slash such as `tmp_ignore/`
+
+Ignored paths are:
+- not copied to `output_root`
+- not injected even if they appear in helper traversals
+- not opened during helper scans such as prototype detection for choosing
+  `isr()` or `isr(0)`
+
+If the manifest references a file that is ignored by `.aibignore`, `aib` fails
+fast instead of silently skipping it.
+
+If `.aibignore` excludes an interleaving source file from
+`project.interleaving_source_files`, `aib` also fails fast. Ignored
+`translation_units` are filtered out of the effective manifest in `output_root`.
+
+Example:
+
+```text
+# generated or derived source artifacts
+harness.i
+harness_added_ileave.i
+harness_unity.c
+
+# environment-specific project scaffolding
+Dockerfile
+docker-compose.yml
+t_isr_multifile.out
+
+# the effective manifest will be rewritten into output_root
+interleaving_harness.json
+```
+
+Unsupported in this version:
+- negation rules such as `!task_define/task.c`
+- wildcard rules such as `*.i`
+- full gitignore-compatible semantics
+
 ## End-to-end example
 
 ```sh
@@ -100,3 +171,57 @@ aib \
   check-src/t_isr_multifile/interleaving_harness.json \
   check-src/t_isr_multifile_injected
 ```
+
+After that, you can reuse `project.translation_units` from the same
+manifest written inside `output_root` when you manually compile the injected
+project for CBMC, instead of calling `find *.c` again.
+
+## Manual CBMC run from `translation_units`
+
+Once `aib` has produced an injected project tree, do not compile the original
+project sources again. Instead, read `project.translation_units` from the
+effective manifest in the injected `output_root`, then resolve each relative
+path under that same `output_root`.
+
+For the sample output manifest
+`check-src/t_isr_multifile_injected/interleaving_harness.json`:
+
+```json
+"translation_units": [
+  "harness.c",
+  "harness_unity.c",
+  "isr_define/isr.c",
+  "task_define/task.c"
+]
+```
+
+and `output_root = check-src/t_isr_multifile_injected`, compile these files:
+- `check-src/t_isr_multifile_injected/harness.c`
+- `check-src/t_isr_multifile_injected/harness_unity.c`
+- `check-src/t_isr_multifile_injected/isr_define/isr.c`
+- `check-src/t_isr_multifile_injected/task_define/task.c`
+
+Example:
+
+```sh
+goto-cc \
+  check-src/t_isr_multifile_injected/harness.c \
+  check-src/t_isr_multifile_injected/harness_unity.c \
+  check-src/t_isr_multifile_injected/isr_define/isr.c \
+  check-src/t_isr_multifile_injected/task_define/task.c \
+  -o check-src/t_isr_multifile_injected/t_isr_multifile_injected.out
+
+cbmc \
+  check-src/t_isr_multifile_injected/t_isr_multifile_injected.out \
+  --function main
+```
+
+Notes:
+- `translation_units` are stored relative to `project_root`
+- after `aib`, use the manifest inside `output_root`, not the original input
+  manifest
+- for manual compilation, prepend `output_root` to each entry
+- if your entry point is not `main`, replace `--function main` with the desired
+  harness or entry function
+- if the program has loops, add the unwind bound you want, for example
+  `--unwind 10`

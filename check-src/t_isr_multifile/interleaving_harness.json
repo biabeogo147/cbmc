@@ -1,4 +1,10 @@
-[
+{
+  "project": {
+    "project_root": "/tmp/cbmc/check-src/t_isr_multifile",
+    "interleaving_source_files": ["isr_define/isr.c"],
+    "translation_units": ["harness.c", "harness_unity.c", "isr_define/isr.c", "task_define/task.c"]
+  },
+  "interleaving": [
   {
     "name": "isr1",
     "write_global_var": ["enable_irq_1", "x"],
@@ -9,4 +15,5 @@
     "write_global_var": ["enable_irq_2", "x"],
     "line_added_block_with_file": [{ "file": "harness.c", "line": [10] }, { "file": "task_define/task.c", "line": [5, 9] }]
   }
-]
+  ]
+}

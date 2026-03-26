@@ -30,8 +30,16 @@ struct interleaving_function_resultt
   std::map<std::string, std::set<int>> candidate_lines_by_file;
 };
 
+struct interleaving_project_resultt
+{
+  std::string project_root;
+  std::vector<std::string> interleaving_source_files;
+  std::vector<std::string> translation_units;
+};
+
 struct interleaving_resultt
 {
+  interleaving_project_resultt project;
   std::vector<irep_idt> function_order;
   std::map<irep_idt, interleaving_function_resultt> functions;
 };

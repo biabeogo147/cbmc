@@ -1,12 +1,19 @@
-[
-  {
-    "name": "isr1",
-    "write_global_var": ["enable_irq_1", "x"],
-    "line_added_block_with_file": [{ "file": "t_isr.c", "line": [27, 31, 38] }]
+{
+  "project": {
+    "project_root": "check-src",
+    "interleaving_source_files": ["t_isr.c"],
+    "translation_units": ["t_isr.c"]
   },
-  {
-    "name": "isr2",
-    "write_global_var": ["enable_irq_2", "x"],
-    "line_added_block_with_file": [{ "file": "t_isr.c", "line": [27, 31, 38] }]
-  }
-]
+  "interleaving": [
+    {
+      "name": "isr1",
+      "write_global_var": ["enable_irq_1", "x"],
+      "line_added_block_with_file": [{ "file": "t_isr.c", "line": [27, 31, 38] }]
+    },
+    {
+      "name": "isr2",
+      "write_global_var": ["enable_irq_2", "x"],
+      "line_added_block_with_file": [{ "file": "t_isr.c", "line": [27, 31, 38] }]
+    }
+  ]
+}
