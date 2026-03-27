@@ -296,7 +296,6 @@ function_write_mapt build_function_write_map(
   for(const auto &function_id : function_ids)
   {
     auto &function_result = result.functions[function_id];
-    function_result.display_name = id2string(function_id);
 
     const auto f_it =
       goto_model.goto_functions.function_map.find(function_id);
@@ -580,14 +579,6 @@ interleaving_resultt run_interleaving_analysis(
 {
   interleaving_resultt result =
     analyze_interleavings(goto_model, message_handler, config);
-
-  if(config.mode == interleaving_modet::analysis_and_instrument)
-  {
-    messaget log(message_handler);
-    log.status() << "[interleaving] instrumentation mode is reserved for a "
-                    "future implementation; reporting candidates only"
-                 << messaget::eom;
-  }
 
   write_interleaving_report(result, config, message_handler);
   return result;

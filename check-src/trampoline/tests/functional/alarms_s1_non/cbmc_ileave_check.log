@@ -1,9 +1,10 @@
+/tmp/cbmc/cmake-build-debug-cbmc/bin/cbmc check-src/trampoline_injected/tests/functional/alarms_s1_non/alarms_s1_non_injected.out --function main --unwind 3 --unwinding-assertions
 CBMC version 6.8.0 (n/a) 64-bit x86_64 linux
-Reading GOTO program from file tests/functional/alarms_s1_non/alarms_s1_non_smoke.out
+Reading GOTO program from file check-src/trampoline_injected/tests/functional/alarms_s1_non/alarms_s1_non_injected.out
 Generating GOTO Program
 Adding CPROVER library (x86_64)
 Removal of function pointers and virtual functions
-file tests/embUnit/TestCaller.c line 46 function TestCaller_run: cast from const to non-const pointer found, only worst case function pointer removal will be done.
+file check-src/trampoline_injected/tests/embUnit/TestCaller.c line 46 function TestCaller_run: cast from const to non-const pointer found, only worst case function pointer removal will be done.
 Generic Property Instrumentation
 Starting Bounded Model Checking
 Passing problem to propositional reduction
@@ -184,7 +185,7 @@ SAT checker inconsistent: instance is UNSATISFIABLE
 [vfprintf.pointer_dereference.11] line 29 dereference failure: pointer outside object bounds in *format: SUCCESS
 [vfprintf.pointer_dereference.12] line 29 dereference failure: invalid integer address in *format: SUCCESS
 
-machines/posix/tpl_machine_posix.c function tpl_init_context
+check-src/trampoline_injected/machines/posix/tpl_machine_posix.c function tpl_init_context
 [tpl_init_context.array_bounds.1] line 152 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_init_context.array_bounds.2] line 152 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_init_context.array_bounds.5] line 152 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)proc_id]: SUCCESS
@@ -221,10 +222,10 @@ machines/posix/tpl_machine_posix.c function tpl_init_context
 [tpl_init_context.pointer_dereference.23] line 153 dereference failure: pointer outside object bounds in tpl_stat_proc_table[(signed long int)proc_id]->context: SUCCESS
 [tpl_init_context.pointer_dereference.24] line 153 dereference failure: invalid integer address in tpl_stat_proc_table[(signed long int)proc_id]->context: SUCCESS
 
-machines/posix/tpl_machine_posix.c function tpl_init_machine
+check-src/trampoline_injected/machines/posix/tpl_machine_posix.c function tpl_init_machine
 [tpl_init_machine.overflow.1] line 208 arithmetic overflow on signed + in proc_id + 1: SUCCESS
 
-machines/posix/tpl_machine_posix.c function tpl_osek_func_stub
+check-src/trampoline_injected/machines/posix/tpl_machine_posix.c function tpl_osek_func_stub
 [tpl_osek_func_stub.array_bounds.1] line 162 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_osek_func_stub.array_bounds.2] line 162 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_osek_func_stub.pointer_dereference.1] line 162 dereference failure: pointer NULL in tpl_stat_proc_table[(signed long int)task_id]->entry: SUCCESS
@@ -245,12 +246,12 @@ machines/posix/tpl_machine_posix.c function tpl_osek_func_stub
 [tpl_osek_func_stub.pointer_dereference.16] line 168 dereference failure: dead object in func: SUCCESS
 [tpl_osek_func_stub.pointer_dereference.17] line 168 dereference failure: pointer outside object bounds in func: SUCCESS
 [tpl_osek_func_stub.pointer_dereference.18] line 168 dereference failure: invalid integer address in func: SUCCESS
-[tpl_osek_func_stub.pointer_dereference.19] line 168 dereferenced function pointer must be one of [idle_function, test_t1_instance, t1_function]: SUCCESS
+[tpl_osek_func_stub.pointer_dereference.19] line 168 dereferenced function pointer must be one of [t1_function, idle_function, test_t1_instance]: SUCCESS
 
-machines/posix/tpl_machine_posix.c function tpl_release_task_lock
+check-src/trampoline_injected/machines/posix/tpl_machine_posix.c function tpl_release_task_lock
 [tpl_release_task_lock.assertion.1] line 102 assertion tpl_locking_depth > 0: SUCCESS
 
-machines/posix/tpl_machine_posix.c function tpl_switch_context
+check-src/trampoline_injected/machines/posix/tpl_machine_posix.c function tpl_switch_context
 [tpl_switch_context.pointer_dereference.1] line 121 dereference failure: pointer NULL in *new_context: SUCCESS
 [tpl_switch_context.pointer_dereference.2] line 121 dereference failure: pointer invalid in *new_context: SUCCESS
 [tpl_switch_context.pointer_dereference.3] line 121 dereference failure: deallocated dynamic object in *new_context: SUCCESS
@@ -270,7 +271,7 @@ machines/posix/tpl_machine_posix.c function tpl_switch_context
 [tpl_switch_context.pointer_dereference.17] line 125 dereference failure: pointer outside object bounds in *new_context: SUCCESS
 [tpl_switch_context.pointer_dereference.18] line 125 dereference failure: invalid integer address in *new_context: SUCCESS
 
-machines/posix/tpl_machine_posix.c function tpl_switch_context_from_it
+check-src/trampoline_injected/machines/posix/tpl_machine_posix.c function tpl_switch_context_from_it
 [tpl_switch_context_from_it.pointer_dereference.1] line 138 dereference failure: pointer NULL in *new_context: SUCCESS
 [tpl_switch_context_from_it.pointer_dereference.2] line 138 dereference failure: pointer invalid in *new_context: SUCCESS
 [tpl_switch_context_from_it.pointer_dereference.3] line 138 dereference failure: deallocated dynamic object in *new_context: SUCCESS
@@ -290,7 +291,7 @@ machines/posix/tpl_machine_posix.c function tpl_switch_context_from_it
 [tpl_switch_context_from_it.pointer_dereference.17] line 142 dereference failure: pointer outside object bounds in *new_context: SUCCESS
 [tpl_switch_context_from_it.pointer_dereference.18] line 142 dereference failure: invalid integer address in *new_context: SUCCESS
 
-machines/posix/tpl_posix_context.c function tpl_create_context
+check-src/trampoline_injected/machines/posix/tpl_posix_context.c function tpl_create_context
 [tpl_create_context.no-body.sigemptyset] line 112 no body for callee sigemptyset: FAILURE
 [tpl_create_context.no-body.sigaddset] line 113 no body for callee sigaddset: FAILURE
 [tpl_create_context.no-body.sigprocmask] line 114 no body for callee sigprocmask: FAILURE
@@ -337,7 +338,7 @@ machines/posix/tpl_posix_context.c function tpl_create_context
 [tpl_create_context.pointer_dereference.29] line 167 dereference failure: pointer outside object bounds in tpl_stat_proc_table[(signed long int)new_proc_id]->context: SUCCESS
 [tpl_create_context.pointer_dereference.30] line 167 dereference failure: invalid integer address in tpl_stat_proc_table[(signed long int)new_proc_id]->context: SUCCESS
 
-machines/posix/tpl_posix_context.c function tpl_create_context_boot
+check-src/trampoline_injected/machines/posix/tpl_posix_context.c function tpl_create_context_boot
 [tpl_create_context_boot.array_bounds.1] line 65 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)context_owner_proc_id]: SUCCESS
 [tpl_create_context_boot.array_bounds.2] line 65 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)context_owner_proc_id]: SUCCESS
 [tpl_create_context_boot.pointer_dereference.1] line 65 dereference failure: pointer NULL in tpl_stat_proc_table[(signed long int)context_owner_proc_id]->context: SUCCESS
@@ -353,7 +354,7 @@ machines/posix/tpl_posix_context.c function tpl_create_context_boot
 [tpl_create_context_boot.pointer_dereference.11] line 67 dereference failure: pointer outside object bounds in tpl_stat_proc_table[(signed long int)(1 + 0)]->context: SUCCESS
 [tpl_create_context_boot.pointer_dereference.12] line 67 dereference failure: invalid integer address in tpl_stat_proc_table[(signed long int)(1 + 0)]->context: SUCCESS
 
-machines/posix/tpl_posix_context.c function tpl_create_context_trampoline
+check-src/trampoline_injected/machines/posix/tpl_posix_context.c function tpl_create_context_trampoline
 [tpl_create_context_trampoline.array_bounds.1] line 85 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)new_proc_id]: SUCCESS
 [tpl_create_context_trampoline.array_bounds.2] line 85 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)new_proc_id]: SUCCESS
 [tpl_create_context_trampoline.pointer_dereference.1] line 85 dereference failure: pointer NULL in tpl_stat_proc_table[(signed long int)new_proc_id]->context: SUCCESS
@@ -363,7 +364,7 @@ machines/posix/tpl_posix_context.c function tpl_create_context_trampoline
 [tpl_create_context_trampoline.pointer_dereference.5] line 85 dereference failure: pointer outside object bounds in tpl_stat_proc_table[(signed long int)new_proc_id]->context: SUCCESS
 [tpl_create_context_trampoline.pointer_dereference.6] line 85 dereference failure: invalid integer address in tpl_stat_proc_table[(signed long int)new_proc_id]->context: SUCCESS
 
-machines/posix/tpl_posixvp_irq_gen.c function print_leds
+check-src/trampoline_injected/machines/posix/tpl_posixvp_irq_gen.c function print_leds
 [print_leds.precondition_instance.1] line 33 strcat src/dst overlap: SUCCESS
 [print_leds.array_bounds.1] line 36 array 'tpl_posixvp_leds' upper bound in tpl_posixvp_leds[(signed long int)led]: SUCCESS
 [print_leds.array_bounds.2] line 38 array 'tpl_posixvp_leds_on' upper bound in tpl_posixvp_leds_on[(signed long int)led]: SUCCESS
@@ -371,21 +372,21 @@ machines/posix/tpl_posixvp_irq_gen.c function print_leds
 [print_leds.precondition_instance.3] line 42 strcat src/dst overlap: SUCCESS
 [print_leds.precondition_instance.4] line 45 strcat src/dst overlap: SUCCESS
 
-machines/posix/tpl_posixvp_irq_gen.c function reset_leds
+check-src/trampoline_injected/machines/posix/tpl_posixvp_irq_gen.c function reset_leds
 [reset_leds.array_bounds.1] line 71 array 'tpl_posixvp_leds' upper bound in tpl_posixvp_leds[(signed long int)led]: SUCCESS
 
-machines/posix/tpl_posixvp_irq_gen.c function set_leds
+check-src/trampoline_injected/machines/posix/tpl_posixvp_irq_gen.c function set_leds
 [set_leds.array_bounds.1] line 56 array 'tpl_posixvp_leds' upper bound in tpl_posixvp_leds[(signed long int)led]: SUCCESS
 
-machines/posix/tpl_posixvp_irq_gen.c function switch_to_cooked
+check-src/trampoline_injected/machines/posix/tpl_posixvp_irq_gen.c function switch_to_cooked
 [switch_to_cooked.no-body.tcsetattr] line 96 no body for callee tcsetattr: FAILURE
 
-machines/posix/tpl_posixvp_irq_gen.c function switch_to_raw
+check-src/trampoline_injected/machines/posix/tpl_posixvp_irq_gen.c function switch_to_raw
 [switch_to_raw.no-body.tcgetattr] line 84 no body for callee tcgetattr: FAILURE
 [switch_to_raw.no-body.cfmakeraw] line 86 no body for callee cfmakeraw: FAILURE
 [switch_to_raw.no-body.tcsetattr] line 87 no body for callee tcsetattr: FAILURE
 
-machines/posix/tpl_posixvp_irq_gen.c function tpl_posixvp_irq_gen_init
+check-src/trampoline_injected/machines/posix/tpl_posixvp_irq_gen.c function tpl_posixvp_irq_gen_init
 [tpl_posixvp_irq_gen_init.precondition_instance.1] line 117 memset destination region writeable: SUCCESS
 [tpl_posixvp_irq_gen_init.no-body.sigaction] line 119 no body for callee sigaction: FAILURE
 [tpl_posixvp_irq_gen_init.no-body.fork] line 123 no body for callee fork: FAILURE
@@ -404,12 +405,12 @@ machines/posix/tpl_posixvp_irq_gen.c function tpl_posixvp_irq_gen_init
 [tpl_posixvp_irq_gen_init.pointer_dereference.12] line 148 dereference failure: invalid integer address in *return_value___errno_location$0: SUCCESS
 [tpl_posixvp_irq_gen_init.precondition_instance.2] line 168 memset destination region writeable: SUCCESS
 
-machines/posix/tpl_viper_interface.c function send_viper_command
+check-src/trampoline_injected/machines/posix/tpl_viper_interface.c function send_viper_command
 [send_viper_command.precondition_instance.1] line 241 memcpy src/dst overlap: SUCCESS
 [send_viper_command.precondition_instance.2] line 241 memcpy source region readable: SUCCESS
 [send_viper_command.precondition_instance.3] line 241 memcpy destination region writeable: SUCCESS
 
-machines/posix/tpl_viper_interface.c function tpl_viper_get_motor_pos
+check-src/trampoline_injected/machines/posix/tpl_viper_interface.c function tpl_viper_get_motor_pos
 [tpl_viper_get_motor_pos.array_bounds.1] line 280 array.motor_pos dynamic object upper bound in status->motor_pos[(signed long int)motor]: SUCCESS
 [tpl_viper_get_motor_pos.pointer_dereference.1] line 280 dereference failure: pointer NULL in status->motor_pos: SUCCESS
 [tpl_viper_get_motor_pos.pointer_dereference.2] line 280 dereference failure: pointer invalid in status->motor_pos: SUCCESS
@@ -418,7 +419,7 @@ machines/posix/tpl_viper_interface.c function tpl_viper_get_motor_pos
 [tpl_viper_get_motor_pos.pointer_dereference.5] line 280 dereference failure: pointer outside object bounds in status->motor_pos: SUCCESS
 [tpl_viper_get_motor_pos.pointer_dereference.6] line 280 dereference failure: invalid integer address in status->motor_pos: SUCCESS
 
-machines/posix/tpl_viper_interface.c function tpl_viper_init
+check-src/trampoline_injected/machines/posix/tpl_viper_interface.c function tpl_viper_init
 [tpl_viper_init.precondition_instance.1] line 81 strncpy src/dst overlap: SUCCESS
 [tpl_viper_init.precondition_instance.2] line 82 strcat src/dst overlap: SUCCESS
 [tpl_viper_init.precondition_instance.3] line 101 strncpy src/dst overlap: SUCCESS
@@ -438,7 +439,7 @@ machines/posix/tpl_viper_interface.c function tpl_viper_init
 [tpl_viper_init.pointer_dereference.11] line 184 dereference failure: pointer outside object bounds in ctrl->motor_csg: SUCCESS
 [tpl_viper_init.pointer_dereference.12] line 184 dereference failure: invalid integer address in ctrl->motor_csg: SUCCESS
 
-machines/posix/tpl_viper_interface.c function tpl_viper_set_motor_csg
+check-src/trampoline_injected/machines/posix/tpl_viper_interface.c function tpl_viper_set_motor_csg
 [tpl_viper_set_motor_csg.array_bounds.1] line 292 array.motor_csg dynamic object upper bound in ctrl->motor_csg[(signed long int)motor]: SUCCESS
 [tpl_viper_set_motor_csg.pointer_dereference.1] line 292 dereference failure: pointer NULL in ctrl->motor_csg: SUCCESS
 [tpl_viper_set_motor_csg.pointer_dereference.2] line 292 dereference failure: pointer invalid in ctrl->motor_csg: SUCCESS
@@ -447,7 +448,7 @@ machines/posix/tpl_viper_interface.c function tpl_viper_set_motor_csg
 [tpl_viper_set_motor_csg.pointer_dereference.5] line 292 dereference failure: pointer outside object bounds in ctrl->motor_csg: SUCCESS
 [tpl_viper_set_motor_csg.pointer_dereference.6] line 292 dereference failure: invalid integer address in ctrl->motor_csg: SUCCESS
 
-os/tpl_os_action.c function tpl_action_activate_task
+check-src/trampoline_injected/os/tpl_os_action.c function tpl_action_activate_task
 [tpl_action_activate_task.pointer_dereference.1] line 81 dereference failure: pointer NULL in ((const tpl_task_activation_action *)action)->task_id: SUCCESS
 [tpl_action_activate_task.pointer_dereference.2] line 81 dereference failure: pointer invalid in ((const tpl_task_activation_action *)action)->task_id: SUCCESS
 [tpl_action_activate_task.pointer_dereference.3] line 81 dereference failure: deallocated dynamic object in ((const tpl_task_activation_action *)action)->task_id: SUCCESS
@@ -455,7 +456,7 @@ os/tpl_os_action.c function tpl_action_activate_task
 [tpl_action_activate_task.pointer_dereference.5] line 81 dereference failure: pointer outside object bounds in ((const tpl_task_activation_action *)action)->task_id: SUCCESS
 [tpl_action_activate_task.pointer_dereference.6] line 81 dereference failure: invalid integer address in ((const tpl_task_activation_action *)action)->task_id: SUCCESS
 
-os/tpl_os_action.c function tpl_action_callback
+check-src/trampoline_injected/os/tpl_os_action.c function tpl_action_callback
 [tpl_action_callback.pointer_dereference.1] line 51 dereference failure: pointer NULL in ((const tpl_callback_action *)action)->callback: SUCCESS
 [tpl_action_callback.pointer_dereference.2] line 51 dereference failure: pointer invalid in ((const tpl_callback_action *)action)->callback: SUCCESS
 [tpl_action_callback.pointer_dereference.3] line 51 dereference failure: deallocated dynamic object in ((const tpl_callback_action *)action)->callback: SUCCESS
@@ -468,9 +469,9 @@ os/tpl_os_action.c function tpl_action_callback
 [tpl_action_callback.pointer_dereference.10] line 51 dereference failure: dead object in ((const tpl_callback_action *)action)->callback: SUCCESS
 [tpl_action_callback.pointer_dereference.11] line 51 dereference failure: pointer outside object bounds in ((const tpl_callback_action *)action)->callback: SUCCESS
 [tpl_action_callback.pointer_dereference.12] line 51 dereference failure: invalid integer address in ((const tpl_callback_action *)action)->callback: SUCCESS
-[tpl_action_callback.pointer_dereference.13] line 51 dereferenced function pointer must be one of [idle_function, test_t1_instance, t1_function]: SUCCESS
+[tpl_action_callback.pointer_dereference.13] line 51 dereferenced function pointer must be one of [t1_function, idle_function, test_t1_instance]: SUCCESS
 
-os/tpl_os_alarm_kernel.c function tpl_cancel_alarm_service
+check-src/trampoline_injected/os/tpl_os_alarm_kernel.c function tpl_cancel_alarm_service
 [tpl_cancel_alarm_service.array_bounds.1] line 398 array 'tpl_alarm_table' upper bound in tpl_alarm_table[(signed long int)alarm_id]: SUCCESS
 [tpl_cancel_alarm_service.pointer_dereference.1] line 404 dereference failure: pointer NULL in alarm->state: SUCCESS
 [tpl_cancel_alarm_service.pointer_dereference.2] line 404 dereference failure: pointer invalid in alarm->state: SUCCESS
@@ -485,7 +486,7 @@ os/tpl_os_alarm_kernel.c function tpl_cancel_alarm_service
 [tpl_cancel_alarm_service.pointer_dereference.11] line 407 dereference failure: pointer outside object bounds in alarm->state: SUCCESS
 [tpl_cancel_alarm_service.pointer_dereference.12] line 407 dereference failure: invalid integer address in alarm->state: SUCCESS
 
-os/tpl_os_alarm_kernel.c function tpl_get_alarm_base_service
+check-src/trampoline_injected/os/tpl_os_alarm_kernel.c function tpl_get_alarm_base_service
 [tpl_get_alarm_base_service.array_bounds.1] line 120 array 'tpl_alarm_table' upper bound in tpl_alarm_table[(signed long int)alarm_id]: SUCCESS
 [tpl_get_alarm_base_service.pointer_dereference.1] line 122 dereference failure: pointer NULL in info->ticksperbase: SUCCESS
 [tpl_get_alarm_base_service.pointer_dereference.2] line 122 dereference failure: pointer invalid in info->ticksperbase: SUCCESS
@@ -560,7 +561,7 @@ os/tpl_os_alarm_kernel.c function tpl_get_alarm_base_service
 [tpl_get_alarm_base_service.pointer_dereference.71] line 124 dereference failure: pointer outside object bounds in alarm->stat_part->counter->min_cycle: SUCCESS
 [tpl_get_alarm_base_service.pointer_dereference.72] line 124 dereference failure: invalid integer address in alarm->stat_part->counter->min_cycle: SUCCESS
 
-os/tpl_os_alarm_kernel.c function tpl_get_alarm_service
+check-src/trampoline_injected/os/tpl_os_alarm_kernel.c function tpl_get_alarm_service
 [tpl_get_alarm_service.array_bounds.1] line 169 array 'tpl_alarm_table' upper bound in tpl_alarm_table[(signed long int)alarm_id]: SUCCESS
 [tpl_get_alarm_service.pointer_dereference.1] line 176 dereference failure: pointer NULL in alarm->state: SUCCESS
 [tpl_get_alarm_service.pointer_dereference.2] line 176 dereference failure: pointer invalid in alarm->state: SUCCESS
@@ -611,7 +612,7 @@ os/tpl_os_alarm_kernel.c function tpl_get_alarm_service
 [tpl_get_alarm_service.pointer_dereference.47] line 185 dereference failure: pointer outside object bounds in *tick: SUCCESS
 [tpl_get_alarm_service.pointer_dereference.48] line 185 dereference failure: invalid integer address in *tick: SUCCESS
 
-os/tpl_os_alarm_kernel.c function tpl_raise_alarm
+check-src/trampoline_injected/os/tpl_os_alarm_kernel.c function tpl_raise_alarm
 [tpl_raise_alarm.pointer_dereference.1] line 77 dereference failure: pointer NULL in time_obj->stat_part: SUCCESS
 [tpl_raise_alarm.pointer_dereference.2] line 77 dereference failure: pointer invalid in time_obj->stat_part: SUCCESS
 [tpl_raise_alarm.pointer_dereference.3] line 77 dereference failure: deallocated dynamic object in time_obj->stat_part: SUCCESS
@@ -636,9 +637,9 @@ os/tpl_os_alarm_kernel.c function tpl_raise_alarm
 [tpl_raise_alarm.pointer_dereference.22] line 83 dereference failure: dead object in action_desc->action: SUCCESS
 [tpl_raise_alarm.pointer_dereference.23] line 83 dereference failure: pointer outside object bounds in action_desc->action: SUCCESS
 [tpl_raise_alarm.pointer_dereference.24] line 83 dereference failure: invalid integer address in action_desc->action: SUCCESS
-[tpl_raise_alarm.pointer_dereference.25] line 83 dereferenced function pointer must be one of [RepeatedTest_name, TestCaller_name, tpl_action_activate_task, TestSuite_countTestCases, TestSuite_name, tpl_signal_handler, quit, TestCase_countTestCases, TestCase_name, set_quit_vp, RepeatedTest_countTestCases, tpl_create_context_trampoline, tpl_raise_alarm, TestCaller_countTestCases]: SUCCESS
+[tpl_raise_alarm.pointer_dereference.25] line 83 dereferenced function pointer must be one of [RepeatedTest_countTestCases, TestCase_name, tpl_signal_handler, TestSuite_countTestCases, set_quit_vp, RepeatedTest_name, tpl_action_activate_task, quit, TestCaller_name, tpl_raise_alarm, TestSuite_name, TestCaller_countTestCases, tpl_create_context_trampoline, TestCase_countTestCases]: SUCCESS
 
-os/tpl_os_alarm_kernel.c function tpl_set_abs_alarm_service
+check-src/trampoline_injected/os/tpl_os_alarm_kernel.c function tpl_set_abs_alarm_service
 [tpl_set_abs_alarm_service.array_bounds.1] line 322 array 'tpl_alarm_table' upper bound in tpl_alarm_table[(signed long int)alarm_id]: SUCCESS
 [tpl_set_abs_alarm_service.pointer_dereference.1] line 322 dereference failure: pointer NULL in tpl_alarm_table[(signed long int)alarm_id]->stat_part: SUCCESS
 [tpl_set_abs_alarm_service.pointer_dereference.2] line 322 dereference failure: pointer invalid in tpl_alarm_table[(signed long int)alarm_id]->stat_part: SUCCESS
@@ -722,7 +723,7 @@ os/tpl_os_alarm_kernel.c function tpl_set_abs_alarm_service
 [tpl_set_abs_alarm_service.pointer_dereference.77] line 339 dereference failure: pointer outside object bounds in alarm->state: SUCCESS
 [tpl_set_abs_alarm_service.pointer_dereference.78] line 339 dereference failure: invalid integer address in alarm->state: SUCCESS
 
-os/tpl_os_alarm_kernel.c function tpl_set_rel_alarm_service
+check-src/trampoline_injected/os/tpl_os_alarm_kernel.c function tpl_set_rel_alarm_service
 [tpl_set_rel_alarm_service.array_bounds.1] line 239 array 'tpl_alarm_table' upper bound in tpl_alarm_table[(signed long int)alarm_id]: SUCCESS
 [tpl_set_rel_alarm_service.pointer_dereference.1] line 239 dereference failure: pointer NULL in tpl_alarm_table[(signed long int)alarm_id]->stat_part: SUCCESS
 [tpl_set_rel_alarm_service.pointer_dereference.2] line 239 dereference failure: pointer invalid in tpl_alarm_table[(signed long int)alarm_id]->stat_part: SUCCESS
@@ -830,7 +831,7 @@ os/tpl_os_alarm_kernel.c function tpl_set_rel_alarm_service
 [tpl_set_rel_alarm_service.pointer_dereference.101] line 262 dereference failure: pointer outside object bounds in alarm->state: SUCCESS
 [tpl_set_rel_alarm_service.pointer_dereference.102] line 262 dereference failure: invalid integer address in alarm->state: SUCCESS
 
-os/tpl_os_interrupt_kernel.c function tpl_terminate_isr2_service
+check-src/trampoline_injected/os/tpl_os_interrupt_kernel.c function tpl_terminate_isr2_service
 [tpl_terminate_isr2_service.pointer_dereference.1] line 231 dereference failure: pointer NULL in tpl_kern.running->resources: SUCCESS
 [tpl_terminate_isr2_service.pointer_dereference.2] line 231 dereference failure: pointer invalid in tpl_kern.running->resources: SUCCESS
 [tpl_terminate_isr2_service.pointer_dereference.3] line 231 dereference failure: deallocated dynamic object in tpl_kern.running->resources: SUCCESS
@@ -838,7 +839,7 @@ os/tpl_os_interrupt_kernel.c function tpl_terminate_isr2_service
 [tpl_terminate_isr2_service.pointer_dereference.5] line 231 dereference failure: pointer outside object bounds in tpl_kern.running->resources: SUCCESS
 [tpl_terminate_isr2_service.pointer_dereference.6] line 231 dereference failure: invalid integer address in tpl_kern.running->resources: SUCCESS
 
-os/tpl_os_kernel.c function tpl_activate_task
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_activate_task
 [tpl_activate_task.array_bounds.1] line 989 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_activate_task.array_bounds.2] line 989 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_activate_task.array_bounds.3] line 991 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
@@ -868,7 +869,7 @@ os/tpl_os_kernel.c function tpl_activate_task
 [tpl_activate_task.pointer_dereference.23] line 1032 dereference failure: pointer outside object bounds in task->activate_count: SUCCESS
 [tpl_activate_task.pointer_dereference.24] line 1032 dereference failure: invalid integer address in task->activate_count: SUCCESS
 
-os/tpl_os_kernel.c function tpl_block
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_block
 [tpl_block.pointer_dereference.1] line 941 dereference failure: pointer NULL in tpl_kern.running->state: SUCCESS
 [tpl_block.pointer_dereference.2] line 941 dereference failure: pointer invalid in tpl_kern.running->state: SUCCESS
 [tpl_block.pointer_dereference.3] line 941 dereference failure: deallocated dynamic object in tpl_kern.running->state: SUCCESS
@@ -876,7 +877,7 @@ os/tpl_os_kernel.c function tpl_block
 [tpl_block.pointer_dereference.5] line 941 dereference failure: pointer outside object bounds in tpl_kern.running->state: SUCCESS
 [tpl_block.pointer_dereference.6] line 941 dereference failure: invalid integer address in tpl_kern.running->state: SUCCESS
 
-os/tpl_os_kernel.c function tpl_bubble_down
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_bubble_down
 [tpl_bubble_down.pointer_dereference.1] line 338 dereference failure: pointer NULL in (heap + (signed long int)0)->key: SUCCESS
 [tpl_bubble_down.pointer_dereference.2] line 338 dereference failure: pointer invalid in (heap + (signed long int)0)->key: SUCCESS
 [tpl_bubble_down.pointer_dereference.3] line 338 dereference failure: deallocated dynamic object in (heap + (signed long int)0)->key: SUCCESS
@@ -902,7 +903,7 @@ os/tpl_os_kernel.c function tpl_bubble_down
 [tpl_bubble_down.pointer_dereference.23] line 357 dereference failure: pointer outside object bounds in heap[(signed long int)child]: SUCCESS
 [tpl_bubble_down.pointer_dereference.24] line 357 dereference failure: invalid integer address in heap[(signed long int)child]: SUCCESS
 
-os/tpl_os_kernel.c function tpl_bubble_up
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_bubble_up
 [tpl_bubble_up.pointer_dereference.1] line 316 dereference failure: pointer NULL in heap[(signed long int)index]: SUCCESS
 [tpl_bubble_up.pointer_dereference.2] line 316 dereference failure: pointer invalid in heap[(signed long int)index]: SUCCESS
 [tpl_bubble_up.pointer_dereference.3] line 316 dereference failure: deallocated dynamic object in heap[(signed long int)index]: SUCCESS
@@ -922,7 +923,7 @@ os/tpl_os_kernel.c function tpl_bubble_up
 [tpl_bubble_up.pointer_dereference.17] line 318 dereference failure: pointer outside object bounds in heap[(signed long int)father]: SUCCESS
 [tpl_bubble_up.pointer_dereference.18] line 318 dereference failure: invalid integer address in heap[(signed long int)father]: SUCCESS
 
-os/tpl_os_kernel.c function tpl_call_terminate_isr2_service
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_call_terminate_isr2_service
 [tpl_call_terminate_isr2_service.pointer_dereference.1] line 1401 dereference failure: pointer NULL in tpl_kern.running->resources: SUCCESS
 [tpl_call_terminate_isr2_service.pointer_dereference.2] line 1401 dereference failure: pointer invalid in tpl_kern.running->resources: SUCCESS
 [tpl_call_terminate_isr2_service.pointer_dereference.3] line 1401 dereference failure: deallocated dynamic object in tpl_kern.running->resources: SUCCESS
@@ -930,7 +931,7 @@ os/tpl_os_kernel.c function tpl_call_terminate_isr2_service
 [tpl_call_terminate_isr2_service.pointer_dereference.5] line 1401 dereference failure: pointer outside object bounds in tpl_kern.running->resources: SUCCESS
 [tpl_call_terminate_isr2_service.pointer_dereference.6] line 1401 dereference failure: invalid integer address in tpl_kern.running->resources: SUCCESS
 
-os/tpl_os_kernel.c function tpl_call_terminate_task_service
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_call_terminate_task_service
 [tpl_call_terminate_task_service.pointer_dereference.1] line 1359 dereference failure: pointer NULL in tpl_kern.running->resources: SUCCESS
 [tpl_call_terminate_task_service.pointer_dereference.2] line 1359 dereference failure: pointer invalid in tpl_kern.running->resources: SUCCESS
 [tpl_call_terminate_task_service.pointer_dereference.3] line 1359 dereference failure: deallocated dynamic object in tpl_kern.running->resources: SUCCESS
@@ -938,7 +939,7 @@ os/tpl_os_kernel.c function tpl_call_terminate_task_service
 [tpl_call_terminate_task_service.pointer_dereference.5] line 1359 dereference failure: pointer outside object bounds in tpl_kern.running->resources: SUCCESS
 [tpl_call_terminate_task_service.pointer_dereference.6] line 1359 dereference failure: invalid integer address in tpl_kern.running->resources: SUCCESS
 
-os/tpl_os_kernel.c function tpl_compare_entries
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_compare_entries
 [tpl_compare_entries.pointer_dereference.1] line 272 dereference failure: pointer NULL in first_entry->key: SUCCESS
 [tpl_compare_entries.pointer_dereference.2] line 272 dereference failure: pointer invalid in first_entry->key: SUCCESS
 [tpl_compare_entries.pointer_dereference.3] line 272 dereference failure: deallocated dynamic object in first_entry->key: SUCCESS
@@ -954,7 +955,7 @@ os/tpl_os_kernel.c function tpl_compare_entries
 [tpl_compare_entries.array_bounds.1] line 279 array 'tpl_tail_for_prio' upper bound in tpl_tail_for_prio[(signed long int)(first_key >> 1)]: SUCCESS
 [tpl_compare_entries.array_bounds.2] line 285 array 'tpl_tail_for_prio' upper bound in tpl_tail_for_prio[(signed long int)(second_key >> 1)]: SUCCESS
 
-os/tpl_os_kernel.c function tpl_get_internal_resource
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_get_internal_resource
 [tpl_get_internal_resource.array_bounds.1] line 578 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_get_internal_resource.array_bounds.2] line 578 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_get_internal_resource.pointer_dereference.1] line 578 dereference failure: pointer NULL in tpl_stat_proc_table[(signed long int)task_id]->internal_resource: SUCCESS
@@ -1008,7 +1009,7 @@ os/tpl_os_kernel.c function tpl_get_internal_resource
 [tpl_get_internal_resource.pointer_dereference.36] line 585 dereference failure: invalid integer address in rez->ceiling_priority: SUCCESS
 [tpl_get_internal_resource.undefined-shift.1] line 585 shift operand is negative in (signed int)rez->ceiling_priority << 1: SUCCESS
 
-os/tpl_os_kernel.c function tpl_init_os
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_init_os
 [tpl_init_os.overflow.1] line 1180 arithmetic overflow on signed shl in 1 << (signed int)app_mode: SUCCESS
 [tpl_init_os.undefined-shift.1] line 1180 shift distance is negative in 1 << (signed int)app_mode: SUCCESS
 [tpl_init_os.undefined-shift.2] line 1180 shift distance too large in 1 << (signed int)app_mode: SUCCESS
@@ -1022,7 +1023,7 @@ os/tpl_os_kernel.c function tpl_init_os
 [tpl_init_os.pointer_dereference.5] line 1279 dereference failure: pointer outside object bounds in auto_time_obj->state: SUCCESS
 [tpl_init_os.pointer_dereference.6] line 1279 dereference failure: invalid integer address in auto_time_obj->state: SUCCESS
 
-os/tpl_os_kernel.c function tpl_init_proc
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_init_proc
 [tpl_init_proc.array_bounds.1] line 1160 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_init_proc.array_bounds.2] line 1160 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_init_proc.pointer_dereference.1] line 1163 dereference failure: pointer NULL in dyn->resources: SUCCESS
@@ -1032,7 +1033,7 @@ os/tpl_os_kernel.c function tpl_init_proc
 [tpl_init_proc.pointer_dereference.5] line 1163 dereference failure: pointer outside object bounds in dyn->resources: SUCCESS
 [tpl_init_proc.pointer_dereference.6] line 1163 dereference failure: invalid integer address in dyn->resources: SUCCESS
 
-os/tpl_os_kernel.c function tpl_preempt
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_preempt
 [tpl_preempt.pointer_dereference.1] line 631 dereference failure: pointer NULL in tpl_kern.elected->state: SUCCESS
 [tpl_preempt.pointer_dereference.2] line 631 dereference failure: pointer invalid in tpl_kern.elected->state: SUCCESS
 [tpl_preempt.pointer_dereference.3] line 631 dereference failure: deallocated dynamic object in tpl_kern.elected->state: SUCCESS
@@ -1040,7 +1041,7 @@ os/tpl_os_kernel.c function tpl_preempt
 [tpl_preempt.pointer_dereference.5] line 631 dereference failure: pointer outside object bounds in tpl_kern.elected->state: SUCCESS
 [tpl_preempt.pointer_dereference.6] line 631 dereference failure: invalid integer address in tpl_kern.elected->state: SUCCESS
 
-os/tpl_os_kernel.c function tpl_put_new_proc
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_put_new_proc
 [tpl_put_new_proc.array_bounds.1] line 387 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_put_new_proc.array_bounds.2] line 387 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_put_new_proc.pointer_dereference.1] line 387 dereference failure: pointer NULL in tpl_stat_proc_table[(signed long int)proc_id]->base_priority: SUCCESS
@@ -1054,7 +1055,7 @@ os/tpl_os_kernel.c function tpl_put_new_proc
 [tpl_put_new_proc.array_bounds.3] line 392 array 'tpl_tail_for_prio' upper bound in tpl_tail_for_prio[(signed long int)prio]: SUCCESS
 [tpl_put_new_proc.array_bounds.4] line 396 array 'tpl_ready_list' upper bound in tpl_ready_list[(signed long int)index]: SUCCESS
 
-os/tpl_os_kernel.c function tpl_put_preempted_proc
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_put_preempted_proc
 [tpl_put_preempted_proc.array_bounds.1] line 422 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_put_preempted_proc.array_bounds.2] line 422 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_put_preempted_proc.pointer_dereference.1] line 422 dereference failure: pointer NULL in tpl_dyn_proc_table[(signed long int)proc_id]->priority: SUCCESS
@@ -1065,7 +1066,7 @@ os/tpl_os_kernel.c function tpl_put_preempted_proc
 [tpl_put_preempted_proc.pointer_dereference.6] line 422 dereference failure: invalid integer address in tpl_dyn_proc_table[(signed long int)proc_id]->priority: SUCCESS
 [tpl_put_preempted_proc.array_bounds.3] line 428 array 'tpl_ready_list' upper bound in tpl_ready_list[(signed long int)index]: SUCCESS
 
-os/tpl_os_kernel.c function tpl_release
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_release
 [tpl_release.array_bounds.1] line 1064 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_release.array_bounds.2] line 1064 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_release.pointer_dereference.1] line 1066 dereference failure: pointer NULL in task->state: SUCCESS
@@ -1075,7 +1076,7 @@ os/tpl_os_kernel.c function tpl_release
 [tpl_release.pointer_dereference.5] line 1066 dereference failure: pointer outside object bounds in task->state: SUCCESS
 [tpl_release.pointer_dereference.6] line 1066 dereference failure: invalid integer address in task->state: SUCCESS
 
-os/tpl_os_kernel.c function tpl_release_internal_resource
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_release_internal_resource
 [tpl_release_internal_resource.array_bounds.1] line 600 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_release_internal_resource.array_bounds.2] line 600 array 'tpl_stat_proc_table' upper bound in tpl_stat_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_release_internal_resource.pointer_dereference.1] line 600 dereference failure: pointer NULL in tpl_stat_proc_table[(signed long int)task_id]->internal_resource: SUCCESS
@@ -1111,11 +1112,11 @@ os/tpl_os_kernel.c function tpl_release_internal_resource
 [tpl_release_internal_resource.pointer_dereference.29] line 605 dereference failure: pointer outside object bounds in rez->owner_prev_priority: SUCCESS
 [tpl_release_internal_resource.pointer_dereference.30] line 605 dereference failure: invalid integer address in rez->owner_prev_priority: SUCCESS
 
-os/tpl_os_kernel.c function tpl_remove_front_proc
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_remove_front_proc
 [tpl_remove_front_proc.array_bounds.1] line 480 array 'tpl_ready_list' upper bound in tpl_ready_list[(signed long int)index]: SUCCESS
 [tpl_remove_front_proc.array_bounds.2] line 480 array 'tpl_ready_list' upper bound in tpl_ready_list[(signed long int)size]: SUCCESS
 
-os/tpl_os_kernel.c function tpl_run_elected
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_run_elected
 [tpl_run_elected.pointer_dereference.1] line 660 dereference failure: pointer NULL in tpl_kern.running->state: SUCCESS
 [tpl_run_elected.pointer_dereference.2] line 660 dereference failure: pointer invalid in tpl_kern.running->state: SUCCESS
 [tpl_run_elected.pointer_dereference.3] line 660 dereference failure: deallocated dynamic object in tpl_kern.running->state: SUCCESS
@@ -1135,7 +1136,7 @@ os/tpl_os_kernel.c function tpl_run_elected
 [tpl_run_elected.pointer_dereference.17] line 719 dereference failure: pointer outside object bounds in tpl_kern.running->state: SUCCESS
 [tpl_run_elected.pointer_dereference.18] line 719 dereference failure: invalid integer address in tpl_kern.running->state: SUCCESS
 
-os/tpl_os_kernel.c function tpl_schedule_from_running
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_schedule_from_running
 [tpl_schedule_from_running.array_bounds.1] line 821 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)tpl_kern.elected_id]: SUCCESS
 [tpl_schedule_from_running.array_bounds.2] line 821 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)tpl_kern.elected_id]: SUCCESS
 [tpl_schedule_from_running.pointer_dereference.1] line 821 dereference failure: pointer NULL in tpl_dyn_proc_table[(signed long int)tpl_kern.elected_id]->priority: SUCCESS
@@ -1145,7 +1146,7 @@ os/tpl_os_kernel.c function tpl_schedule_from_running
 [tpl_schedule_from_running.pointer_dereference.5] line 821 dereference failure: pointer outside object bounds in tpl_dyn_proc_table[(signed long int)tpl_kern.elected_id]->priority: SUCCESS
 [tpl_schedule_from_running.pointer_dereference.6] line 821 dereference failure: invalid integer address in tpl_dyn_proc_table[(signed long int)tpl_kern.elected_id]->priority: SUCCESS
 
-os/tpl_os_kernel.c function tpl_start
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_start
 [tpl_start.array_bounds.1] line 774 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)proc.id]: SUCCESS
 [tpl_start.array_bounds.2] line 774 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)proc.id]: SUCCESS
 [tpl_start.array_bounds.3] line 775 array 'tpl_stat_proc_table' lower bound in tpl_stat_proc_table[(signed long int)proc.id]: SUCCESS
@@ -1165,7 +1166,7 @@ os/tpl_os_kernel.c function tpl_start
 [tpl_start.pointer_dereference.11] line 785 dereference failure: pointer outside object bounds in tpl_dyn_proc_table[(signed long int)proc.id]->priority: SUCCESS
 [tpl_start.pointer_dereference.12] line 785 dereference failure: invalid integer address in tpl_dyn_proc_table[(signed long int)proc.id]->priority: SUCCESS
 
-os/tpl_os_kernel.c function tpl_terminate
+check-src/trampoline_injected/os/tpl_os_kernel.c function tpl_terminate
 [tpl_terminate.pointer_dereference.1] line 869 dereference failure: pointer NULL in tpl_kern.running->activate_count: SUCCESS
 [tpl_terminate.pointer_dereference.2] line 869 dereference failure: pointer invalid in tpl_kern.running->activate_count: SUCCESS
 [tpl_terminate.pointer_dereference.3] line 869 dereference failure: deallocated dynamic object in tpl_kern.running->activate_count: SUCCESS
@@ -1185,7 +1186,7 @@ os/tpl_os_kernel.c function tpl_terminate
 [tpl_terminate.pointer_dereference.17] line 897 dereference failure: pointer outside object bounds in tpl_kern.running->state: SUCCESS
 [tpl_terminate.pointer_dereference.18] line 897 dereference failure: invalid integer address in tpl_kern.running->state: SUCCESS
 
-os/tpl_os_resource_kernel.c function tpl_get_resource_service
+check-src/trampoline_injected/os/tpl_os_resource_kernel.c function tpl_get_resource_service
 [tpl_get_resource_service.array_bounds.1] line 155 array 'tpl_resource_table' upper bound in tpl_resource_table[(signed long int)res_id]: SUCCESS
 [tpl_get_resource_service.pointer_dereference.1] line 164 dereference failure: pointer NULL in res->owner: SUCCESS
 [tpl_get_resource_service.pointer_dereference.2] line 164 dereference failure: pointer invalid in res->owner: SUCCESS
@@ -1258,7 +1259,7 @@ os/tpl_os_resource_kernel.c function tpl_get_resource_service
 [tpl_get_resource_service.overflow.1] line 190 arithmetic overflow on signed shl in (signed int)res->ceiling_priority << 1: SUCCESS
 [tpl_get_resource_service.undefined-shift.1] line 190 shift operand is negative in (signed int)res->ceiling_priority << 1: SUCCESS
 
-os/tpl_os_resource_kernel.c function tpl_release_all_resources
+check-src/trampoline_injected/os/tpl_os_resource_kernel.c function tpl_release_all_resources
 [tpl_release_all_resources.array_bounds.1] line 89 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_release_all_resources.array_bounds.2] line 89 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)proc_id]: SUCCESS
 [tpl_release_all_resources.pointer_dereference.1] line 89 dereference failure: pointer NULL in tpl_dyn_proc_table[(signed long int)proc_id]->resources: SUCCESS
@@ -1286,7 +1287,7 @@ os/tpl_os_resource_kernel.c function tpl_release_all_resources
 [tpl_release_all_resources.pointer_dereference.23] line 103 dereference failure: pointer outside object bounds in res->next_res: SUCCESS
 [tpl_release_all_resources.pointer_dereference.24] line 103 dereference failure: invalid integer address in res->next_res: SUCCESS
 
-os/tpl_os_resource_kernel.c function tpl_release_resource_service
+check-src/trampoline_injected/os/tpl_os_resource_kernel.c function tpl_release_resource_service
 [tpl_release_resource_service.array_bounds.1] line 241 array 'tpl_resource_table' upper bound in tpl_resource_table[(signed long int)res_id]: SUCCESS
 [tpl_release_resource_service.pointer_dereference.1] line 248 dereference failure: pointer NULL in ((tpl_kern_state)tpl_kern).s_running->base_priority: SUCCESS
 [tpl_release_resource_service.pointer_dereference.2] line 248 dereference failure: pointer invalid in ((tpl_kern_state)tpl_kern).s_running->base_priority: SUCCESS
@@ -1343,7 +1344,7 @@ os/tpl_os_resource_kernel.c function tpl_release_resource_service
 [tpl_release_resource_service.pointer_dereference.53] line 272 dereference failure: pointer outside object bounds in res->owner: SUCCESS
 [tpl_release_resource_service.pointer_dereference.54] line 272 dereference failure: invalid integer address in res->owner: SUCCESS
 
-os/tpl_os_task_kernel.c function tpl_chain_task_service
+check-src/trampoline_injected/os/tpl_os_task_kernel.c function tpl_chain_task_service
 [tpl_chain_task_service.pointer_dereference.1] line 174 dereference failure: pointer NULL in tpl_kern.running->resources: SUCCESS
 [tpl_chain_task_service.pointer_dereference.2] line 174 dereference failure: pointer invalid in tpl_kern.running->resources: SUCCESS
 [tpl_chain_task_service.pointer_dereference.3] line 174 dereference failure: deallocated dynamic object in tpl_kern.running->resources: SUCCESS
@@ -1363,7 +1364,7 @@ os/tpl_os_task_kernel.c function tpl_chain_task_service
 [tpl_chain_task_service.pointer_dereference.17] line 225 dereference failure: pointer outside object bounds in tpl_kern.running->activate_count: SUCCESS
 [tpl_chain_task_service.pointer_dereference.18] line 225 dereference failure: invalid integer address in tpl_kern.running->activate_count: SUCCESS
 
-os/tpl_os_task_kernel.c function tpl_get_task_id_service
+check-src/trampoline_injected/os/tpl_os_task_kernel.c function tpl_get_task_id_service
 [tpl_get_task_id_service.pointer_dereference.1] line 318 dereference failure: pointer NULL in *task_id: SUCCESS
 [tpl_get_task_id_service.pointer_dereference.2] line 318 dereference failure: pointer invalid in *task_id: SUCCESS
 [tpl_get_task_id_service.pointer_dereference.3] line 318 dereference failure: deallocated dynamic object in *task_id: SUCCESS
@@ -1377,7 +1378,7 @@ os/tpl_os_task_kernel.c function tpl_get_task_id_service
 [tpl_get_task_id_service.pointer_dereference.11] line 322 dereference failure: pointer outside object bounds in *task_id: SUCCESS
 [tpl_get_task_id_service.pointer_dereference.12] line 322 dereference failure: invalid integer address in *task_id: SUCCESS
 
-os/tpl_os_task_kernel.c function tpl_get_task_state_service
+check-src/trampoline_injected/os/tpl_os_task_kernel.c function tpl_get_task_state_service
 [tpl_get_task_state_service.array_bounds.1] line 367 array 'tpl_dyn_proc_table' lower bound in tpl_dyn_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_get_task_state_service.array_bounds.2] line 367 array 'tpl_dyn_proc_table' upper bound in tpl_dyn_proc_table[(signed long int)task_id]: SUCCESS
 [tpl_get_task_state_service.pointer_dereference.1] line 367 dereference failure: pointer NULL in *state: SUCCESS
@@ -1393,7 +1394,7 @@ os/tpl_os_task_kernel.c function tpl_get_task_state_service
 [tpl_get_task_state_service.pointer_dereference.11] line 367 dereference failure: pointer outside object bounds in tpl_dyn_proc_table[(signed long int)task_id]->state: SUCCESS
 [tpl_get_task_state_service.pointer_dereference.12] line 367 dereference failure: invalid integer address in tpl_dyn_proc_table[(signed long int)task_id]->state: SUCCESS
 
-os/tpl_os_task_kernel.c function tpl_schedule_service
+check-src/trampoline_injected/os/tpl_os_task_kernel.c function tpl_schedule_service
 [tpl_schedule_service.pointer_dereference.1] line 256 dereference failure: pointer NULL in tpl_kern.running->resources: SUCCESS
 [tpl_schedule_service.pointer_dereference.2] line 256 dereference failure: pointer invalid in tpl_kern.running->resources: SUCCESS
 [tpl_schedule_service.pointer_dereference.3] line 256 dereference failure: deallocated dynamic object in tpl_kern.running->resources: SUCCESS
@@ -1401,7 +1402,7 @@ os/tpl_os_task_kernel.c function tpl_schedule_service
 [tpl_schedule_service.pointer_dereference.5] line 256 dereference failure: pointer outside object bounds in tpl_kern.running->resources: SUCCESS
 [tpl_schedule_service.pointer_dereference.6] line 256 dereference failure: invalid integer address in tpl_kern.running->resources: SUCCESS
 
-os/tpl_os_task_kernel.c function tpl_terminate_task_service
+check-src/trampoline_injected/os/tpl_os_task_kernel.c function tpl_terminate_task_service
 [tpl_terminate_task_service.pointer_dereference.1] line 123 dereference failure: pointer NULL in tpl_kern.running->resources: SUCCESS
 [tpl_terminate_task_service.pointer_dereference.2] line 123 dereference failure: pointer invalid in tpl_kern.running->resources: SUCCESS
 [tpl_terminate_task_service.pointer_dereference.3] line 123 dereference failure: deallocated dynamic object in tpl_kern.running->resources: SUCCESS
@@ -1415,7 +1416,7 @@ os/tpl_os_task_kernel.c function tpl_terminate_task_service
 [tpl_terminate_task_service.pointer_dereference.11] line 131 dereference failure: pointer outside object bounds in tpl_kern.running->activate_count: SUCCESS
 [tpl_terminate_task_service.pointer_dereference.12] line 131 dereference failure: invalid integer address in tpl_kern.running->activate_count: SUCCESS
 
-os/tpl_os_timeobj_kernel.c function tpl_counter_tick
+check-src/trampoline_injected/os/tpl_os_timeobj_kernel.c function tpl_counter_tick
 [tpl_counter_tick.pointer_dereference.1] line 339 dereference failure: pointer NULL in counter->current_tick: SUCCESS
 [tpl_counter_tick.pointer_dereference.2] line 339 dereference failure: pointer invalid in counter->current_tick: SUCCESS
 [tpl_counter_tick.pointer_dereference.3] line 339 dereference failure: deallocated dynamic object in counter->current_tick: SUCCESS
@@ -1494,7 +1495,7 @@ os/tpl_os_timeobj_kernel.c function tpl_counter_tick
 [tpl_counter_tick.pointer_dereference.76] line 384 dereference failure: dead object in expire: SUCCESS
 [tpl_counter_tick.pointer_dereference.77] line 384 dereference failure: pointer outside object bounds in expire: SUCCESS
 [tpl_counter_tick.pointer_dereference.78] line 384 dereference failure: invalid integer address in expire: SUCCESS
-[tpl_counter_tick.pointer_dereference.79] line 384 dereferenced function pointer must be one of [RepeatedTest_name, TestCaller_name, tpl_action_activate_task, TestSuite_countTestCases, TestSuite_name, tpl_signal_handler, quit, TestCase_countTestCases, TestCase_name, set_quit_vp, RepeatedTest_countTestCases, tpl_create_context_trampoline, tpl_raise_alarm, TestCaller_countTestCases]: SUCCESS
+[tpl_counter_tick.pointer_dereference.79] line 384 dereferenced function pointer must be one of [RepeatedTest_countTestCases, TestCase_name, tpl_signal_handler, TestSuite_countTestCases, set_quit_vp, RepeatedTest_name, tpl_action_activate_task, quit, TestCaller_name, tpl_raise_alarm, TestSuite_name, TestCaller_countTestCases, tpl_create_context_trampoline, TestCase_countTestCases]: SUCCESS
 [tpl_counter_tick.pointer_dereference.80] line 387 dereference failure: pointer NULL in t_obj->cycle: SUCCESS
 [tpl_counter_tick.pointer_dereference.81] line 387 dereference failure: pointer invalid in t_obj->cycle: SUCCESS
 [tpl_counter_tick.pointer_dereference.82] line 387 dereference failure: deallocated dynamic object in t_obj->cycle: SUCCESS
@@ -1526,7 +1527,7 @@ os/tpl_os_timeobj_kernel.c function tpl_counter_tick
 [tpl_counter_tick.pointer_dereference.108] line 405 dereference failure: pointer outside object bounds in t_obj->state: SUCCESS
 [tpl_counter_tick.pointer_dereference.109] line 405 dereference failure: invalid integer address in t_obj->state: SUCCESS
 
-os/tpl_os_timeobj_kernel.c function tpl_insert_time_obj
+check-src/trampoline_injected/os/tpl_os_timeobj_kernel.c function tpl_insert_time_obj
 [tpl_insert_time_obj.pointer_dereference.1] line 69 dereference failure: pointer NULL in time_obj->stat_part: SUCCESS
 [tpl_insert_time_obj.pointer_dereference.2] line 69 dereference failure: pointer invalid in time_obj->stat_part: SUCCESS
 [tpl_insert_time_obj.pointer_dereference.3] line 69 dereference failure: deallocated dynamic object in time_obj->stat_part: SUCCESS
@@ -1696,7 +1697,7 @@ os/tpl_os_timeobj_kernel.c function tpl_insert_time_obj
 [tpl_insert_time_obj.pointer_dereference.167] line 133 dereference failure: pointer outside object bounds in counter->next_to: SUCCESS
 [tpl_insert_time_obj.pointer_dereference.168] line 133 dereference failure: invalid integer address in counter->next_to: SUCCESS
 
-os/tpl_os_timeobj_kernel.c function tpl_remove_time_obj
+check-src/trampoline_injected/os/tpl_os_timeobj_kernel.c function tpl_remove_time_obj
 [tpl_remove_time_obj.pointer_dereference.1] line 148 dereference failure: pointer NULL in time_obj->stat_part: SUCCESS
 [tpl_remove_time_obj.pointer_dereference.2] line 148 dereference failure: pointer invalid in time_obj->stat_part: SUCCESS
 [tpl_remove_time_obj.pointer_dereference.3] line 148 dereference failure: deallocated dynamic object in time_obj->stat_part: SUCCESS
@@ -1782,7 +1783,7 @@ os/tpl_os_timeobj_kernel.c function tpl_remove_time_obj
 [tpl_remove_time_obj.pointer_dereference.83] line 177 dereference failure: pointer outside object bounds in counter->first_to: SUCCESS
 [tpl_remove_time_obj.pointer_dereference.84] line 177 dereference failure: invalid integer address in counter->first_to: SUCCESS
 
-os/tpl_os_timeobj_kernel.c function tpl_remove_timeobj_set
+check-src/trampoline_injected/os/tpl_os_timeobj_kernel.c function tpl_remove_timeobj_set
 [tpl_remove_timeobj_set.pointer_dereference.1] line 189 dereference failure: pointer NULL in counter->next_to: SUCCESS
 [tpl_remove_timeobj_set.pointer_dereference.2] line 189 dereference failure: pointer invalid in counter->next_to: SUCCESS
 [tpl_remove_timeobj_set.pointer_dereference.3] line 189 dereference failure: deallocated dynamic object in counter->next_to: SUCCESS
@@ -1868,13 +1869,13 @@ os/tpl_os_timeobj_kernel.c function tpl_remove_timeobj_set
 [tpl_remove_timeobj_set.pointer_dereference.83] line 287 dereference failure: pointer outside object bounds in last_to->next_to: SUCCESS
 [tpl_remove_timeobj_set.pointer_dereference.84] line 287 dereference failure: invalid integer address in last_to->next_to: SUCCESS
 
-tests/embUnit/AssertImpl.c function assertImplementationCStr
+check-src/trampoline_injected/tests/embUnit/AssertImpl.c function assertImplementationCStr
 [assertImplementationCStr.overflow.1] line 82 arithmetic overflow on signed - in ((64 - 11) - 1) / 2 - al: SUCCESS
 [assertImplementationCStr.overflow.2] line 82 arithmetic overflow on signed + in ((64 - 11) - 1) / 2 + (((64 - 11) - 1) / 2 - al): SUCCESS
 [assertImplementationCStr.overflow.3] line 88 arithmetic overflow on signed - in ((64 - 11) - 1) / 2 - el: SUCCESS
 [assertImplementationCStr.overflow.4] line 88 arithmetic overflow on signed + in ((64 - 11) - 1) / 2 + (((64 - 11) - 1) / 2 - el): SUCCESS
 
-tests/embUnit/RepeatedTest.c function RepeatedTest_countTestCases
+check-src/trampoline_injected/tests/embUnit/RepeatedTest.c function RepeatedTest_countTestCases
 [RepeatedTest_countTestCases.overflow.1] line 54 arithmetic overflow on signed * in return_value * self->timesRepeat: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.1] line 54 dereference failure: pointer NULL in self->test: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.2] line 54 dereference failure: pointer invalid in self->test: SUCCESS
@@ -1900,7 +1901,7 @@ tests/embUnit/RepeatedTest.c function RepeatedTest_countTestCases
 [RepeatedTest_countTestCases.pointer_dereference.22] line 54 dereference failure: dead object in ((Test *)self->test)->isa->countTestCases: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.23] line 54 dereference failure: pointer outside object bounds in ((Test *)self->test)->isa->countTestCases: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.24] line 54 dereference failure: invalid integer address in ((Test *)self->test)->isa->countTestCases: SUCCESS
-[RepeatedTest_countTestCases.pointer_dereference.25] line 54 dereferenced function pointer must be one of [TestCaller_name, RepeatedTest_name, TestCaller_countTestCases, RepeatedTest_countTestCases, TestCase_name, TestCase_countTestCases, TestSuite_name, TestSuite_countTestCases]: SUCCESS
+[RepeatedTest_countTestCases.pointer_dereference.25] line 54 dereferenced function pointer must be one of [TestCaller_name, TestCase_countTestCases, TestCaller_countTestCases, TestSuite_name, RepeatedTest_name, TestCase_name, RepeatedTest_countTestCases, TestSuite_countTestCases]: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.26] line 54 dereference failure: pointer NULL in self->test: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.27] line 54 dereference failure: pointer invalid in self->test: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.28] line 54 dereference failure: deallocated dynamic object in self->test: SUCCESS
@@ -1956,7 +1957,7 @@ tests/embUnit/RepeatedTest.c function RepeatedTest_countTestCases
 [RepeatedTest_countTestCases.pointer_dereference.78] line 54 dereference failure: pointer outside object bounds in self->timesRepeat: SUCCESS
 [RepeatedTest_countTestCases.pointer_dereference.79] line 54 dereference failure: invalid integer address in self->timesRepeat: SUCCESS
 
-tests/embUnit/RepeatedTest.c function RepeatedTest_name
+check-src/trampoline_injected/tests/embUnit/RepeatedTest.c function RepeatedTest_name
 [RepeatedTest_name.pointer_dereference.1] line 40 dereference failure: pointer NULL in self->test: SUCCESS
 [RepeatedTest_name.pointer_dereference.2] line 40 dereference failure: pointer invalid in self->test: SUCCESS
 [RepeatedTest_name.pointer_dereference.3] line 40 dereference failure: deallocated dynamic object in self->test: SUCCESS
@@ -1981,7 +1982,7 @@ tests/embUnit/RepeatedTest.c function RepeatedTest_name
 [RepeatedTest_name.pointer_dereference.22] line 40 dereference failure: dead object in ((Test *)self->test)->isa->name: SUCCESS
 [RepeatedTest_name.pointer_dereference.23] line 40 dereference failure: pointer outside object bounds in ((Test *)self->test)->isa->name: SUCCESS
 [RepeatedTest_name.pointer_dereference.24] line 40 dereference failure: invalid integer address in ((Test *)self->test)->isa->name: SUCCESS
-[RepeatedTest_name.pointer_dereference.25] line 40 dereferenced function pointer must be one of [TestCaller_name, RepeatedTest_name, TestCaller_countTestCases, RepeatedTest_countTestCases, TestCase_name, TestCase_countTestCases, TestSuite_name, TestSuite_countTestCases]: SUCCESS
+[RepeatedTest_name.pointer_dereference.25] line 40 dereferenced function pointer must be one of [TestCaller_name, TestCase_countTestCases, TestCaller_countTestCases, TestSuite_name, RepeatedTest_name, TestCase_name, RepeatedTest_countTestCases, TestSuite_countTestCases]: SUCCESS
 [RepeatedTest_name.pointer_dereference.26] line 40 dereference failure: pointer NULL in self->test: SUCCESS
 [RepeatedTest_name.pointer_dereference.27] line 40 dereference failure: pointer invalid in self->test: SUCCESS
 [RepeatedTest_name.pointer_dereference.28] line 40 dereference failure: deallocated dynamic object in self->test: SUCCESS
@@ -2031,7 +2032,7 @@ tests/embUnit/RepeatedTest.c function RepeatedTest_name
 [RepeatedTest_name.pointer_dereference.72] line 40 dereference failure: pointer outside object bounds in self->test: SUCCESS
 [RepeatedTest_name.pointer_dereference.73] line 40 dereference failure: invalid integer address in self->test: SUCCESS
 
-tests/embUnit/RepeatedTest.c function RepeatedTest_run
+check-src/trampoline_injected/tests/embUnit/RepeatedTest.c function RepeatedTest_run
 [RepeatedTest_run.pointer_dereference.1] line 46 dereference failure: pointer NULL in self->test: SUCCESS
 [RepeatedTest_run.pointer_dereference.2] line 46 dereference failure: pointer invalid in self->test: SUCCESS
 [RepeatedTest_run.pointer_dereference.3] line 46 dereference failure: deallocated dynamic object in self->test: SUCCESS
@@ -2063,9 +2064,9 @@ tests/embUnit/RepeatedTest.c function RepeatedTest_run
 [RepeatedTest_run.pointer_dereference.28] line 48 dereference failure: dead object in ((Test *)test)->isa->run: SUCCESS
 [RepeatedTest_run.pointer_dereference.29] line 48 dereference failure: pointer outside object bounds in ((Test *)test)->isa->run: SUCCESS
 [RepeatedTest_run.pointer_dereference.30] line 48 dereference failure: invalid integer address in ((Test *)test)->isa->run: SUCCESS
-[RepeatedTest_run.pointer_dereference.31] line 48 dereferenced function pointer must be one of [TestCase_run, RepeatedTest_run, TestRunner_startTest, TestRunner_endTest, TestSuite_run, TestCaller_run]: SUCCESS
+[RepeatedTest_run.pointer_dereference.31] line 48 dereferenced function pointer must be one of [TestCaller_run, TestRunner_startTest, RepeatedTest_run, TestRunner_endTest, TestCase_run, TestSuite_run]: SUCCESS
 
-tests/embUnit/TestCaller.c function TestCaller_countTestCases
+check-src/trampoline_injected/tests/embUnit/TestCaller.c function TestCaller_countTestCases
 [TestCaller_countTestCases.pointer_dereference.1] line 60 dereference failure: pointer NULL in self->numberOfFixtuers: SUCCESS
 [TestCaller_countTestCases.pointer_dereference.2] line 60 dereference failure: pointer invalid in self->numberOfFixtuers: SUCCESS
 [TestCaller_countTestCases.pointer_dereference.3] line 60 dereference failure: deallocated dynamic object in self->numberOfFixtuers: SUCCESS
@@ -2073,7 +2074,7 @@ tests/embUnit/TestCaller.c function TestCaller_countTestCases
 [TestCaller_countTestCases.pointer_dereference.5] line 60 dereference failure: pointer outside object bounds in self->numberOfFixtuers: SUCCESS
 [TestCaller_countTestCases.pointer_dereference.6] line 60 dereference failure: invalid integer address in self->numberOfFixtuers: SUCCESS
 
-tests/embUnit/TestCaller.c function TestCaller_name
+check-src/trampoline_injected/tests/embUnit/TestCaller.c function TestCaller_name
 [TestCaller_name.pointer_dereference.1] line 41 dereference failure: pointer NULL in self->name: SUCCESS
 [TestCaller_name.pointer_dereference.2] line 41 dereference failure: pointer invalid in self->name: SUCCESS
 [TestCaller_name.pointer_dereference.3] line 41 dereference failure: deallocated dynamic object in self->name: SUCCESS
@@ -2081,7 +2082,7 @@ tests/embUnit/TestCaller.c function TestCaller_name
 [TestCaller_name.pointer_dereference.5] line 41 dereference failure: pointer outside object bounds in self->name: SUCCESS
 [TestCaller_name.pointer_dereference.6] line 41 dereference failure: invalid integer address in self->name: SUCCESS
 
-tests/embUnit/TestCaller.c function TestCaller_run
+check-src/trampoline_injected/tests/embUnit/TestCaller.c function TestCaller_run
 [TestCaller_run.pointer_dereference.1] line 48 dereference failure: pointer NULL in self->setUp: SUCCESS
 [TestCaller_run.pointer_dereference.2] line 48 dereference failure: pointer invalid in self->setUp: SUCCESS
 [TestCaller_run.pointer_dereference.3] line 48 dereference failure: deallocated dynamic object in self->setUp: SUCCESS
@@ -2132,9 +2133,9 @@ tests/embUnit/TestCaller.c function TestCaller_run
 [TestCaller_run.pointer_dereference.47] line 54 dereference failure: dead object in ((Test *)&cs)->isa->run: SUCCESS
 [TestCaller_run.pointer_dereference.48] line 54 dereference failure: pointer outside object bounds in ((Test *)&cs)->isa->run: SUCCESS
 [TestCaller_run.pointer_dereference.49] line 54 dereference failure: invalid integer address in ((Test *)&cs)->isa->run: SUCCESS
-[TestCaller_run.pointer_dereference.50] line 54 dereferenced function pointer must be one of [TestCase_run, RepeatedTest_run, TestRunner_startTest, TestRunner_endTest, TestSuite_run, TestCaller_run]: SUCCESS
+[TestCaller_run.pointer_dereference.50] line 54 dereferenced function pointer must be one of [TestCaller_run, TestRunner_startTest, RepeatedTest_run, TestRunner_endTest, TestCase_run, TestSuite_run]: SUCCESS
 
-tests/embUnit/TestCase.c function TestCase_name
+check-src/trampoline_injected/tests/embUnit/TestCase.c function TestCase_name
 [TestCase_name.pointer_dereference.1] line 44 dereference failure: pointer NULL in self->name: SUCCESS
 [TestCase_name.pointer_dereference.2] line 44 dereference failure: pointer invalid in self->name: SUCCESS
 [TestCase_name.pointer_dereference.3] line 44 dereference failure: deallocated dynamic object in self->name: SUCCESS
@@ -2142,7 +2143,7 @@ tests/embUnit/TestCase.c function TestCase_name
 [TestCase_name.pointer_dereference.5] line 44 dereference failure: pointer outside object bounds in self->name: SUCCESS
 [TestCase_name.pointer_dereference.6] line 44 dereference failure: invalid integer address in self->name: SUCCESS
 
-tests/embUnit/TestCase.c function TestCase_run
+check-src/trampoline_injected/tests/embUnit/TestCase.c function TestCase_run
 [TestCase_run.pointer_dereference.1] line 50 dereference failure: pointer NULL in self->setUp: SUCCESS
 [TestCase_run.pointer_dereference.2] line 50 dereference failure: pointer invalid in self->setUp: SUCCESS
 [TestCase_run.pointer_dereference.3] line 50 dereference failure: deallocated dynamic object in self->setUp: SUCCESS
@@ -2155,7 +2156,7 @@ tests/embUnit/TestCase.c function TestCase_run
 [TestCase_run.pointer_dereference.10] line 51 dereference failure: dead object in self->setUp: SUCCESS
 [TestCase_run.pointer_dereference.11] line 51 dereference failure: pointer outside object bounds in self->setUp: SUCCESS
 [TestCase_run.pointer_dereference.12] line 51 dereference failure: invalid integer address in self->setUp: SUCCESS
-[TestCase_run.pointer_dereference.13] line 51 dereferenced function pointer must be one of [idle_function, test_t1_instance, t1_function]: SUCCESS
+[TestCase_run.pointer_dereference.13] line 51 dereferenced function pointer must be one of [t1_function, idle_function, test_t1_instance]: SUCCESS
 [TestCase_run.pointer_dereference.14] line 53 dereference failure: pointer NULL in self->runTest: SUCCESS
 [TestCase_run.pointer_dereference.15] line 53 dereference failure: pointer invalid in self->runTest: SUCCESS
 [TestCase_run.pointer_dereference.16] line 53 dereference failure: deallocated dynamic object in self->runTest: SUCCESS
@@ -2168,7 +2169,7 @@ tests/embUnit/TestCase.c function TestCase_run
 [TestCase_run.pointer_dereference.23] line 58 dereference failure: dead object in self->runTest: SUCCESS
 [TestCase_run.pointer_dereference.24] line 58 dereference failure: pointer outside object bounds in self->runTest: SUCCESS
 [TestCase_run.pointer_dereference.25] line 58 dereference failure: invalid integer address in self->runTest: SUCCESS
-[TestCase_run.pointer_dereference.26] line 58 dereferenced function pointer must be one of [idle_function, test_t1_instance, t1_function]: SUCCESS
+[TestCase_run.pointer_dereference.26] line 58 dereferenced function pointer must be one of [t1_function, idle_function, test_t1_instance]: SUCCESS
 [TestCase_run.pointer_dereference.27] line 62 dereference failure: pointer NULL in self->tearDown: SUCCESS
 [TestCase_run.pointer_dereference.28] line 62 dereference failure: pointer invalid in self->tearDown: SUCCESS
 [TestCase_run.pointer_dereference.29] line 62 dereference failure: deallocated dynamic object in self->tearDown: SUCCESS
@@ -2181,9 +2182,9 @@ tests/embUnit/TestCase.c function TestCase_run
 [TestCase_run.pointer_dereference.36] line 63 dereference failure: dead object in self->tearDown: SUCCESS
 [TestCase_run.pointer_dereference.37] line 63 dereference failure: pointer outside object bounds in self->tearDown: SUCCESS
 [TestCase_run.pointer_dereference.38] line 63 dereference failure: invalid integer address in self->tearDown: SUCCESS
-[TestCase_run.pointer_dereference.39] line 63 dereferenced function pointer must be one of [idle_function, test_t1_instance, t1_function]: SUCCESS
+[TestCase_run.pointer_dereference.39] line 63 dereferenced function pointer must be one of [t1_function, idle_function, test_t1_instance]: SUCCESS
 
-tests/embUnit/TestResult.c function TestResult_addFailure
+check-src/trampoline_injected/tests/embUnit/TestResult.c function TestResult_addFailure
 [TestResult_addFailure.pointer_dereference.1] line 63 dereference failure: pointer NULL in self->failureCount: SUCCESS
 [TestResult_addFailure.pointer_dereference.2] line 63 dereference failure: pointer invalid in self->failureCount: SUCCESS
 [TestResult_addFailure.pointer_dereference.3] line 63 dereference failure: deallocated dynamic object in self->failureCount: SUCCESS
@@ -2222,7 +2223,7 @@ tests/embUnit/TestResult.c function TestResult_addFailure
 [TestResult_addFailure.pointer_dereference.36] line 65 dereference failure: pointer outside object bounds in self->listener: SUCCESS
 [TestResult_addFailure.pointer_dereference.37] line 65 dereference failure: invalid integer address in self->listener: SUCCESS
 
-tests/embUnit/TestResult.c function TestResult_endTest
+check-src/trampoline_injected/tests/embUnit/TestResult.c function TestResult_endTest
 [TestResult_endTest.pointer_dereference.1] line 56 dereference failure: pointer NULL in self->listener: SUCCESS
 [TestResult_endTest.pointer_dereference.2] line 56 dereference failure: pointer invalid in self->listener: SUCCESS
 [TestResult_endTest.pointer_dereference.3] line 56 dereference failure: deallocated dynamic object in self->listener: SUCCESS
@@ -2247,7 +2248,7 @@ tests/embUnit/TestResult.c function TestResult_endTest
 [TestResult_endTest.pointer_dereference.22] line 57 dereference failure: dead object in ((TestListner *)self->listener)->isa->endTest: SUCCESS
 [TestResult_endTest.pointer_dereference.23] line 57 dereference failure: pointer outside object bounds in ((TestListner *)self->listener)->isa->endTest: SUCCESS
 [TestResult_endTest.pointer_dereference.24] line 57 dereference failure: invalid integer address in ((TestListner *)self->listener)->isa->endTest: SUCCESS
-[TestResult_endTest.pointer_dereference.25] line 57 dereferenced function pointer must be one of [TestCase_run, RepeatedTest_run, TestRunner_startTest, TestRunner_endTest, TestSuite_run, TestCaller_run]: SUCCESS
+[TestResult_endTest.pointer_dereference.25] line 57 dereferenced function pointer must be one of [TestCaller_run, TestRunner_startTest, RepeatedTest_run, TestRunner_endTest, TestCase_run, TestSuite_run]: SUCCESS
 [TestResult_endTest.pointer_dereference.26] line 57 dereference failure: pointer NULL in self->listener: SUCCESS
 [TestResult_endTest.pointer_dereference.27] line 57 dereference failure: pointer invalid in self->listener: SUCCESS
 [TestResult_endTest.pointer_dereference.28] line 57 dereference failure: deallocated dynamic object in self->listener: SUCCESS
@@ -2285,7 +2286,7 @@ tests/embUnit/TestResult.c function TestResult_endTest
 [TestResult_endTest.pointer_dereference.60] line 57 dereference failure: pointer outside object bounds in self->listener: SUCCESS
 [TestResult_endTest.pointer_dereference.61] line 57 dereference failure: invalid integer address in self->listener: SUCCESS
 
-tests/embUnit/TestResult.c function TestResult_init
+check-src/trampoline_injected/tests/embUnit/TestResult.c function TestResult_init
 [TestResult_init.pointer_dereference.1] line 41 dereference failure: pointer NULL in self->runCount: SUCCESS
 [TestResult_init.pointer_dereference.2] line 41 dereference failure: pointer invalid in self->runCount: SUCCESS
 [TestResult_init.pointer_dereference.3] line 41 dereference failure: deallocated dynamic object in self->runCount: SUCCESS
@@ -2305,7 +2306,7 @@ tests/embUnit/TestResult.c function TestResult_init
 [TestResult_init.pointer_dereference.17] line 43 dereference failure: pointer outside object bounds in self->listener: SUCCESS
 [TestResult_init.pointer_dereference.18] line 43 dereference failure: invalid integer address in self->listener: SUCCESS
 
-tests/embUnit/TestResult.c function TestResult_startTest
+check-src/trampoline_injected/tests/embUnit/TestResult.c function TestResult_startTest
 [TestResult_startTest.pointer_dereference.1] line 48 dereference failure: pointer NULL in self->runCount: SUCCESS
 [TestResult_startTest.pointer_dereference.2] line 48 dereference failure: pointer invalid in self->runCount: SUCCESS
 [TestResult_startTest.pointer_dereference.3] line 48 dereference failure: deallocated dynamic object in self->runCount: SUCCESS
@@ -2336,7 +2337,7 @@ tests/embUnit/TestResult.c function TestResult_startTest
 [TestResult_startTest.pointer_dereference.28] line 50 dereference failure: dead object in ((TestListner *)self->listener)->isa->startTest: SUCCESS
 [TestResult_startTest.pointer_dereference.29] line 50 dereference failure: pointer outside object bounds in ((TestListner *)self->listener)->isa->startTest: SUCCESS
 [TestResult_startTest.pointer_dereference.30] line 50 dereference failure: invalid integer address in ((TestListner *)self->listener)->isa->startTest: SUCCESS
-[TestResult_startTest.pointer_dereference.31] line 50 dereferenced function pointer must be one of [TestCase_run, RepeatedTest_run, TestRunner_startTest, TestRunner_endTest, TestSuite_run, TestCaller_run]: SUCCESS
+[TestResult_startTest.pointer_dereference.31] line 50 dereferenced function pointer must be one of [TestCaller_run, TestRunner_startTest, RepeatedTest_run, TestRunner_endTest, TestCase_run, TestSuite_run]: SUCCESS
 [TestResult_startTest.pointer_dereference.32] line 50 dereference failure: pointer NULL in self->listener: SUCCESS
 [TestResult_startTest.pointer_dereference.33] line 50 dereference failure: pointer invalid in self->listener: SUCCESS
 [TestResult_startTest.pointer_dereference.34] line 50 dereference failure: deallocated dynamic object in self->listener: SUCCESS
@@ -2374,7 +2375,7 @@ tests/embUnit/TestResult.c function TestResult_startTest
 [TestResult_startTest.pointer_dereference.66] line 50 dereference failure: pointer outside object bounds in self->listener: SUCCESS
 [TestResult_startTest.pointer_dereference.67] line 50 dereference failure: invalid integer address in self->listener: SUCCESS
 
-tests/embUnit/TestRunner.c function TestRunner_addFailure
+check-src/trampoline_injected/tests/embUnit/TestRunner.c function TestRunner_addFailure
 [TestRunner_addFailure.pointer_dereference.1] line 57 dereference failure: pointer NULL in ((Test *)root_)->isa: SUCCESS
 [TestRunner_addFailure.pointer_dereference.2] line 57 dereference failure: pointer invalid in ((Test *)root_)->isa: SUCCESS
 [TestRunner_addFailure.pointer_dereference.3] line 57 dereference failure: deallocated dynamic object in ((Test *)root_)->isa: SUCCESS
@@ -2393,7 +2394,7 @@ tests/embUnit/TestRunner.c function TestRunner_addFailure
 [TestRunner_addFailure.pointer_dereference.16] line 57 dereference failure: dead object in ((Test *)root_)->isa->name: SUCCESS
 [TestRunner_addFailure.pointer_dereference.17] line 57 dereference failure: pointer outside object bounds in ((Test *)root_)->isa->name: SUCCESS
 [TestRunner_addFailure.pointer_dereference.18] line 57 dereference failure: invalid integer address in ((Test *)root_)->isa->name: SUCCESS
-[TestRunner_addFailure.pointer_dereference.19] line 57 dereferenced function pointer must be one of [TestCaller_name, RepeatedTest_name, TestCaller_countTestCases, RepeatedTest_countTestCases, TestCase_name, TestCase_countTestCases, TestSuite_name, TestSuite_countTestCases]: SUCCESS
+[TestRunner_addFailure.pointer_dereference.19] line 57 dereferenced function pointer must be one of [TestCaller_name, TestCase_countTestCases, TestCaller_countTestCases, TestSuite_name, RepeatedTest_name, TestCase_name, RepeatedTest_countTestCases, TestSuite_countTestCases]: SUCCESS
 [TestRunner_addFailure.pointer_dereference.20] line 59 dereference failure: pointer NULL in ((Test *)test)->isa: SUCCESS
 [TestRunner_addFailure.pointer_dereference.21] line 59 dereference failure: pointer invalid in ((Test *)test)->isa: SUCCESS
 [TestRunner_addFailure.pointer_dereference.22] line 59 dereference failure: deallocated dynamic object in ((Test *)test)->isa: SUCCESS
@@ -2412,9 +2413,9 @@ tests/embUnit/TestRunner.c function TestRunner_addFailure
 [TestRunner_addFailure.pointer_dereference.35] line 59 dereference failure: dead object in ((Test *)test)->isa->name: SUCCESS
 [TestRunner_addFailure.pointer_dereference.36] line 59 dereference failure: pointer outside object bounds in ((Test *)test)->isa->name: SUCCESS
 [TestRunner_addFailure.pointer_dereference.37] line 59 dereference failure: invalid integer address in ((Test *)test)->isa->name: SUCCESS
-[TestRunner_addFailure.pointer_dereference.38] line 59 dereferenced function pointer must be one of [TestCaller_name, RepeatedTest_name, TestCaller_countTestCases, RepeatedTest_countTestCases, TestCase_name, TestCase_countTestCases, TestSuite_name, TestSuite_countTestCases]: SUCCESS
+[TestRunner_addFailure.pointer_dereference.38] line 59 dereferenced function pointer must be one of [TestCaller_name, TestCase_countTestCases, TestCaller_countTestCases, TestSuite_name, RepeatedTest_name, TestCase_name, RepeatedTest_countTestCases, TestSuite_countTestCases]: SUCCESS
 
-tests/embUnit/TestRunner.c function TestRunner_runTest
+check-src/trampoline_injected/tests/embUnit/TestRunner.c function TestRunner_runTest
 [TestRunner_runTest.pointer_dereference.1] line 91 dereference failure: pointer NULL in ((Test *)test)->isa: SUCCESS
 [TestRunner_runTest.pointer_dereference.2] line 91 dereference failure: pointer invalid in ((Test *)test)->isa: SUCCESS
 [TestRunner_runTest.pointer_dereference.3] line 91 dereference failure: deallocated dynamic object in ((Test *)test)->isa: SUCCESS
@@ -2433,9 +2434,9 @@ tests/embUnit/TestRunner.c function TestRunner_runTest
 [TestRunner_runTest.pointer_dereference.16] line 91 dereference failure: dead object in ((Test *)test)->isa->run: SUCCESS
 [TestRunner_runTest.pointer_dereference.17] line 91 dereference failure: pointer outside object bounds in ((Test *)test)->isa->run: SUCCESS
 [TestRunner_runTest.pointer_dereference.18] line 91 dereference failure: invalid integer address in ((Test *)test)->isa->run: SUCCESS
-[TestRunner_runTest.pointer_dereference.19] line 91 dereferenced function pointer must be one of [TestCase_run, RepeatedTest_run, TestRunner_startTest, TestRunner_endTest, TestSuite_run, TestCaller_run]: SUCCESS
+[TestRunner_runTest.pointer_dereference.19] line 91 dereferenced function pointer must be one of [TestCaller_run, TestRunner_startTest, RepeatedTest_run, TestRunner_endTest, TestCase_run, TestSuite_run]: SUCCESS
 
-tests/embUnit/TestSuite.c function TestSuite_countTestCases
+check-src/trampoline_injected/tests/embUnit/TestSuite.c function TestSuite_countTestCases
 [TestSuite_countTestCases.pointer_dereference.1] line 60 dereference failure: pointer NULL in self->tests: SUCCESS
 [TestSuite_countTestCases.pointer_dereference.2] line 60 dereference failure: pointer invalid in self->tests: SUCCESS
 [TestSuite_countTestCases.pointer_dereference.3] line 60 dereference failure: deallocated dynamic object in self->tests: SUCCESS
@@ -2480,9 +2481,9 @@ tests/embUnit/TestSuite.c function TestSuite_countTestCases
 [TestSuite_countTestCases.pointer_dereference.40] line 63 dereference failure: dead object in ((Test *)test)->isa->countTestCases: SUCCESS
 [TestSuite_countTestCases.pointer_dereference.41] line 63 dereference failure: pointer outside object bounds in ((Test *)test)->isa->countTestCases: SUCCESS
 [TestSuite_countTestCases.pointer_dereference.42] line 63 dereference failure: invalid integer address in ((Test *)test)->isa->countTestCases: SUCCESS
-[TestSuite_countTestCases.pointer_dereference.43] line 63 dereferenced function pointer must be one of [TestCaller_name, RepeatedTest_name, TestCaller_countTestCases, RepeatedTest_countTestCases, TestCase_name, TestCase_countTestCases, TestSuite_name, TestSuite_countTestCases]: SUCCESS
+[TestSuite_countTestCases.pointer_dereference.43] line 63 dereferenced function pointer must be one of [TestCaller_name, TestCase_countTestCases, TestCaller_countTestCases, TestSuite_name, RepeatedTest_name, TestCase_name, RepeatedTest_countTestCases, TestSuite_countTestCases]: SUCCESS
 
-tests/embUnit/TestSuite.c function TestSuite_name
+check-src/trampoline_injected/tests/embUnit/TestSuite.c function TestSuite_name
 [TestSuite_name.pointer_dereference.1] line 40 dereference failure: pointer NULL in self->name: SUCCESS
 [TestSuite_name.pointer_dereference.2] line 40 dereference failure: pointer invalid in self->name: SUCCESS
 [TestSuite_name.pointer_dereference.3] line 40 dereference failure: deallocated dynamic object in self->name: SUCCESS
@@ -2490,7 +2491,7 @@ tests/embUnit/TestSuite.c function TestSuite_name
 [TestSuite_name.pointer_dereference.5] line 40 dereference failure: pointer outside object bounds in self->name: SUCCESS
 [TestSuite_name.pointer_dereference.6] line 40 dereference failure: invalid integer address in self->name: SUCCESS
 
-tests/embUnit/TestSuite.c function TestSuite_run
+check-src/trampoline_injected/tests/embUnit/TestSuite.c function TestSuite_run
 [TestSuite_run.pointer_dereference.1] line 47 dereference failure: pointer NULL in self->tests: SUCCESS
 [TestSuite_run.pointer_dereference.2] line 47 dereference failure: pointer invalid in self->tests: SUCCESS
 [TestSuite_run.pointer_dereference.3] line 47 dereference failure: deallocated dynamic object in self->tests: SUCCESS
@@ -2534,9 +2535,9 @@ tests/embUnit/TestSuite.c function TestSuite_run
 [TestSuite_run.pointer_dereference.40] line 50 dereference failure: dead object in ((Test *)test)->isa->run: SUCCESS
 [TestSuite_run.pointer_dereference.41] line 50 dereference failure: pointer outside object bounds in ((Test *)test)->isa->run: SUCCESS
 [TestSuite_run.pointer_dereference.42] line 50 dereference failure: invalid integer address in ((Test *)test)->isa->run: SUCCESS
-[TestSuite_run.pointer_dereference.43] line 50 dereferenced function pointer must be one of [TestCase_run, RepeatedTest_run, TestRunner_startTest, TestRunner_endTest, TestSuite_run, TestCaller_run]: SUCCESS
+[TestSuite_run.pointer_dereference.43] line 50 dereferenced function pointer must be one of [TestCaller_run, TestRunner_startTest, RepeatedTest_run, TestRunner_endTest, TestCase_run, TestSuite_run]: SUCCESS
 
-tests/embUnit/stdImpl.c function _xtoa
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function _xtoa
 [_xtoa.array_bounds.1] line 119 string constant upper bound in "0123456789abcdef"[(signed long int)(v % (unsigned long int)r & (unsigned long int)0xF)]: SUCCESS
 [_xtoa.division-by-zero.1] line 119 division by zero in v % (unsigned long int)r: SUCCESS
 [_xtoa.pointer_dereference.1] line 119 dereference failure: dead object in *tmp_post_p: SUCCESS
@@ -2559,10 +2560,10 @@ tests/embUnit/stdImpl.c function _xtoa
 [_xtoa.pointer_dereference.17] line 130 dereference failure: pointer outside object bounds in *string: SUCCESS
 [_xtoa.pointer_dereference.18] line 130 dereference failure: invalid integer address in *string: SUCCESS
 
-tests/embUnit/stdImpl.c function stdimpl_itoa
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function stdimpl_itoa
 [stdimpl_itoa.overflow.1] line 138 arithmetic overflow on signed unary minus in -v: SUCCESS
 
-tests/embUnit/stdImpl.c function stdimpl_strcat
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function stdimpl_strcat
 [stdimpl_strcat.pointer_dereference.1] line 55 dereference failure: pointer NULL in *dst: SUCCESS
 [stdimpl_strcat.pointer_dereference.2] line 55 dereference failure: pointer invalid in *dst: SUCCESS
 [stdimpl_strcat.pointer_dereference.3] line 55 dereference failure: deallocated dynamic object in *dst: SUCCESS
@@ -2582,7 +2583,7 @@ tests/embUnit/stdImpl.c function stdimpl_strcat
 [stdimpl_strcat.pointer_dereference.17] line 61 dereference failure: pointer outside object bounds in *dst: SUCCESS
 [stdimpl_strcat.pointer_dereference.18] line 61 dereference failure: invalid integer address in *dst: SUCCESS
 
-tests/embUnit/stdImpl.c function stdimpl_strcmp
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function stdimpl_strcmp
 [stdimpl_strcmp.pointer_dereference.1] line 105 dereference failure: pointer NULL in *tmp_post_s1: SUCCESS
 [stdimpl_strcmp.pointer_dereference.2] line 105 dereference failure: pointer invalid in *tmp_post_s1: SUCCESS
 [stdimpl_strcmp.pointer_dereference.3] line 105 dereference failure: deallocated dynamic object in *tmp_post_s1: SUCCESS
@@ -2597,7 +2598,7 @@ tests/embUnit/stdImpl.c function stdimpl_strcmp
 [stdimpl_strcmp.pointer_dereference.12] line 106 dereference failure: invalid integer address in *tmp_post_s2: SUCCESS
 [stdimpl_strcmp.overflow.1] line 108 arithmetic overflow on signed - in (signed int)c1 - (signed int)c2: SUCCESS
 
-tests/embUnit/stdImpl.c function stdimpl_strcpy
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function stdimpl_strcpy
 [stdimpl_strcpy.pointer_dereference.1] line 42 dereference failure: pointer NULL in *src: SUCCESS
 [stdimpl_strcpy.pointer_dereference.2] line 42 dereference failure: pointer invalid in *src: SUCCESS
 [stdimpl_strcpy.pointer_dereference.3] line 42 dereference failure: deallocated dynamic object in *src: SUCCESS
@@ -2611,7 +2612,7 @@ tests/embUnit/stdImpl.c function stdimpl_strcpy
 [stdimpl_strcpy.pointer_dereference.11] line 43 dereference failure: pointer outside object bounds in *dst: SUCCESS
 [stdimpl_strcpy.pointer_dereference.12] line 43 dereference failure: invalid integer address in *dst: SUCCESS
 
-tests/embUnit/stdImpl.c function stdimpl_strlen
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function stdimpl_strlen
 [stdimpl_strlen.pointer_dereference.1] line 95 dereference failure: pointer NULL in *estr: SUCCESS
 [stdimpl_strlen.pointer_dereference.2] line 95 dereference failure: pointer invalid in *estr: SUCCESS
 [stdimpl_strlen.pointer_dereference.3] line 95 dereference failure: deallocated dynamic object in *estr: SUCCESS
@@ -2634,7 +2635,7 @@ tests/embUnit/stdImpl.c function stdimpl_strlen
 [stdimpl_strlen.pointer_arithmetic.11] line 98 pointer relation: pointer outside object bounds in str: SUCCESS
 [stdimpl_strlen.pointer_arithmetic.12] line 98 pointer relation: invalid integer address in str: SUCCESS
 
-tests/embUnit/stdImpl.c function stdimpl_strncat
+check-src/trampoline_injected/tests/embUnit/stdImpl.c function stdimpl_strncat
 [stdimpl_strncat.pointer_dereference.1] line 73 dereference failure: pointer NULL in *dst: SUCCESS
 [stdimpl_strncat.pointer_dereference.2] line 73 dereference failure: pointer invalid in *dst: SUCCESS
 [stdimpl_strncat.pointer_dereference.3] line 73 dereference failure: deallocated dynamic object in *dst: SUCCESS
@@ -2660,7 +2661,18 @@ tests/embUnit/stdImpl.c function stdimpl_strncat
 [stdimpl_strncat.pointer_dereference.23] line 85 dereference failure: pointer outside object bounds in *dst: SUCCESS
 [stdimpl_strncat.pointer_dereference.24] line 85 dereference failure: invalid integer address in *dst: SUCCESS
 
-tests/machines/common/commonTestConfig.c function WaitActivationOneShotAlarm
+check-src/trampoline_injected/tests/functional/alarms_s1_non/alarms_s1.c function main
+[main.assertion.1] line 59 assertion alarms_irq_guard_1 == 10: FAILURE
+[main.assertion.2] line 61 assertion alarms_irq_guard_2 == 20: FAILURE
+[main.assertion.3] line 63 assertion alarms_irq_guard_3 == 30: FAILURE
+
+check-src/trampoline_injected/tests/functional/alarms_s1_non/isr_define/isr.c function isr1
+[isr1.overflow.1] line 13 arithmetic overflow on signed + in alarms_irq_guard_1 + 1: SUCCESS
+
+check-src/trampoline_injected/tests/functional/alarms_s1_non/isr_define/isr.c function isr2
+[isr2.overflow.1] line 26 arithmetic overflow on signed unary minus in -alarms_irq_guard_2: SUCCESS
+
+check-src/trampoline_injected/tests/machines/common/commonTestConfig.c function WaitActivationOneShotAlarm
 [WaitActivationOneShotAlarm.array_bounds.1] line 100 array 'tpl_alarm_table' upper bound in tpl_alarm_table[(signed long int)Alarm]: SUCCESS
 [WaitActivationOneShotAlarm.pointer_dereference.1] line 100 dereference failure: pointer NULL in tpl_alarm_table[(signed long int)Alarm]->stat_part: SUCCESS
 [WaitActivationOneShotAlarm.pointer_dereference.2] line 100 dereference failure: pointer invalid in tpl_alarm_table[(signed long int)Alarm]->stat_part: SUCCESS
@@ -2681,5 +2693,7 @@ tests/machines/common/commonTestConfig.c function WaitActivationOneShotAlarm
 [WaitActivationOneShotAlarm.pointer_dereference.17] line 100 dereference failure: pointer outside object bounds in tpl_alarm_table[(signed long int)Alarm]->stat_part->counter->max_allowed_value: SUCCESS
 [WaitActivationOneShotAlarm.pointer_dereference.18] line 100 dereference failure: invalid integer address in tpl_alarm_table[(signed long int)Alarm]->stat_part->counter->max_allowed_value: SUCCESS
 
-** 17 of 2471 failed (5 iterations)
+** 20 of 2476 failed (5 iterations)
 VERIFICATION FAILED
+
+Process finished with exit code 10

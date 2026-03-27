@@ -787,6 +787,78 @@ std::string indentation_for(const std::string &line)
   return line.substr(0, first_non_ws);
 }
 
+std::vector<std::string> forward_declarations_for(
+  const line_to_namest &line_to_names,
+  const std::unordered_map<std::string, std::string> &name_to_suffix)
+{
+  std::set<std::string> ordered_names;
+  for(const auto &line_entry : line_to_names)
+  {
+    for(const auto &name : line_entry.second)
+      ordered_names.insert(name);
+  }
+
+  std::vector<std::string> declarations;
+  if(!ordered_names.empty())
+    declarations.push_back("extern _Bool nondet_bool(void);");
+
+  for(const auto &name : ordered_names)
+  {
+    const auto suffix_it = name_to_suffix.find(name);
+    const std::string suffix =
+      suffix_it == name_to_suffix.end() ? "()" : suffix_it->second;
+    if(suffix == "(0)")
+      declarations.push_back("void *" + name + "(void *arg);");
+    else
+      declarations.push_back("void " + name + "(void);");
+  }
+
+  return declarations;
+}
+
+std::size_t declaration_insertion_index(const std::vector<std::string> &lines)
+{
+  bool in_block_comment = false;
+  std::size_t insertion_index = 0;
+
+  for(std::size_t i = 0; i < lines.size(); ++i)
+  {
+    const std::string trimmed = trim(lines[i]);
+
+    if(in_block_comment)
+    {
+      insertion_index = i + 1;
+      if(trimmed.find("*/") != std::string::npos)
+        in_block_comment = false;
+      continue;
+    }
+
+    if(trimmed.empty())
+    {
+      insertion_index = i + 1;
+      continue;
+    }
+
+    if(starts_with(trimmed, "/*"))
+    {
+      insertion_index = i + 1;
+      if(trimmed.find("*/") == std::string::npos)
+        in_block_comment = true;
+      continue;
+    }
+
+    if(starts_with(trimmed, "//") || trimmed[0] == '#')
+    {
+      insertion_index = i + 1;
+      continue;
+    }
+
+    break;
+  }
+
+  return insertion_index;
+}
+
 bool rewrite_source_file(
   const std::filesystem::path &input_file,
   const std::filesystem::path &output_file,
@@ -825,8 +897,24 @@ bool rewrite_source_file(
     return false;
   }
 
+  const std::vector<std::string> forward_declarations =
+    forward_declarations_for(line_to_names, name_to_suffix);
+  const std::size_t insertion_index = declaration_insertion_index(lines);
+  bool declarations_written = false;
+
   for(std::size_t i = 0; i < lines.size(); ++i)
   {
+    if(!declarations_written && i == insertion_index)
+    {
+      for(const auto &declaration : forward_declarations)
+        out << declaration << '\n';
+
+      if(!forward_declarations.empty())
+        out << '\n';
+
+      declarations_written = true;
+    }
+
     const std::size_t line_number = i + 1;
     const auto it = line_to_names.find(line_number);
 
@@ -843,6 +931,15 @@ bool rewrite_source_file(
     }
 
     out << lines[i] << '\n';
+  }
+
+  if(!declarations_written)
+  {
+    for(const auto &declaration : forward_declarations)
+      out << declaration << '\n';
+
+    if(!forward_declarations.empty())
+      out << '\n';
   }
 
   return true;

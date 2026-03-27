@@ -124,6 +124,12 @@ if (nondet_bool()) isr1(0);
 if (nondet_bool()) isr2(0);
 ```
 
+For each rewritten C file, `aib` also inserts a forward-declaration block near
+the top of the file so the injected source does not depend on implicit
+declarations. In the current implementation that block contains
+`extern _Bool nondet_bool(void);` plus one declaration for each injected
+interleaving function used in that file.
+
 For the `t_isr_multifile` sample, the expected rewritten files are:
 - `check-src/t_isr_multifile_injected/harness.c`
 - `check-src/t_isr_multifile_injected/task_define/task.c`

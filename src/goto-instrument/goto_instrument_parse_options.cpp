@@ -163,14 +163,11 @@ std::optional<interleaving_configt> get_interleaving_config(
       normalize_input_path(cmdline.get_value("interleaving-project-root"));
   }
 
-  if(cmdline.isset("interleaving-source-files"))
+  for(const auto &source_file :
+      split_csv_values(cmdline.get_value("interleaving-source-files")))
   {
-    for(const auto &source_file :
-        split_csv_values(cmdline.get_value("interleaving-source-files")))
-    {
-      config.interleaving_source_files.push_back(
-        normalize_input_path(source_file));
-    }
+    config.interleaving_source_files.push_back(
+      normalize_input_path(source_file));
   }
 
   if(cmdline.isset("interleaving-output"))
@@ -2041,7 +2038,7 @@ void goto_instrument_parse_optionst::help()
     " {y--interleaving-source-files} {uf1.c,f2.c} \t source files defining "
     "interleaving functions\n"
     " {y--interleaving-output} {ufile} \t write interleaving metadata to {ufile}"
-    " (default: interleaving_adding.json)\n"
+    " (default: interleaving_manifest.json)\n"
     " {y--undefined-function-is-assume-false} \t convert each call to an"
     " undefined function to assume(false)\n"
     HELP_INSERT_FINAL_ASSERT_FALSE

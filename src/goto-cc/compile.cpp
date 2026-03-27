@@ -417,14 +417,11 @@ bool compilet::link(std::optional<symbol_tablet> &&symbol_table)
       interleaving_config.project_root_path =
         normalize_input_path(cmdline.get_value("interleaving-project-root"));
     }
-    if(cmdline.isset("interleaving-source-files"))
+    for(const auto &source_file :
+        split_csv_values(cmdline.get_value("interleaving-source-files")))
     {
-      for(const auto &source_file :
-          split_csv_values(cmdline.get_value("interleaving-source-files")))
-      {
-        interleaving_config.interleaving_source_files.push_back(
-          normalize_input_path(source_file));
-      }
+      interleaving_config.interleaving_source_files.push_back(
+        normalize_input_path(source_file));
     }
     interleaving_config.translation_units = effective_translation_units;
     if(cmdline.isset("interleaving-output"))

@@ -56,6 +56,11 @@ cbmc \
   --unwinding-assertions
 ```
 
+In the current `alarms_s1_non` sample, `main` owns three app-level globals
+(`alarms_irq_guard_1..3`) and asserts that they keep their expected values
+before `StartOS()`. Without injected interleaving, those three assertions stay
+`SUCCESS`.
+
 ## Interleaving manifest
 
 ```bash
@@ -174,3 +179,7 @@ cbmc \
   --unwind 3 \
   --unwinding-assertions
 ```
+
+With the current ISR experiment, the injected build should now expose failures
+on the three `main.assertion.*` properties for `alarms_irq_guard_1..3`, in
+addition to the existing broader Trampoline/POSIX bounded-check surface.

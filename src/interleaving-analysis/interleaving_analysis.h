@@ -9,24 +9,16 @@
 #include <string>
 #include <vector>
 
-enum class interleaving_modet
-{
-  analysis_only,
-  analysis_and_instrument
-};
-
 struct interleaving_configt
 {
   std::vector<std::string> interleaving_source_files;
   std::vector<std::string> translation_units;
   std::string project_root_path;
-  std::string json_output_path = "interleaving_adding.json";
-  interleaving_modet mode = interleaving_modet::analysis_only;
+  std::string json_output_path = "interleaving_manifest.json";
 };
 
 struct interleaving_function_resultt
 {
-  std::string display_name;
   std::set<irep_idt> written_global_variables;
   std::map<std::string, std::set<int>> candidate_lines_by_file;
 };

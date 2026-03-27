@@ -32,12 +32,25 @@
  * $URL$
  */
 
+#include <assert.h>
 #include "tpl_os.h"
 
 TestRef AlarmsTest_seq1_t1_instance(void);
 
+int alarms_irq_guard_1 = 0;
+int alarms_irq_guard_2 = 0;
+int alarms_irq_guard_3 = 0;
+
 int main(void)
 {
+	alarms_irq_guard_1 = 10;
+	alarms_irq_guard_2 = 20;
+	alarms_irq_guard_3 = 30;
+
+	assert(alarms_irq_guard_1 == 10 || alarms_irq_guard_1 == 11);
+	assert(alarms_irq_guard_2 == 20);
+	assert(alarms_irq_guard_3 == 30);
+
 	StartOS(OSDEFAULTAPPMODE);
 	return 0;
 }

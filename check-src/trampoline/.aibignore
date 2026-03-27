@@ -1,6 +1,6 @@
 how-to-check-with-cbmc.md
 
-tests/functional/alarms_s1_non/cbmc_unwind3.log
+tests/functional/alarms_s1_non/cbmc_ileave_check.log
 tests/functional/alarms_s1_non/alarms_s1_non.out
 tests/functional/alarms_s1_non/alarms_s1_non_interleaving.out
 tests/functional/alarms_s1_non/interleaving_pipeline.json

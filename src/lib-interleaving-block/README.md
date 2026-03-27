@@ -93,6 +93,13 @@ if (nondet_bool()) isr1(0);
 if (nondet_bool()) isr2(0);
 ```
 
+For rewritten C files, `aib` also inserts a small forward-declaration block near
+the top of the file so the injected calls do not rely on implicit declarations.
+That block currently includes:
+- `extern _Bool nondet_bool(void);`
+- one declaration per injected interleaving function, such as
+  `void *isr1(void *arg);`
+
 Example:
 
 ```bash

@@ -7,18 +7,18 @@
   "interleaving": [
   {
     "name": "isr1",
-    "write_global_var": ["tpl_locking_depth"],
-    "line_added_block_with_file": [{ "file": "machines/posix/tpl_machine_posix.c", "line": [88, 91, 102, 104, 107] }, { "file": "machines/posix/tpl_posix_irq.c", "line": [128, 179] }, { "file": "os/tpl_os_interrupt_kernel.c", "line": [110, 123, 137, 141, 188, 202, 206] }]
+    "write_global_var": ["alarms_irq_guard_1", "enable_irq_1"],
+    "line_added_block_with_file": [{ "file": "tests/functional/alarms_s1_non/alarms_s1.c", "line": [46, 50] }]
   },
   {
     "name": "isr2",
-    "write_global_var": ["tpl_user_task_lock"],
-    "line_added_block_with_file": [{ "file": "machines/posix/tpl_machine_posix.c", "line": [107] }, { "file": "os/tpl_os_interrupt_kernel.c", "line": [87, 105, 160, 171, 173] }]
+    "write_global_var": ["alarms_irq_guard_2", "enable_irq_2"],
+    "line_added_block_with_file": [{ "file": "tests/functional/alarms_s1_non/alarms_s1.c", "line": [47, 51] }]
   },
   {
     "name": "isr3",
-    "write_global_var": ["tpl_cpt_os_task_lock"],
-    "line_added_block_with_file": [{ "file": "machines/posix/tpl_machine_posix.c", "line": [92, 105] }, { "file": "machines/posix/tpl_posix_irq.c", "line": [129, 180] }, { "file": "os/tpl_os_interrupt_kernel.c", "line": [110] }]
+    "write_global_var": ["alarms_irq_guard_3", "enable_irq_3"],
+    "line_added_block_with_file": [{ "file": "tests/functional/alarms_s1_non/alarms_s1.c", "line": [48, 52] }]
   }
   ]
 }
