@@ -752,7 +752,10 @@ int gcc_modet::doit()
 
         if(language=="cpp-output" || language=="c++-cpp-output")
         {
+          const auto source_file_count_before = compiler.source_files.size();
           compiler.add_input_file(arg_it->arg);
+          if(compiler.source_files.size() > source_file_count_before)
+            compiler.effective_translation_units.push_back(arg_it->arg);
         }
         else if(
           language == "c" || language == "c++" ||
@@ -782,10 +785,18 @@ int gcc_modet::doit()
             return exit_code;
           }
 
+          const auto source_file_count_before = compiler.source_files.size();
           compiler.add_input_file(dest);
+          if(compiler.source_files.size() > source_file_count_before)
+            compiler.effective_translation_units.push_back(arg_it->arg);
         }
         else
+        {
+          const auto source_file_count_before = compiler.source_files.size();
           compiler.add_input_file(arg_it->arg);
+          if(compiler.source_files.size() > source_file_count_before)
+            compiler.effective_translation_units.push_back(arg_it->arg);
+        }
       }
       else if(arg_it->arg=="-x")
       {

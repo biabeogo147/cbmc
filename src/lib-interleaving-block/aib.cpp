@@ -68,6 +68,25 @@ std::string normalize_absolute_path(const std::string &path)
     .generic_string();
 }
 
+bool path_matches_or_is_within(
+  const std::string &candidate_path,
+  const std::string &root_path)
+{
+  const std::string normalized_candidate = normalize_absolute_path(candidate_path);
+  const std::string normalized_root = normalize_absolute_path(root_path);
+
+  if(normalized_candidate == normalized_root)
+    return true;
+
+  if(normalized_candidate.size() <= normalized_root.size())
+    return false;
+
+  return
+    normalized_candidate.compare(0, normalized_root.size(), normalized_root) ==
+      0 &&
+    normalized_candidate[normalized_root.size()] == '/';
+}
+
 std::string json_escape(const std::string &value)
 {
   std::ostringstream escaped;
@@ -1034,18 +1053,20 @@ bool write_effective_manifest(
 
 int main(int argc, char **argv)
 {
-  if(argc != 4)
+  if(argc != 5)
   {
-    std::cerr << "usage: aib <project_root> <config.json> <output_root>\n";
+    std::cerr
+      << "usage: aib <project_root> <input_config.json> <output_root> "
+         "<output_config.json>\n";
     return 1;
   }
 
   const std::string project_root = argv[1];
   const std::string json_file = argv[2];
   const std::string output_root = argv[3];
+  const std::string output_config_file = argv[4];
   const auto output_manifest_path =
-    std::filesystem::path(output_root).lexically_normal() /
-    std::filesystem::path(json_file).filename();
+    std::filesystem::path(output_config_file).lexically_normal();
 
   if(
     !std::filesystem::exists(project_root) ||
@@ -1053,6 +1074,17 @@ int main(int argc, char **argv)
   {
     std::cerr << "error: project root is not a directory: " << project_root
               << '\n';
+    return 1;
+  }
+
+  if(
+    !path_matches_or_is_within(output_manifest_path.string(), output_root) ||
+    normalize_absolute_path(output_manifest_path.string()) ==
+      normalize_absolute_path(output_root))
+  {
+    std::cerr << "error: output_config.json must be a file path inside "
+                 "output_root: "
+              << output_manifest_path.string() << '\n';
     return 1;
   }
 

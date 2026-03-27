@@ -41,9 +41,9 @@ Expected binary path in that setup:
 Usage:
 
 ```bash
-./cmake-build-debug-docker/bin/aib project_root config.json output_root
+./cmake-build-debug-docker/bin/aib project_root input_config.json output_root output_config.json
 # or
-./build/bin/aib project_root config.json output_root
+./build/bin/aib project_root input_config.json output_root output_config.json
 ```
 
 `aib` now expects the project-mode JSON emitted by `interleaving-analysis`, for
@@ -74,6 +74,16 @@ example:
 }
 ```
 
+In this manifest, `project.translation_units` should match the effective source
+files from the `goto-cc` command that produced the JSON. `project_root` is used
+for path relativization and candidate filtering; it does not imply recursive
+source discovery during `goto-cc`.
+
+If `project.interleaving_source_files` points to a source file that was not
+part of the current build, `goto-cc` still preserves normal compile behavior.
+In that case the emitted manifest can have an empty `interleaving` array while
+still recording the requested source-file metadata and effective build inputs.
+
 The tool copies the entire project tree from `project_root` to `output_root`.
 For files listed in `line_added_block_with_file`, it injects nondeterministic
 interleaving calls immediately before the target lines:
@@ -89,16 +99,18 @@ Example:
 ./build/bin/aib \
   check-src/t_isr_multifile \
   check-src/t_isr_multifile/interleaving_harness.json \
-  out/t_isr_multifile_injected
+  out/t_isr_multifile_injected \
+  out/t_isr_multifile_injected/interleaving_harness_injected.json
 ```
 
 `aib` validates that the CLI `project_root` matches `project.project_root` in
-the config.
+the input config.
 
 The input manifest is not modified in place. After a successful run, `aib`
-writes an effective manifest to `output_root/<config_basename>`. Downstream
-compile/check steps should use that output manifest, because it reflects the
-rewritten tree after `.aibignore` filtering.
+writes an effective manifest to the explicit `output_config.json` path you
+provided. That path must stay inside `output_root`. Downstream compile/check
+steps should use that output manifest, because it reflects the rewritten tree
+after `.aibignore` filtering.
 
 `.aibignore` is optional. If present, it must live at
 `<project_root>/.aibignore`. Matched paths are:

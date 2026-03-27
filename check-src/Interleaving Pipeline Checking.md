@@ -3,13 +3,17 @@
 ## Project-mode interleaving analysis
 
 Project mode takes:
-- a project root to collect all `*.c` files recursively
+- a project root to relativize/filter reported paths
 - a list of source files that define the interleaving functions
 
 Example:
 
 ```sh
 goto-cc \
+  check-src/t_isr_multifile/harness.c \
+  check-src/t_isr_multifile/harness_unity.c \
+  check-src/t_isr_multifile/isr_define/isr.c \
+  check-src/t_isr_multifile/task_define/task.c \
   --interleaving-project-root check-src/t_isr_multifile \
   --interleaving-source-files check-src/t_isr_multifile/isr_define/isr.c \
   --interleaving-output check-src/t_isr_multifile/interleaving_harness.json \
@@ -18,6 +22,15 @@ goto-cc \
 
 `--interleaving-source-files` is required. It is the source of truth for which
 functions are treated as interleaving functions.
+
+`goto-cc` still compiles only the source files explicitly passed on the command
+line. `--interleaving-project-root` does not recursively add `*.c` files to the
+build; it is used only to scope report paths and candidate locations.
+
+If an interleaving source file is not part of the current build inputs, the
+build still follows normal `goto-cc` behavior. In that case the emitted
+manifest may contain an empty `interleaving` array because analysis only
+observes the already-built goto model.
 
 If a goto binary already exists, the same analysis can run through
 `goto-instrument`:
@@ -36,6 +49,9 @@ Project-mode JSON is now a manifest object with:
 - `project.interleaving_source_files`
 - `project.translation_units`
 - `interleaving`
+
+`project.translation_units` reflects the effective source files from the
+current build command, not a recursive scan of `project_root`.
 
 The `interleaving` section still groups candidate insertion lines by file and
 excludes the interleaving source files themselves from insertion candidates:
@@ -75,7 +91,8 @@ Usage:
 aib \
   check-src/t_isr_multifile \
   check-src/t_isr_multifile/interleaving_harness.json \
-  check-src/t_isr_multifile_injected
+  check-src/t_isr_multifile_injected \
+  check-src/t_isr_multifile_injected/interleaving_harness_injected.json
 ```
 
 This command:
@@ -89,9 +106,15 @@ This command:
   copy, injection, and helper scans such as interleaving call prototype
   detection
 - writes an effective manifest to
-  `check-src/t_isr_multifile_injected/interleaving_harness.json`
+  `check-src/t_isr_multifile_injected/interleaving_harness_injected.json`
   so downstream compile/check steps can use metadata that matches the rewritten
   tree
+
+If the input manifest itself was stored inside the original project tree, that
+file is still copied as a normal project artifact. Downstream steps should use
+the explicit `output_config.json` path passed to `aib`, not the copied original
+manifest under its old relative path. `output_config.json` must be inside
+`output_root`.
 
 The injected block is a sequence of nondeterministic interleaving calls placed
 immediately before each target line:
@@ -161,6 +184,10 @@ Unsupported in this version:
 
 ```sh
 goto-cc \
+  check-src/t_isr_multifile/harness.c \
+  check-src/t_isr_multifile/harness_unity.c \
+  check-src/t_isr_multifile/isr_define/isr.c \
+  check-src/t_isr_multifile/task_define/task.c \
   --interleaving-project-root check-src/t_isr_multifile \
   --interleaving-source-files check-src/t_isr_multifile/isr_define/isr.c \
   --interleaving-output check-src/t_isr_multifile/interleaving_harness.json \
@@ -169,12 +196,13 @@ goto-cc \
 aib \
   check-src/t_isr_multifile \
   check-src/t_isr_multifile/interleaving_harness.json \
-  check-src/t_isr_multifile_injected
+  check-src/t_isr_multifile_injected \
+  check-src/t_isr_multifile_injected/interleaving_harness_injected.json
 ```
 
 After that, you can reuse `project.translation_units` from the same
-manifest written inside `output_root` when you manually compile the injected
-project for CBMC, instead of calling `find *.c` again.
+effective manifest you wrote into `output_root` when you manually compile the
+injected project for CBMC, instead of calling `find *.c` again.
 
 ## Manual CBMC run from `translation_units`
 
@@ -184,12 +212,11 @@ effective manifest in the injected `output_root`, then resolve each relative
 path under that same `output_root`.
 
 For the sample output manifest
-`check-src/t_isr_multifile_injected/interleaving_harness.json`:
+`check-src/t_isr_multifile_injected/interleaving_harness_injected.json`:
 
 ```json
 "translation_units": [
   "harness.c",
-  "harness_unity.c",
   "isr_define/isr.c",
   "task_define/task.c"
 ]
@@ -197,7 +224,6 @@ For the sample output manifest
 
 and `output_root = check-src/t_isr_multifile_injected`, compile these files:
 - `check-src/t_isr_multifile_injected/harness.c`
-- `check-src/t_isr_multifile_injected/harness_unity.c`
 - `check-src/t_isr_multifile_injected/isr_define/isr.c`
 - `check-src/t_isr_multifile_injected/task_define/task.c`
 
@@ -206,7 +232,6 @@ Example:
 ```sh
 goto-cc \
   check-src/t_isr_multifile_injected/harness.c \
-  check-src/t_isr_multifile_injected/harness_unity.c \
   check-src/t_isr_multifile_injected/isr_define/isr.c \
   check-src/t_isr_multifile_injected/task_define/task.c \
   -o check-src/t_isr_multifile_injected/t_isr_multifile_injected.out
@@ -219,7 +244,7 @@ cbmc \
 Notes:
 - `translation_units` are stored relative to `project_root`
 - after `aib`, use the manifest inside `output_root`, not the original input
-  manifest
+  manifest; use the exact `output_config.json` path passed to `aib`
 - for manual compilation, prepend `output_root` to each entry
 - if your entry point is not `main`, replace `--function main` with the desired
   harness or entry function

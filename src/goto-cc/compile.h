@@ -20,6 +20,7 @@ Date: June 2006
 
 #include <list>
 #include <map>
+#include <vector>
 
 class cmdlinet;
 class goto_functionst;
@@ -47,6 +48,7 @@ public:
   std::list<std::string> source_files;
   std::list<std::string> object_files;
   std::list<std::string> libraries;
+  std::vector<std::string> effective_translation_units;
 
   std::string object_file_extension;
   std::string output_file_executable;

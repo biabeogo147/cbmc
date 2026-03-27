@@ -1,6 +1,8 @@
 #ifndef TRAMPOLINE_ALARMS_S1_NON_ISR_H
 #define TRAMPOLINE_ALARMS_S1_NON_ISR_H
 
+#include <stdbool.h>
+
 #include "tpl_os_internal_types.h"
 
 extern bool enable_irq_1;

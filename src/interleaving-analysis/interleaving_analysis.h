@@ -18,6 +18,7 @@ enum class interleaving_modet
 struct interleaving_configt
 {
   std::vector<std::string> interleaving_source_files;
+  std::vector<std::string> translation_units;
   std::string project_root_path;
   std::string json_output_path = "interleaving_adding.json";
   interleaving_modet mode = interleaving_modet::analysis_only;
@@ -43,9 +44,6 @@ struct interleaving_resultt
   std::vector<irep_idt> function_order;
   std::map<irep_idt, interleaving_function_resultt> functions;
 };
-
-std::vector<std::string>
-collect_interleaving_project_sources(const std::string &project_root_path);
 
 interleaving_resultt analyze_interleavings(
   goto_modelt &goto_model,

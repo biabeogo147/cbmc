@@ -82,7 +82,6 @@ std::string normalize_input_path(const std::string &path)
 bool compilet::doit()
 {
   add_compiler_specific_defines();
-  std::set<std::string> added_input_paths;
 
   if(
     cmdline.isset("interleaving-project-root") &&
@@ -97,48 +96,8 @@ bool compilet::doit()
   // Parse command line for source and object file names
   for(const auto &arg : cmdline.args)
   {
-    if(arg != "-")
-      added_input_paths.insert(normalize_input_path(arg));
-
     if(add_input_file(arg))
       return true;
-  }
-
-  if(
-    cmdline.isset("interleaving-source-files") &&
-    cmdline.isset("interleaving-project-root"))
-  {
-    const auto project_sources = collect_interleaving_project_sources(
-      cmdline.get_value("interleaving-project-root"));
-
-    if(project_sources.empty())
-    {
-      log.error() << "no .c source files found under interleaving project root '"
-                  << cmdline.get_value("interleaving-project-root") << "'"
-                  << messaget::eom;
-      return true;
-    }
-
-    for(const auto &source_file : project_sources)
-    {
-      if(added_input_paths.insert(source_file).second && add_input_file(source_file))
-        return true;
-    }
-  }
-
-  if(cmdline.isset("interleaving-source-files"))
-  {
-    for(const auto &source_file :
-        split_csv_values(cmdline.get_value("interleaving-source-files")))
-    {
-      const std::string normalized_source_file = normalize_input_path(source_file);
-      if(
-        added_input_paths.insert(normalized_source_file).second &&
-        add_input_file(normalized_source_file))
-      {
-        return true;
-      }
-    }
   }
 
   for(const auto &library : libraries)
@@ -153,6 +112,16 @@ bool compilet::doit()
                    << messaget::eom;
   log.statistics() << "No. of object files: " << object_files.size()
                    << messaget::eom;
+
+  if(effective_translation_units.empty())
+  {
+    effective_translation_units.reserve(source_files.size());
+    for(const auto &source_file : source_files)
+      effective_translation_units.push_back(source_file);
+  }
+
+  for(auto &translation_unit : effective_translation_units)
+    translation_unit = normalize_input_path(translation_unit);
 
   // Work through the given source files
 
@@ -457,6 +426,7 @@ bool compilet::link(std::optional<symbol_tablet> &&symbol_table)
           normalize_input_path(source_file));
       }
     }
+    interleaving_config.translation_units = effective_translation_units;
     if(cmdline.isset("interleaving-output"))
       interleaving_config.json_output_path =
         cmdline.get_value("interleaving-output");

@@ -149,6 +149,39 @@ std::string function_source_file(
   return "";
 }
 
+std::vector<std::string> collect_translation_units_from_goto_model(
+  const goto_modelt &goto_model,
+  const std::string &project_root_path)
+{
+  std::set<std::string> translation_units;
+
+  for(const auto &function_entry : goto_model.goto_functions.function_map)
+  {
+    const auto &function_id = function_entry.first;
+    const auto &function = function_entry.second;
+
+    if(!function.body_available())
+      continue;
+
+    const std::string source_file =
+      function_source_file(goto_model, function_id, function);
+    if(source_file.empty() || !is_c_source_file(source_file))
+      continue;
+
+    if(
+      !project_root_path.empty() &&
+      !path_matches_or_is_within(source_file, project_root_path))
+    {
+      continue;
+    }
+
+    translation_units.insert(normalize_path(source_file));
+  }
+
+  return std::vector<std::string>(
+    translation_units.begin(), translation_units.end());
+}
+
 std::vector<irep_idt> resolve_target_function_ids(
   const goto_modelt &goto_model,
   message_handlert &message_handler,
@@ -387,31 +420,6 @@ void record_candidate_lines(
 }
 } // namespace
 
-std::vector<std::string>
-collect_interleaving_project_sources(const std::string &project_root_path)
-{
-  std::vector<std::string> source_files;
-  if(project_root_path.empty())
-    return source_files;
-
-  const auto root_path = std::filesystem::path(project_root_path);
-  if(
-    !std::filesystem::exists(root_path) ||
-    !std::filesystem::is_directory(root_path))
-  {
-    return source_files;
-  }
-
-  for(const auto &entry : std::filesystem::recursive_directory_iterator(root_path))
-  {
-    if(entry.is_regular_file() && is_c_source_file(entry.path().generic_string()))
-      source_files.push_back(normalize_path(entry.path().generic_string()));
-  }
-
-  std::sort(source_files.begin(), source_files.end());
-  return source_files;
-}
-
 interleaving_resultt analyze_interleavings(
   goto_modelt &goto_model,
   message_handlert &message_handler,
@@ -421,13 +429,29 @@ interleaving_resultt analyze_interleavings(
   result.project.project_root = config.project_root_path;
   result.project.interleaving_source_files = relative_report_paths(
     config.interleaving_source_files, config.project_root_path);
-  result.project.translation_units = relative_report_paths(
-    collect_interleaving_project_sources(config.project_root_path),
-    config.project_root_path);
+  const auto &translation_units =
+    config.translation_units.empty()
+      ? collect_translation_units_from_goto_model(
+          goto_model, config.project_root_path)
+      : config.translation_units;
+  result.project.translation_units =
+    relative_report_paths(translation_units, config.project_root_path);
 
   const auto target_function_ids =
     resolve_target_function_ids(goto_model, message_handler, config);
   result.function_order = target_function_ids;
+
+  if(
+    target_function_ids.empty() &&
+    !config.interleaving_source_files.empty())
+  {
+    messaget log(message_handler);
+    log.warning()
+      << "[interleaving] no interleaving functions were found in the current "
+         "goto model for the requested source files; the emitted manifest will "
+         "only reflect the effective build inputs"
+      << messaget::eom;
+  }
 
   auto function_write_map = build_function_write_map(
     goto_model, message_handler, target_function_ids, result);
