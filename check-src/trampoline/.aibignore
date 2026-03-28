@@ -1,4 +1,4 @@
-how-to-check-with-cbmc.md
+how-to-check-with-cbmc-aib.md
 
 tests/functional/alarms_s1_non/cbmc_ileave_check.log
 tests/functional/alarms_s1_non/alarms_s1_non.out
