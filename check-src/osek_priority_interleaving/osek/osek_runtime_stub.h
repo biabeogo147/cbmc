@@ -1,0 +1,6 @@
+#ifndef OSEK_PRIORITY_INTERLEAVING_RUNTIME_STUB_H
+#define OSEK_PRIORITY_INTERLEAVING_RUNTIME_STUB_H
+
+void boot_autostart_task(void);
+
+#endif

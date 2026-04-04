@@ -1,0 +1,9 @@
+# generated manifests and outputs
+interleaving_harness.json
+interleaving_harness.windows.json
+osek_priority_interleaving.out
+osek_priority_interleaving.exe
+
+# documentation is not needed in injected trees
+README.md
+how-to-check-with-env4cbmc.md

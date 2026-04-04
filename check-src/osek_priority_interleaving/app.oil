@@ -1,0 +1,17 @@
+TASK controller {
+    SCHEDULE = FULL;
+    PRIORITY = 2;
+    AUTOSTART = TRUE;
+};
+
+TASK worker {
+    SCHEDULE = FULL;
+    PRIORITY = 3;
+    AUTOSTART = FALSE;
+};
+
+TASK cleanup {
+    SCHEDULE = NON;
+    PRIORITY = 1;
+    AUTOSTART = FALSE;
+};
