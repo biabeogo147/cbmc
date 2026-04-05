@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/message.h>
 
+#include <os-api/core/os_api_dispatcher.h>
+
 #include "complexity_limiter.h"
 #include "shadow_memory.h"
 #include "symex_config.h"
@@ -79,6 +81,8 @@ public:
         ns,
         mh)
   {
+    os_api_dispatcher =
+      std::make_unique<os_api::core::os_api_dispatchert>(options);
   }
 
   /// A virtual destructor allowing derived classes to be cleaned up correctly
@@ -466,7 +470,9 @@ protected:
 
   /// Symbolically execute a END_FUNCTION instruction.
   /// \param state: Symbolic execution state for current instruction
-  virtual void symex_end_of_function(statet &);
+  virtual void symex_end_of_function(
+    const get_goto_functiont &get_goto_function,
+    statet &);
 
   /// Symbolic execution of a call to a function call.
   /// \param get_goto_function: The delegate to retrieve function bodies (see
@@ -500,6 +506,18 @@ protected:
     const exprt &cleaned_lhs,
     const symbol_exprt &function,
     const exprt::operandst &cleaned_arguments);
+
+  bool try_handle_os_api_function_call(
+    const get_goto_functiont &get_goto_function,
+    statet &state,
+    const irep_idt &identifier,
+    const exprt::operandst &cleaned_arguments);
+
+  void start_os_api_task(
+    const get_goto_functiont &get_goto_function,
+    statet &state,
+    const os_api::core::task_infot &task,
+    bool resume_after_calling_location);
 
   virtual bool get_unwind_recursion(
     const irep_idt &identifier,
@@ -835,6 +853,7 @@ protected:
 
   /// Shadow memory instrumentation API
   shadow_memoryt shadow_memory;
+  std::unique_ptr<os_api::core::os_api_dispatchert> os_api_dispatcher;
 
 public:
   unsigned get_total_vccs() const

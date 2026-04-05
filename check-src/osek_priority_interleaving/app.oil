@@ -1,16 +1,16 @@
-TASK controller {
+TASK t1 {
     SCHEDULE = FULL;
     PRIORITY = 2;
     AUTOSTART = TRUE;
 };
 
-TASK worker {
+TASK t2 {
     SCHEDULE = FULL;
     PRIORITY = 3;
     AUTOSTART = FALSE;
 };
 
-TASK cleanup {
+TASK t3 {
     SCHEDULE = NON;
     PRIORITY = 1;
     AUTOSTART = FALSE;

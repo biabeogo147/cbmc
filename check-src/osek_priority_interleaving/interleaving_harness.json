@@ -7,8 +7,8 @@
   "interleaving": [
   {
     "name": "isr_boost_shared",
-    "write_global_var": ["irq_enabled", "irq_fired", "irq_observed_value", "shared_value"],
-    "line_added_block_with_file": [{ "file": "harness.c", "line": [10, 11] }, { "file": "task_define/tasks.c", "line": [9, 11, 17, 18, 24, 25] }]
+    "write_global_var": ["irq_enabled", "irq_fired", "irq_observed_value", "x"],
+    "line_added_block_with_file": [{ "file": "harness.c", "line": [12, 13] }, { "file": "task_define/tasks.c", "line": [9, 11, 17, 18, 24, 25] }]
   }
   ]
 }

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "cbmc_parse_options.h"
 
 #include <util/config.h>
+#include <util/exception_utils.h>
 #include <util/exit_codes.h>
 #include <util/help_formatter.h>
 #include <util/invariant.h>
@@ -56,6 +57,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-symex/path_storage.h>
 #include <langapi/language.h>
 #include <langapi/mode.h>
+#include <os-api/osek/osek_config.h>
 #include <pointer-analysis/add_failed_symbols.h>
 
 #include "c_test_input_generator.h"
@@ -159,6 +161,44 @@ void cbmc_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("function"))
     options.set_option("function", cmdline.get_value("function"));
+
+  if(cmdline.isset("osek-oil") && !cmdline.isset("os-api"))
+  {
+    log.error() << "--osek-oil requires --os-api osek" << messaget::eom;
+    exit(CPROVER_EXIT_USAGE_ERROR);
+  }
+
+  if(cmdline.isset("os-api"))
+  {
+    const auto requested_os_api = cmdline.get_value("os-api");
+    if(requested_os_api != "osek")
+    {
+      log.error() << "unsupported OS API integration '" << requested_os_api
+                  << "'" << messaget::eom;
+      exit(CPROVER_EXIT_USAGE_ERROR);
+    }
+
+    if(!cmdline.isset("osek-oil"))
+    {
+      log.error() << "--os-api osek requires --osek-oil <file>"
+                  << messaget::eom;
+      exit(CPROVER_EXIT_USAGE_ERROR);
+    }
+
+    try
+    {
+      (void)os_api::osek::osek_configt::from_oil_file(
+        cmdline.get_value("osek-oil"));
+    }
+    catch(const invalid_command_line_argument_exceptiont &error)
+    {
+      log.error() << error.what() << messaget::eom;
+      exit(CPROVER_EXIT_USAGE_ERROR);
+    }
+
+    options.set_option("os-api", requested_os_api);
+    options.set_option("osek-oil", cmdline.get_value("osek-oil"));
+  }
 
   if(cmdline.isset("cover") && cmdline.isset("unwinding-assertions"))
   {
@@ -1062,6 +1102,10 @@ void cbmc_parse_optionst::help()
     "Semantic transformations:\n"
     " {y--nondet-static} \t add nondeterministic initialization of variables"
     " with static lifetime\n"
+    "\n"
+    "OS API integrations:\n"
+    " {y--os-api} {uosek} \t enable an operating-system API model\n"
+    " {y--osek-oil} {uf} \t OIL configuration file for {y--os-api osek}\n"
     "\n"
     "BMC options:\n"
     HELP_BMC

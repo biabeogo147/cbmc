@@ -631,8 +631,7 @@ void goto_symext::execute_next_instruction(
   case END_FUNCTION:
     // do even if !state.reachable to clear out frame created
     // in symex_start_thread
-    symex_end_of_function(state);
-    symex_transition(state);
+    symex_end_of_function(get_goto_function, state);
     break;
 
   case LOCATION:

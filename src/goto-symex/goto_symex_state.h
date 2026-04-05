@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 
 #include <analyses/guard.h>
+#include <os-api/core/scheduler_state.h>
 
 #include "call_stack.h"
 #include "field_sensitivity.h"
@@ -122,6 +123,7 @@ public:
   field_sensitivityt field_sensitivity;
 
   shadow_memory_statet shadow_memory;
+  os_api::core::scheduler_statet scheduler_state;
 
 protected:
   template <levelt>

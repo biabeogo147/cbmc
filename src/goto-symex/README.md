@@ -82,6 +82,21 @@ the instruction type, i.e. goto_symext::symex_function_call() if the
 current instruction is a function call, goto_symext::symex_goto() if the
 current instruction is a goto, etc.
 
+\subsection symex-os-api Modular OS API Scheduling
+
+`goto-symex` now also hosts the execution hook for modular OS API integrations.
+The current OSEK implementation works by:
+
+1. Storing scheduler bookkeeping in `goto_symex_statet`.
+2. Marking task frames with lightweight OS API metadata in `framet`.
+3. Intercepting recognized API calls in `goto_symext::symex_function_call_symbol`.
+4. Applying dispatcher results to symbolic execution without spreading OSEK
+   parsing and scheduling rules across unrelated symex files.
+
+This keeps generic symbolic execution separate from API-specific policy while
+still allowing task priority, preemption, and chain/terminate semantics to
+change the active call stack.
+
 \subsection symex-loop-and-recursion-unwinding Loop and recursion unwinding
 
 Each backwards goto and recursive call has a separate counter

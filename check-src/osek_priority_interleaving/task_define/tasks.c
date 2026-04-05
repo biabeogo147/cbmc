@@ -4,24 +4,24 @@
 #include "../osek/osek_api.h"
 #include "tasks.h"
 
-TASK(controller)
+TASK(t1)
 {
-  shared_value = 1;
+  x = 1;
   ActivateTask(TASK_ID_worker);
-  assert(shared_value == 2);
+  assert(x == 2);
   ChainTask(TASK_ID_cleanup);
 }
 
-TASK(worker)
+TASK(t2)
 {
-  assert(shared_value == 1);
-  shared_value = 2;
+  assert(x == 1);
+  x = 2;
   TerminateTask();
 }
 
-TASK(cleanup)
+TASK(t3)
 {
-  assert(shared_value == 2);
-  shared_value = 3;
+  assert(x == 2);
+  x = 3;
   TerminateTask();
 }

@@ -29,6 +29,77 @@ bool goto_symext::get_unwind_recursion(const irep_idt &, unsigned, unsigned)
   return false;
 }
 
+void goto_symext::start_os_api_task(
+  const get_goto_functiont &get_goto_function,
+  statet &state,
+  const os_api::core::task_infot &task,
+  const bool resume_after_calling_location)
+{
+  const std::size_t previous_depth = state.call_stack().size();
+  const auto function_symbol = ns.lookup(task.function_identifier).symbol_expr();
+
+  symex_function_call_post_clean(
+    get_goto_function, state, nil_exprt(), function_symbol, {});
+
+  if(state.call_stack().size() > previous_depth)
+  {
+    framet &frame = state.call_stack().top();
+    frame.is_os_api_task = true;
+    frame.os_api_task_name = task.function_identifier;
+    frame.os_api_task_priority = task.priority;
+    frame.os_api_task_preemptive = task.preemptive;
+    frame.os_api_resume_after_calling_location =
+      resume_after_calling_location;
+  }
+}
+
+bool goto_symext::try_handle_os_api_function_call(
+  const get_goto_functiont &get_goto_function,
+  statet &state,
+  const irep_idt &identifier,
+  const exprt::operandst &cleaned_arguments)
+{
+  if(!os_api_dispatcher || !os_api_dispatcher->enabled())
+    return false;
+
+  const auto api_result = os_api_dispatcher->handle_function_call(
+    identifier, cleaned_arguments, state.scheduler_state);
+  if(!api_result.has_value())
+    return false;
+
+  switch(api_result->next_step)
+  {
+  case os_api::core::next_step_kindt::CONTINUE_CURRENT_THREAD:
+    symex_transition(state);
+    return true;
+
+  case os_api::core::next_step_kindt::START_TASK_NOW:
+    if(api_result->next_task.has_value())
+    {
+      start_os_api_task(
+        get_goto_function, state, *api_result->next_task, true);
+    }
+    else
+      symex_transition(state);
+    return true;
+
+  case os_api::core::next_step_kindt::POP_TASK_AND_RESUME_CALLER:
+    symex_end_of_function(get_goto_function, state);
+    return true;
+
+  case os_api::core::next_step_kindt::POP_TASK_AND_START_TASK:
+    symex_end_of_function(get_goto_function, state);
+    if(api_result->next_task.has_value())
+    {
+      start_os_api_task(
+        get_goto_function, state, *api_result->next_task, false);
+    }
+    return true;
+  }
+
+  UNREACHABLE;
+}
+
 void goto_symext::parameter_assignments(
   const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
@@ -225,6 +296,11 @@ void goto_symext::symex_function_call_symbol(
   {
     shadow_memory.symex_set_field(state, cleaned_arguments);
     symex_transition(state);
+  }
+  else if(
+    try_handle_os_api_function_call(
+      get_goto_function, state, identifier, cleaned_arguments))
+  {
   }
   else
   {
@@ -434,11 +510,21 @@ static void pop_frame(
 }
 
 /// do function call by inlining
-void goto_symext::symex_end_of_function(statet &state)
+void goto_symext::symex_end_of_function(
+  const get_goto_functiont &get_goto_function,
+  statet &state)
 {
   PRECONDITION(!state.call_stack().empty());
 
   const bool hidden = state.call_stack().top().hidden_function;
+  const bool resume_after_calling_location =
+    !state.call_stack().top().is_os_api_task ||
+    state.call_stack().top().os_api_resume_after_calling_location;
+  const bool implicit_os_api_task_completion =
+    state.call_stack().top().is_os_api_task &&
+    state.scheduler_state.current_task().has_value() &&
+    state.scheduler_state.current_task()->function_identifier ==
+      state.call_stack().top().os_api_task_name;
 
   // first record the return
   target.function_return(
@@ -463,6 +549,33 @@ void goto_symext::symex_end_of_function(statet &state)
       return_value_symbol.value(), call_lhs.type());
     symex_assign(state, call_lhs, casted_return_value);
   }
+
+  if(implicit_os_api_task_completion)
+  {
+    state.scheduler_state.pop_active_task();
+
+    const auto highest_ready =
+      state.scheduler_state.peek_highest_priority_ready_task();
+    const auto &current_task = state.scheduler_state.current_task();
+
+    if(
+      highest_ready.has_value() &&
+      (!current_task.has_value() ||
+       highest_ready->priority > current_task->priority))
+    {
+      const auto next_task =
+        state.scheduler_state.pop_highest_priority_ready_task();
+      INVARIANT(
+        next_task.has_value(),
+        "ready task should exist after peeking the ready queue");
+      state.scheduler_state.push_active_task(*next_task);
+      start_os_api_task(get_goto_function, state, *next_task, false);
+      return;
+    }
+  }
+
+  if(resume_after_calling_location)
+    symex_transition(state);
 }
 
 void goto_symext::locality(

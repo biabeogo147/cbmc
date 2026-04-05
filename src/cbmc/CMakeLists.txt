@@ -18,6 +18,7 @@ target_link_libraries(cbmc-lib
     goto-programs
     goto-symex
     json
+    os-api-lib
     json-symtab-language
     langapi
     linking

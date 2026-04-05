@@ -38,6 +38,11 @@ struct framet
   exprt call_lhs = nil_exprt();                // cleaned, but not renamed
   std::optional<symbol_exprt> return_value_symbol; // not renamed
   bool hidden_function = false;
+  bool is_os_api_task = false;
+  irep_idt os_api_task_name;
+  int os_api_task_priority = 0;
+  bool os_api_task_preemptive = false;
+  bool os_api_resume_after_calling_location = true;
 
   symex_level1t old_level1;
 

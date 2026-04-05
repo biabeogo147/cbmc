@@ -14,7 +14,7 @@
 extern bool irq_enabled;
 extern bool irq_fired;
 extern int irq_observed_value;
-extern int shared_value;
+extern int x;
 
 void *isr_boost_shared(void *arg);
 
