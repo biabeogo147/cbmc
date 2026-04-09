@@ -1,4 +1,4 @@
-TASK controller {
+TASK t1 {
   SCHEDULE = FULL;
   PRIORITY = 2;
   TYPE = EXTENDED;
@@ -6,7 +6,7 @@ TASK controller {
   AUTOSTART = TRUE;
 };
 
-TASK worker {
+TASK t2 {
   SCHEDULE = FULL;
   PRIORITY = 3;
   TYPE = BASIC;

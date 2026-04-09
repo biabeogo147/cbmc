@@ -7,6 +7,7 @@
 #include <util/irep.h>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace os_api
 {
@@ -19,6 +20,12 @@ enum class schedule_typet
   NON
 };
 
+enum class task_typet
+{
+  BASIC,
+  EXTENDED
+};
+
 struct task_configurationt
 {
   std::size_t task_id = 0;
@@ -26,6 +33,8 @@ struct task_configurationt
   irep_idt function_identifier;
   int priority = 0;
   schedule_typet schedule = schedule_typet::FULL;
+  task_typet task_type = task_typet::BASIC;
+  std::uint64_t event_mask = 0;
   bool autostart = false;
 };
 

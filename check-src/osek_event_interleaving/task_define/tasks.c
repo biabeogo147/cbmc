@@ -4,13 +4,13 @@
 #include "../osek/osek_api.h"
 #include "tasks.h"
 
-TASK(controller)
+TASK(t1)
 {
   EventMaskType snapshot = 0;
 
-  ActivateTask(TASK_ID_worker);
+  ActivateTask(TASK_ID_2);
   WaitEvent(EVENT_WORK_DONE);
-  GetEvent(TASK_ID_controller, &snapshot);
+  GetEvent(TASK_ID_1, &snapshot);
   assert((snapshot & EVENT_WORK_DONE) != 0u);
   ClearEvent(EVENT_WORK_DONE);
 
@@ -19,11 +19,11 @@ TASK(controller)
   TerminateTask();
 }
 
-TASK(worker)
+TASK(t2)
 {
   assert(controller_done == 0);
   shared_value = 2;
-  SetEvent(TASK_ID_controller, EVENT_WORK_DONE);
+  SetEvent(TASK_ID_1, EVENT_WORK_DONE);
   TerminateTask();
 }
 

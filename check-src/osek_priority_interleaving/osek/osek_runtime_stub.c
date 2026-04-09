@@ -21,5 +21,5 @@ void Schedule(void)
 
 void boot_autostart_task(void)
 {
-  ActivateTask(TASK_ID_controller);
+  ActivateTask(TASK_ID_1);
 }

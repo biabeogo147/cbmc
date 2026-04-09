@@ -8,8 +8,8 @@ typedef EventMaskType *EventMaskRefType;
 
 typedef enum task_id
 {
-  TASK_ID_controller = 1,
-  TASK_ID_worker = 2
+  TASK_ID_1 = 1,
+  TASK_ID_2 = 2
 } task_idt;
 
 enum

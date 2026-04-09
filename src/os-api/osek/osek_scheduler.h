@@ -22,6 +22,11 @@ core::task_infot make_runtime_task(const task_configurationt &task);
 std::optional<core::task_infot>
 resolve_task_argument(const osek_configt &config, const exprt &argument);
 
+std::optional<std::size_t>
+resolve_task_id_argument(const osek_configt &config, const exprt &argument);
+
+std::optional<std::uint64_t> resolve_event_mask_argument(const exprt &argument);
+
 } // namespace osek
 } // namespace os_api
 

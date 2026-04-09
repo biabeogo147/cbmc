@@ -2,6 +2,10 @@
 
 #include "osek_scheduler.h"
 
+#include <util/arith_tools.h>
+#include <util/pointer_expr.h>
+#include <util/std_expr.h>
+
 namespace os_api
 {
 namespace osek
@@ -78,6 +82,9 @@ std::optional<core::api_call_resultt> handle_api_call(
     if(!task.has_value())
       return result;
 
+    if(scheduler_state.is_task_suspended(task->task_id))
+      scheduler_state.reset_task_events(task->task_id);
+
     scheduler_state.enqueue_ready_task(*task);
 
     const auto &current_task = scheduler_state.current_task();
@@ -117,6 +124,10 @@ std::optional<core::api_call_resultt> handle_api_call(
       return result;
 
     scheduler_state.pop_active_task();
+
+    if(scheduler_state.is_task_suspended(task->task_id))
+      scheduler_state.reset_task_events(task->task_id);
+
     scheduler_state.enqueue_ready_task(*task);
     return schedule_after_reschedule_point(
       scheduler_state,
@@ -134,6 +145,89 @@ std::optional<core::api_call_resultt> handle_api_call(
       return maybe_dispatch_highest_ready_task(
         scheduler_state, core::next_step_kindt::START_TASK_NOW);
     }
+
+    return result;
+  }
+
+  case api_call_kindt::SET_EVENT:
+  {
+    if(arguments.size() < 2)
+      return result;
+
+    const auto task_id = resolve_task_id_argument(config, arguments.front());
+    const auto mask = resolve_event_mask_argument(arguments[1]);
+    if(!task_id.has_value() || !mask.has_value())
+      return result;
+
+    const bool woke_waiting_task =
+      scheduler_state.set_event_for_task(*task_id, *mask);
+    if(!woke_waiting_task)
+      return result;
+
+    return schedule_after_reschedule_point(
+      scheduler_state,
+      core::next_step_kindt::CONTINUE_CURRENT_THREAD,
+      core::next_step_kindt::START_TASK_NOW);
+  }
+
+  case api_call_kindt::CLEAR_EVENT:
+  {
+    if(arguments.empty())
+      return result;
+
+    const auto mask = resolve_event_mask_argument(arguments.front());
+    if(!mask.has_value())
+      return result;
+
+    scheduler_state.clear_events_for_current_task(*mask);
+    return result;
+  }
+
+  case api_call_kindt::GET_EVENT:
+  {
+    if(arguments.size() < 2)
+      return result;
+
+    const auto task_id = resolve_task_id_argument(config, arguments.front());
+    if(!task_id.has_value())
+      return result;
+
+    const auto set_events = scheduler_state.get_set_events(*task_id);
+    if(!set_events.has_value())
+      return result;
+
+    const exprt &event_out_pointer = arguments[1];
+    if(event_out_pointer.type().id() != ID_pointer)
+      return result;
+
+    const typet &event_mask_type = to_pointer_type(event_out_pointer.type()).base_type();
+    result.memory_writeback = core::memory_writebackt{
+      dereference_exprt(event_out_pointer, event_mask_type),
+      from_integer(*set_events, event_mask_type)};
+    return result;
+  }
+
+  case api_call_kindt::WAIT_EVENT:
+  {
+    if(arguments.empty())
+      return result;
+
+    const auto mask = resolve_event_mask_argument(arguments.front());
+    if(!mask.has_value())
+      return result;
+
+    if(!scheduler_state.wait_current_task_for_events(*mask))
+      return result;
+
+    const auto next_task = scheduler_state.pop_highest_priority_ready_task();
+    if(next_task.has_value())
+    {
+      scheduler_state.push_active_task(*next_task);
+      result.next_step = core::next_step_kindt::POP_TASK_AND_START_TASK;
+      result.next_task = next_task;
+    }
+    else
+      result.next_step = core::next_step_kindt::POP_TASK_AND_RESUME_CALLER;
 
     return result;
   }

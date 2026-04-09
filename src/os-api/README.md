@@ -304,6 +304,9 @@ The module is now wired end-to-end for the first integration:
    of inlining scheduler logic directly in the generic symex flow.
 4. The OSEK backend now also models event services (`SetEvent`, `ClearEvent`,
    `GetEvent`, `WaitEvent`) on top of scheduler state.
+5. `GetEvent` writeback is routed through the dispatcher result so the OS API
+   layer can update caller-visible memory without embedding OSEK-specific
+   pointer stores in `goto-symex`.
 
 This keeps OS API selection, configuration loading, and scheduling decisions
 behind one boundary instead of patching multiple unrelated folders directly.

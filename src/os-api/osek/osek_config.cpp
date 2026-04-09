@@ -2,6 +2,7 @@
 
 #include <util/exception_utils.h>
 
+#include <cstdint>
 #include <fstream>
 #include <optional>
 #include <regex>
@@ -33,6 +34,24 @@ std::string strip_line_comment(const std::string &text)
   return text.substr(0, comment_pos);
 }
 
+std::uint64_t parse_event_mask(
+  const std::string &token,
+  const std::string &path,
+  const std::size_t line_number)
+{
+  try
+  {
+    return std::stoull(token, nullptr, 0);
+  }
+  catch(const std::exception &)
+  {
+    throw invalid_command_line_argument_exceptiont(
+      "invalid EVENT_MASK value '" + token + "' at line " +
+        std::to_string(line_number) + " in '" + path + "'",
+      "--osek-oil");
+  }
+}
+
 } // namespace
 
 osek_configt osek_configt::from_oil_file(const std::string &path)
@@ -48,6 +67,9 @@ osek_configt osek_configt::from_oil_file(const std::string &path)
   const std::regex task_start_regex(R"(^TASK\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$)");
   const std::regex priority_regex(R"(^PRIORITY\s*=\s*([0-9]+)\s*;$)");
   const std::regex schedule_regex(R"(^SCHEDULE\s*=\s*(FULL|NON)\s*;$)");
+  const std::regex task_type_regex(R"(^TYPE\s*=\s*(BASIC|EXTENDED)\s*;$)");
+  const std::regex event_mask_regex(
+    R"(^EVENT_MASK\s*=\s*(0[xX][0-9A-Fa-f]+|[0-9]+)\s*;$)");
   const std::regex autostart_regex(R"(^AUTOSTART\s*=\s*(TRUE|FALSE)\s*;$)");
   const std::regex task_end_regex(R"(^\}\s*;$)");
 
@@ -99,6 +121,20 @@ osek_configt osek_configt::from_oil_file(const std::string &path)
       current_task->task.schedule =
         match[1].str() == "NON" ? schedule_typet::NON : schedule_typet::FULL;
       current_task->saw_schedule = true;
+      continue;
+    }
+
+    if(std::regex_match(line, match, task_type_regex))
+    {
+      current_task->task.task_type =
+        match[1].str() == "EXTENDED" ? task_typet::EXTENDED : task_typet::BASIC;
+      continue;
+    }
+
+    if(std::regex_match(line, match, event_mask_regex))
+    {
+      current_task->task.event_mask =
+        parse_event_mask(match[1].str(), path, line_number);
       continue;
     }
 

@@ -27,6 +27,7 @@ public:
   void push_active_task(const task_infot &task);
   void pop_active_task();
   void enqueue_ready_task(const task_infot &task);
+  void reset_task_events(std::size_t task_id);
   [[nodiscard]] bool is_task_waiting(std::size_t task_id) const;
   [[nodiscard]] bool is_task_suspended(std::size_t task_id) const;
 

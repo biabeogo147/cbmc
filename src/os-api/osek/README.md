@@ -6,10 +6,10 @@
 
 This folder now contains:
 
-1. A small OIL parser that loads `TASK`, `PRIORITY`, `SCHEDULE`, and
-   `AUTOSTART`.
-2. API classification for `ActivateTask`, `TerminateTask`, `ChainTask`, and
-   `Schedule`.
+1. A small OIL parser that loads `TASK`, `PRIORITY`, `SCHEDULE`,
+   `AUTOSTART`, `TYPE`, and `EVENT_MASK`.
+2. API classification for `ActivateTask`, `TerminateTask`, `ChainTask`,
+   `Schedule`, `SetEvent`, `ClearEvent`, `GetEvent`, and `WaitEvent`.
 3. Scheduler-decision handlers that convert OSEK API calls into generic
    next-step actions for `goto-symex`.
 4. The runtime task mapping used by the new regression fixture and
@@ -42,6 +42,7 @@ This folder now contains:
 - OIL task IDs are assigned by declaration order to match `TASK_ID_*` enums in
   the regression fixture.
 - Event masks are modeled as a 64-bit bitset loaded from `EVENT_MASK`.
+- `TYPE` defaults to `BASIC` and a missing `EVENT_MASK` defaults to `0`.
 - `AUTOSTART` is parsed and preserved in metadata, but the current workflow
   still expects the harness/runtime stub to call `ActivateTask(...)` explicitly
   for bootstrapping.

@@ -5,9 +5,9 @@
 
 typedef enum task_id
 {
-  TASK_ID_controller = 1,
-  TASK_ID_worker = 2,
-  TASK_ID_cleanup = 3
+  TASK_ID_1 = 1,
+  TASK_ID_2 = 2,
+  TASK_ID_3 = 3
 } task_idt;
 
 void ActivateTask(task_idt task_id);
