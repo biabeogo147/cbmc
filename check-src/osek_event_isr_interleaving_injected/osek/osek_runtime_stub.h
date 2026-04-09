@@ -1,0 +1,7 @@
+#ifndef OSEK_EVENT_ISR_INTERLEAVING_RUNTIME_STUB_H
+#define OSEK_EVENT_ISR_INTERLEAVING_RUNTIME_STUB_H
+
+void boot_autostart_task(void);
+
+#endif
+

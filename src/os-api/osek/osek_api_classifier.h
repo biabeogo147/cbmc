@@ -17,7 +17,11 @@ enum class api_call_kindt
   ACTIVATE_TASK,
   TERMINATE_TASK,
   CHAIN_TASK,
-  SCHEDULE
+  SCHEDULE,
+  SET_EVENT,
+  CLEAR_EVENT,
+  GET_EVENT,
+  WAIT_EVENT
 };
 
 api_call_kindt classify_api_call(const irep_idt &function_identifier);

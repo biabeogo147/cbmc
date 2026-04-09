@@ -67,6 +67,14 @@ bool goto_symext::try_handle_os_api_function_call(
   if(!api_result.has_value())
     return false;
 
+  if(api_result->memory_writeback.has_value())
+  {
+    symex_assign(
+      state,
+      api_result->memory_writeback->lhs,
+      api_result->memory_writeback->rhs);
+  }
+
   switch(api_result->next_step)
   {
   case os_api::core::next_step_kindt::CONTINUE_CURRENT_THREAD:

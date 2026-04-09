@@ -1,0 +1,8 @@
+TASK TaskE {
+  PRIORITY = 2;
+  SCHEDULE = FULL;
+  TYPE = EXTENDED;
+  EVENT_MASK = 0x7;
+  AUTOSTART = FALSE;
+};
+
