@@ -129,7 +129,8 @@ if(DEFINED CMAKE_USE_CUDD)
     message(STATUS "Building Cudd-3.0.0")
     execute_process(COMMAND make WORKING_DIRECTORY ${cudd_SOURCE_DIR})
 
-    add_library(cudd STATIC IMPORTED)
+    add_library(cudd STATIC IMPORTED
+            check-src/add_lib/main.c)
     set_property(TARGET cudd PROPERTY IMPORTED_LOCATION ${cudd_SOURCE_DIR}/cudd/.libs/libcudd.a)
 
     add_library(cudd-cplusplus STATIC IMPORTED)
