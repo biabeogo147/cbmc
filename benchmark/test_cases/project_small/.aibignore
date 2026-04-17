@@ -1,6 +1,5 @@
 # AIB ignore - files that are generated or should be ignored by version control
 # Generated outputs
-cbmc_output/
 interleaved.out
 interleaving_harness_generated.json
 *.out

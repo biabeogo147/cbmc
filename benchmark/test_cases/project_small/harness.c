@@ -19,6 +19,9 @@ int controller_done = 0;
 
 extern void task_main_run(void);
 
+/*
+ * TODO: Test with aib, cmbc not interleaved, cbmc interleaved.
+ */
 int main() {
     init_osek_runtime();
     protocol_init();
