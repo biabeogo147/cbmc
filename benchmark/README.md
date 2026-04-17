@@ -10,4 +10,6 @@
 ### Test cases information
 
 - https://github.com/langroodi/Adaptive-AUTOSAR
-- project_small: self-written tests that runs dummy tasks (~30-40 tasks) with difference priorities
+- project_small: 
+  - self-written tests that runs dummy tasks (~30-40 tasks) with difference priorities
+  - tested with goto-cc. use ```generate_build_cmd.py``` to get the interleaved goto-cc command.
