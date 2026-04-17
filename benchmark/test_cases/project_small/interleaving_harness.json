@@ -1,0 +1,14 @@
+{
+  "project": {
+    "project_root": "/tmp/cbmc/benchmark/test_cases/project_small",
+    "interleaving_source_files": ["isr_define/isr_timer.c"],
+    "translation_units": ["common/lib_math.c", "common/lib_mem.c", "common/lib_utils.c", "drivers/gpio_driver.c", "drivers/timer_driver.c", "harness.c", "isr_define/isr_adc.c", "isr_define/isr_adc.c", "isr_define/isr_external.c", "isr_define/isr_external.c", "isr_define/isr_timer.c", "isr_define/isr_uart.c", "isr_define/isr_uart.c", "middleware/data_filter.c", "middleware/protocol_stack.c", "osek/osek_runtime_stub.c", "task_define/task_10.c", "task_define/task_11.c", "task_define/task_12.c", "task_define/task_13.c", "task_define/task_14.c", "task_define/task_15.c", "task_define/task_16.c", "task_define/task_17.c", "task_define/task_18.c", "task_define/task_19.c", "task_define/task_20.c", "task_define/task_21.c", "task_define/task_22.c", "task_define/task_23.c", "task_define/task_24.c", "task_define/task_25.c", "task_define/task_26.c", "task_define/task_27.c", "task_define/task_28.c", "task_define/task_29.c", "task_define/task_30.c", "task_define/task_9.c", "task_define/task_comm.c", "task_define/task_comm2.c", "task_define/task_io.c", "task_define/task_main.c", "task_define/task_monitor.c", "task_define/task_process.c", "task_define/task_sensor.c"]
+  },
+  "interleaving": [
+  {
+    "name": "isr_timer_handler",
+    "write_global_var": ["shared_value"],
+    "line_added_block_with_file": [{ "file": "harness.c", "line": [74] }, { "file": "isr_define/isr_adc.c", "line": [13] }, { "file": "isr_define/isr_external.c", "line": [12] }, { "file": "isr_define/isr_uart.c", "line": [13] }, { "file": "task_define/task_main.c", "line": [20, 33] }]
+  }
+  ]
+}

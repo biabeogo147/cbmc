@@ -1,0 +1,37 @@
+#ifndef OSEK_EVENT_ISR_INTERLEAVING_TASKS_H
+#define OSEK_EVENT_ISR_INTERLEAVING_TASKS_H
+
+#include "../osek/osek_api.h"
+
+TASK(t1);
+TASK(t2);
+TASK(t3);
+TASK(t4);
+TASK(t5);
+TASK(t6);
+TASK(t7);
+TASK(t8);
+TASK(t9);
+TASK(t10);
+TASK(t11);
+TASK(t12);
+TASK(t13);
+TASK(t14);
+TASK(t15);
+TASK(t16);
+TASK(t17);
+TASK(t18);
+TASK(t19);
+TASK(t20);
+TASK(t21);
+TASK(t22);
+TASK(t23);
+TASK(t24);
+TASK(t25);
+TASK(t26);
+TASK(t27);
+TASK(t28);
+TASK(t29);
+TASK(t30);
+
+#endif
