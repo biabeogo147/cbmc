@@ -7,9 +7,9 @@
 TASK(t1)
 {
   x = 1;
-  ActivateTask(TASK_ID_worker);
+  ActivateTask(TASK_ID_2);
   assert(x == 2);
-  ChainTask(TASK_ID_cleanup);
+  ChainTask(TASK_ID_3);
 }
 
 TASK(t2)

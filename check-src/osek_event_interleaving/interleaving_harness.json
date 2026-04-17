@@ -1,0 +1,14 @@
+{
+  "project": {
+    "project_root": "/tmp/cbmc/check-src/osek_event_interleaving",
+    "interleaving_source_files": ["isr_define/isr.c"],
+    "translation_units": ["harness.c", "isr_define/isr.c", "osek/osek_runtime_stub.c", "task_define/tasks.c"]
+  },
+  "interleaving": [
+  {
+    "name": "isr_touch_shared",
+    "write_global_var": ["irq_enabled", "irq_fired", "irq_observed_value", "shared_value"],
+    "line_added_block_with_file": [{ "file": "harness.c", "line": [14, 15] }, { "file": "task_define/tasks.c", "line": [17, 25] }]
+  }
+  ]
+}

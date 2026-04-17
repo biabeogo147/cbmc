@@ -1,0 +1,6 @@
+# generated outputs
+how-to-check-with-cbmc.md
+README.md
+osek_event_interleaving.out
+interleaving_harness.json
+interleaving_harness_injected.json
