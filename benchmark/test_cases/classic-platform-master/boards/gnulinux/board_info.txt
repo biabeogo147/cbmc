@@ -1,9 +1,0 @@
-
-
-GNULinux
-
-A userspace Linux program.
----------------------------
-
-
-

@@ -1,0 +1,226 @@
+/*
+ * OSEK Application Configuration (app.oil)
+ * Generated for CBMC verification
+ */
+
+#include "osek/osek_api.h"
+
+CPU cpu_main {
+  OS os_main {
+    TYPE = BCC1;
+    CPU_LOAD = FALSE;
+    MEMORY_SIZE = 16384;
+  };
+
+  TASK t1 {
+    SCHEDULE = FULL;
+    PRIORITY = 2;
+    TYPE = EXTENDED;
+    EVENT_MASK = 0x1;
+    AUTOSTART = TRUE;
+  };
+
+  TASK t2 {
+    SCHEDULE = FULL;
+    PRIORITY = 3;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t3 {
+    SCHEDULE = FULL;
+    PRIORITY = 10;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t4 {
+    SCHEDULE = FULL;
+    PRIORITY = 20;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t5 {
+    SCHEDULE = FULL;
+    PRIORITY = 15;
+    TYPE = EXTENDED;
+    EVENT_MASK = 0x2;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t6 {
+    SCHEDULE = FULL;
+    PRIORITY = 25;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t7 {
+    SCHEDULE = FULL;
+    PRIORITY = 5;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t8 {
+    SCHEDULE = FULL;
+    PRIORITY = 30;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t9 {
+    SCHEDULE = FULL;
+    PRIORITY = 12;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t10 {
+    SCHEDULE = FULL;
+    PRIORITY = 8;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t11 {
+    SCHEDULE = FULL;
+    PRIORITY = 18;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t12 {
+    SCHEDULE = FULL;
+    PRIORITY = 22;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t13 {
+    SCHEDULE = FULL;
+    PRIORITY = 6;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t14 {
+    SCHEDULE = FULL;
+    PRIORITY = 14;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t15 {
+    SCHEDULE = FULL;
+    PRIORITY = 28;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t16 {
+    SCHEDULE = FULL;
+    PRIORITY = 4;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t17 {
+    SCHEDULE = FULL;
+    PRIORITY = 16;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t18 {
+    SCHEDULE = FULL;
+    PRIORITY = 9;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t19 {
+    SCHEDULE = FULL;
+    PRIORITY = 24;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t20 {
+    SCHEDULE = FULL;
+    PRIORITY = 7;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t21 {
+    SCHEDULE = FULL;
+    PRIORITY = 21;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t22 {
+    SCHEDULE = FULL;
+    PRIORITY = 11;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t23 {
+    SCHEDULE = FULL;
+    PRIORITY = 26;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t24 {
+    SCHEDULE = FULL;
+    PRIORITY = 3;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t25 {
+    SCHEDULE = FULL;
+    PRIORITY = 19;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t26 {
+    SCHEDULE = FULL;
+    PRIORITY = 13;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t27 {
+    SCHEDULE = FULL;
+    PRIORITY = 27;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t28 {
+    SCHEDULE = FULL;
+    PRIORITY = 5;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t29 {
+    SCHEDULE = FULL;
+    PRIORITY = 17;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+
+  TASK t30 {
+    SCHEDULE = FULL;
+    PRIORITY = 23;
+    TYPE = BASIC;
+    AUTOSTART = FALSE;
+  };
+};
