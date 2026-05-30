@@ -1,0 +1,5 @@
+work/
+results/*.csv
+results/*.log
+results/summary.md
+!results/.gitkeep

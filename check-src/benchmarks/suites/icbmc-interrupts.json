@@ -1,0 +1,27 @@
+{
+  "suite_name": "icbmc-interrupts",
+  "description": "Planned i-CBMC interrupt benchmark suite from CProver interrupt artifacts.",
+  "enabled": false,
+  "runs": 5,
+  "warmups": 1,
+  "variants": ["stock_naive", "improved_targeted"],
+  "cases": [
+    {
+      "name": "placeholder-logger",
+      "enabled": false,
+      "reason": "Import CProver i-CBMC sources and record license before enabling.",
+      "root": "check-src/simple-benchmarks",
+      "sources": ["t_isr.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["t_isr.c"],
+      "isr_functions": ["isr1"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "expected_result": "same-result",
+      "timeout_sec": 900,
+      "memory_limit_mb": 16384
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "suite_name": "intabs-interrupts",
+  "description": "Planned IntAbs interrupt-driven benchmark suite.",
+  "enabled": false,
+  "runs": 5,
+  "warmups": 1,
+  "variants": ["stock_naive", "improved_targeted"],
+  "cases": [
+    {
+      "name": "placeholder-intabs-case",
+      "enabled": false,
+      "reason": "Import ChunghaSung/intAbs artifact and normalize __VERIFIER helpers before enabling.",
+      "root": "check-src/simple-benchmarks",
+      "sources": ["t_isr.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["t_isr.c"],
+      "isr_functions": ["isr1"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "expected_result": "same-result",
+      "timeout_sec": 900,
+      "memory_limit_mb": 16384
+    }
+  ]
+}

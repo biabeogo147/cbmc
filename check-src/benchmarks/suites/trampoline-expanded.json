@@ -1,0 +1,27 @@
+{
+  "suite_name": "trampoline-expanded",
+  "description": "Planned larger Trampoline ISR/OSEK suite imported from the full local/upstream Trampoline tree.",
+  "enabled": false,
+  "runs": 5,
+  "warmups": 1,
+  "variants": ["stock_naive", "improved_targeted"],
+  "cases": [
+    {
+      "name": "placeholder-readbutton-isr",
+      "enabled": false,
+      "reason": "Import and stub hardware-specific Trampoline example before enabling.",
+      "root": "check-src/simple-benchmarks/trampoline",
+      "sources": ["tests/functional/alarms_s1_non/alarms_s1.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["tests/functional/alarms_s1_non/isr_define/isr.c"],
+      "isr_functions": ["isr1"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "expected_result": "same-result",
+      "timeout_sec": 900,
+      "memory_limit_mb": 16384
+    }
+  ]
+}
