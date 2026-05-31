@@ -1,173 +1,194 @@
 # check-src Benchmarks
 
-Thu muc nay la lop benchmark runner cho `check-src`. Source benchmark thuc te
-nam o `check-src/simple-benchmarks`; cac file trong thu muc nay chi mo ta cach
-chay, cach inject ISR, cach do thoi gian/RAM, va cach luu ket qua.
+This directory contains the manifest-driven benchmark runner for `check-src`.
+Runnable benchmark source corpora live in `check-src/benchmark-sources`; this
+directory owns suite manifests, runner scripts, measurement, logs, and result
+reporting.
 
-## Luong chay chinh
+## Main Flow
 
 ```text
 suite json
   -> run_suite.sh
   -> common/runner.py
-  -> stock_naive: inject_naive.py -> stock goto-cc -> stock cbmc
-  -> improved_targeted: improved goto-cc manifest -> aib inject -> improved goto-cc -> improved cbmc
-  -> results/<suite>.csv + work/logs
+  -> stock_cprover_async: stock goto-cc -> stock cbmc
+  -> improved_pipeline: improved goto-cc manifest -> aib inject -> improved goto-cc -> improved cbmc
+  -> results/<suite>.csv + WORK/logs
 ```
 
-Hai bien the duoc so sanh:
+Legacy suites can still use:
 
-| Bien the | Y nghia |
+| Variant | Meaning |
 | --- | --- |
-| `stock_naive` | Copy source tree, chen loi goi ISR nondeterministic vao nhieu diem statement bang `inject_naive.py`, bien dich bang CBMC/goto-cc goc, roi verify bang CBMC goc. |
-| `improved_targeted` | Dung `goto-cc` cai tien de sinh interleaving manifest, dung `aib` de inject dung cac diem interleaving muc tieu, bien dich va verify bang CBMC/goto-cc cai tien. |
+| `stock_naive` | Copy a source tree, insert nondeterministic ISR calls with `inject_naive.py`, compile with stock `goto-cc`, then verify with stock CBMC. |
+| `improved_targeted` | Historical name for the improved pipeline. It is kept for older local smoke tests. |
 
-## Thu muc va file
+The preferred benchmark variants are:
 
-| Path | Vai tro |
+| Variant | Meaning |
 | --- | --- |
-| `.gitignore` | Bo qua output sinh ra khi benchmark: `work/`, CSV/log trong `results/`, `summary.md`; giu lai `results/.gitkeep`. |
-| `README.md` | Tai lieu nay: giai thich cau truc benchmark va y nghia tung config. |
-| `VERIFICATION_PROTOCOL.md` | Quy tac report headline: ghi moi truong, version toolchain, dung cung function/unwind/property, report median, va chi so sanh khi ket qua verification tuong thich. |
-| `manifest.schema.json` | JSON schema cho cac file suite trong `suites/`. Dung de biet field nao bat buoc va kieu du lieu mong doi. |
-| `run_suite.sh` | Entrypoint chay mot suite: nap `common/env.sh`, roi goi `common/runner.py <suite.json>`. |
-| `run_all.sh` | Quet tat ca `suites/*.json`, chi chay suite co top-level `enabled: true`. |
-| `common/env.sh` | Thiet lap bien moi truong mac dinh: duong dan repo, CBMC/goto-cc goc/cai tien, `aib`, `WORK`, `RESULTS_DIR`, `PYTHON`. |
-| `common/runner.py` | Runner chinh: validate manifest, copy source, chay cac phase, sample RSS tu `/proc/<pid>/status`, ghi CSV va log. |
-| `common/inject_naive.py` | Tao source tree cho `stock_naive`; chen prologue `nondet_bool` va loi goi tung ISR sau cac statement hop le. |
-| `common/inject_naive_isr.sh` | Wrapper shell cho `inject_naive.py`, tien dung khi can test injection thu cong. |
-| `common/measure.sh` | Helper do command bang shell. Hien tai `runner.py` co logic do rieng, file nay giu cho script shell/legacy. |
-| `common/report.sh` | Doc CSV trong `results/` va tao `results/summary.md` voi median verify time/RAM cho `stock_naive` va `improved_targeted`. |
-| `common/validate_manifest.sh` | Kiem tra mot suite JSON: field bat buoc, root/source/include ton tai, va ISR function khong rong voi case enabled. |
-| `importers/` | Placeholder script de import/normalize benchmark ngoai repo. Chua tu dong tai benchmark trong luong chay mac dinh. |
-| `results/` | Noi luu CSV va summary report. `results/*.csv` la output sinh ra va dang bi ignore de tranh commit so lieu tam. |
-| `results/.gitkeep` | Giu thu muc `results/` trong git du khong commit CSV. |
-| `suites/` | Cac manifest JSON mo ta benchmark suite/case. Day la noi them benchmark moi. |
-| `tests/selftest.ps1` | Structural test tren Windows: verify file framework ton tai, suite JSON parse duoc, enabled case co path hop le, va README top-level cua `check-src` co document cac item. |
-| `work/` | Output tam sinh ra khi chay benchmark: source copy, injected tree, goto binary, logs, stock toolchain copy. Day la generated artifact va bi ignore. |
+| `stock_cprover_async` | Stock CBMC baseline using source modeled with `__CPROVER_ASYNC_*` labels. This matches the CPROVER async interrupt style instead of the improved pipeline. |
+| `improved_pipeline` | Improved CBMC pipeline: `goto-cc --interleaving-*` emits the manifest, `aib` injects only targeted ISR calls, and improved CBMC verifies the injected program. |
 
-## Bien moi truong
+## Files and Folders
 
-`common/env.sh` doc cac bien moi truong duoc runner dung. Co the override khi chay
-Docker/WSL/Linux:
+| Path | Role |
+| --- | --- |
+| `.gitignore` | Ignores generated benchmark artifacts: `work/`, CSV/log files in `results/`, and generated summaries. |
+| `README.md` | This document. It explains the runner layout and each suite/config field. |
+| `VERIFICATION_PROTOCOL.md` | Reporting rules: record environment, tool versions, function/unwind/property settings, and only compare compatible verification outcomes. |
+| `manifest.schema.json` | JSON schema for suite manifests. Useful for checking required fields and expected types. |
+| `run_suite.sh` | Entrypoint for one suite. It loads `common/env.sh` and calls `common/runner.py <suite.json>`. |
+| `run_all.sh` | Scans `suites/*.json` and runs only top-level suites with `enabled: true`. |
+| `common/env.sh` | Default environment variables for repo paths, stock/improved tools, `aib`, `WORK`, `RESULTS_DIR`, and `PYTHON`. |
+| `common/runner.py` | Main runner. It validates manifests, copies variant sources, runs phases, samples peak RSS from `/proc/<pid>/status`, enforces timeout/RSS limits, and writes CSV rows. |
+| `common/inject_naive.py` | Legacy `stock_naive` source rewriter. It inserts guarded calls to ISR functions after candidate statements. |
+| `common/inject_naive_isr.sh` | Small shell wrapper around `inject_naive.py` for manual injection tests. |
+| `common/measure.sh` | Shell measurement helper retained for legacy scripts. `runner.py` has its own measurement logic. |
+| `common/report.sh` | Reads CSV files in `results/` and writes a summary Markdown report. |
+| `common/report_benchmark.py` | Generates `check-src/benchmark.md` from measured CSV files, suite manifests, and source inventory. It computes medians and refuses speed/RAM deltas for not-comparable verification outcomes. |
+| `common/corpus_inventory.py` | Counts C/H/I files and LOC in managed benchmark corpora and writes `benchmark-sources/INVENTORY.md`. |
+| `common/candidate_scan.py` | Ranks upstream i-CBMC/IntAbs candidate source files by LOC and interrupt/concurrency markers. |
+| `common/normalize_case.py` | Creates staged normalized case directories with `stock-cprover-async` and `improved-pipeline` variants from selected single-file upstream cases. |
+| `common/validate_manifest.sh` | Shell-side manifest validator for required fields and enabled-case paths. |
+| `importers/` | Import/normalization notes for external benchmark artifacts. Current runnable normalized sources are stored under `check-src/benchmark-sources`. |
+| `results/` | CSV output directory. Generated CSV files are ignored so temporary machine-specific measurements are not committed by accident. |
+| `results/.gitkeep` | Keeps `results/` present in git without committing generated CSV data. |
+| `suites/` | Suite manifest directory. Add or enable benchmark cases here. |
+| `tests/selftest.ps1` | Windows structural test. It parses suite JSON, checks enabled case paths, and verifies the top-level `check-src` README documents visible items. |
+| `work/` | Generated work area: copied sources, injected sources, GOTO binaries, logs, downloaded stock toolchain, and import staging. This directory is ignored. |
 
-| Bien | Mac dinh | Tac dung |
+## Environment Variables
+
+`common/env.sh` defines defaults. Override these in Docker/WSL/Linux when needed:
+
+| Variable | Default | Effect |
 | --- | --- | --- |
-| `IMPROVED_CBMC` | `$REPO_ROOT/cmake-build-debug-cbmc/bin/cbmc` | CBMC ban cai tien dung cho `improved_targeted` verify. |
-| `IMPROVED_GOTOCC` | `$REPO_ROOT/cmake-build-debug-cbmc/bin/goto-cc` | goto-cc ban cai tien dung de sinh manifest va compile source da inject. |
-| `STOCK_CBMC` | `$IMPROVED_CBMC` | CBMC goc dung cho `stock_naive`. Khi benchmark that su, nen tro den binary goc, vi du copy tu `diffblue/cbmc`. |
-| `STOCK_GOTOCC` | `$IMPROVED_GOTOCC` | goto-cc goc dung cho `stock_naive` compile. |
-| `AIB` | `$REPO_ROOT/cmake-build-debug-cbmc/bin/aib` | Tool inject interleaving theo manifest do improved `goto-cc` sinh ra. |
-| `WORK` | `/tmp/cbmc_check_src_benchmarks` | Thu muc tam chua source copy, injected tree va logs. Trong Docker hien tai thuong set ve `/repo/check-src/benchmarks/work/run-current`. |
-| `RESULTS_DIR` | `$BENCHMARK_DIR/results` | Thu muc ghi CSV/summary. |
-| `PYTHON` | `python3` | Python interpreter de chay runner va helper. |
+| `IMPROVED_CBMC` | `$REPO_ROOT/cmake-build-debug-cbmc/bin/cbmc` | Improved CBMC used for `improved_pipeline` verification. |
+| `IMPROVED_GOTOCC` | `$REPO_ROOT/cmake-build-debug-cbmc/bin/goto-cc` | Improved `goto-cc` used to emit interleaving manifests and compile injected source. |
+| `STOCK_CBMC` | `$IMPROVED_CBMC` | Stock CBMC used for `stock_cprover_async` and `stock_naive`. For real comparisons this should point to the extracted stock binary, for example CBMC 5.95.0 from `diffblue/cbmc`. |
+| `STOCK_GOTOCC` | `$IMPROVED_GOTOCC` | Stock `goto-cc` used for stock variants. |
+| `AIB` | `$REPO_ROOT/cmake-build-debug-cbmc/bin/aib` | Interleaving injector that consumes the manifest emitted by improved `goto-cc`. |
+| `WORK` | `/tmp/cbmc_check_src_benchmarks` | Temporary run directory for copied source, injected source, GOTO files, and logs. Docker runs in this repo usually set it to `check-src/benchmarks/work/<run-name>`. |
+| `RESULTS_DIR` | `$BENCHMARK_DIR/results` | Directory for CSV output. |
+| `PYTHON` | `python3` | Python interpreter for runner/helper scripts. |
 
-## Cau truc suite JSON
+## Suite JSON
 
-Moi file trong `suites/*.json` co mot top-level suite va mot danh sach `cases`.
-Duong dan trong manifest la relative tu repo root.
+Each file in `suites/*.json` contains one top-level suite and a list of cases.
+All paths are relative to the repository root.
 
-### Top-level fields
+### Top-Level Fields
 
-| Field | Bat buoc | Runner hien tai dung? | Y nghia |
+| Field | Required | Used by runner? | Meaning |
 | --- | --- | --- | --- |
-| `suite_name` | Co | Co | Ten suite, dung lam prefix console/log va ten CSV `results/<suite_name>.csv`. |
-| `description` | Co | Metadata | Mo ta ngan ve suite. |
-| `enabled` | Co | Co trong `run_all.sh` | `run_all.sh` chi chay suite co `enabled: true`; `run_suite.sh` van chay manifest duoc chi dinh truc tiep. |
-| `runs` | Khong | Chua enforce trong `runner.py` | So lan do mong muon theo protocol. Hien tai runner chi ghi run `1`; field nay de giu y do benchmark lap lai. |
-| `warmups` | Khong | Chua enforce trong `runner.py` | So warmup mong muon theo protocol. Hien tai chua sinh run warmup. |
-| `variants` | Khong | Metadata | Liet ke bien the can so sanh, mac dinh y nghia la `stock_naive` va `improved_targeted`. Runner hien tai chay hai bien the nay co dinh. |
-| `cases` | Co | Co | Mang case benchmark. Case disabled se bi bo qua. |
+| `suite_name` | Yes | Yes | Suite name used in console output, log names, and `results/<suite_name>.csv`. |
+| `description` | Yes | Metadata | Short human-readable suite description. |
+| `enabled` | Yes | Used by `run_all.sh` | `run_all.sh` only runs suites with `enabled: true`; direct `runner.py <suite.json>` still runs the specified file. |
+| `runs` | No | Yes | Number of measured runs per enabled case and variant. Defaults to `1`. |
+| `warmups` | No | Yes | Number of warmup runs per enabled case and variant. Defaults to `0`; warmup rows are ignored by the generated report. |
+| `variants` | No | Yes | Variant order for each enabled case. Preferred values are `stock_cprover_async` and `improved_pipeline`. |
+| `cases` | Yes | Yes | Benchmark case list. Disabled cases are skipped. |
 
-### Case fields
+### Case Fields
 
-| Field | Bat buoc | Runner hien tai dung? | Y nghia |
+| Field | Required | Used by runner? | Meaning |
 | --- | --- | --- | --- |
-| `name` | Co | Co | Ten case, dung trong console, CSV, log file va `work/<suite>/<case>/`. |
-| `enabled` | Khong | Co | `false` thi runner va selftest bo qua case. |
-| `reason` | Khong | Metadata | Ly do case disabled hoac ghi chu normalization. |
-| `root` | Co | Co | Thu muc goc cua source case, relative tu repo root. Runner copy thu muc nay vao `work/`. |
-| `sources` | Co | Co | Danh sach file compile bang `goto-cc`, relative tu `root`. |
-| `include_dirs` | Co | Co | Danh sach include dir, relative tu `root`; runner convert thanh `-I<root>/<dir>`. |
-| `isr_sources` | Co | Co | File chua ISR. `stock_naive` khong chen ISR vao cac file nay; `improved_targeted` truyen cac file nay cho `--interleaving-source-files`. |
-| `isr_functions` | Co | Co voi `stock_naive` | Ten function ISR de `inject_naive.py` chen loi goi `if(nondet_bool()) isr(...);`. Improved pipeline lay diem inject tu manifest cua `goto-cc`. |
-| `entry_function` | Co | Co | Gia tri cho `cbmc --function`. Thuong la `main`. |
-| `properties` | Khong | Co | Danh sach property truyen bang `--property`. Neu rong, CBMC check theo cau hinh mac dinh cua command. |
-| `unwind` | Co | Co | Gia tri cho `cbmc --unwind`. |
-| `defines` | Khong | Chua enforce | Placeholder cho macro define compile, chua duoc runner them vao command. |
-| `expected_result` | Khong | Metadata | Ghi ky vong so sanh, hien dung de doc/report, chua enforce. |
-| `timeout_sec` | Co | Chua enforce | Gioi han thoi gian mong muon; runner hien tai chua kill process theo timeout. |
-| `memory_limit_mb` | Co | Chua enforce | Gioi han RAM mong muon; runner hien tai chi sample RSS, chua enforce limit. |
+| `name` | Yes | Yes | Case name used in console output, CSV rows, log files, and `WORK/<suite>/<case>/`. |
+| `enabled` | No | Yes | `false` skips the case. |
+| `reason` | No | Metadata | Explanation for disabled cases or normalization notes. |
+| `root` | Yes | Yes | Default source root, relative to repo root. Used when a variant-specific root is not provided. |
+| `variant_roots` | No | Yes | Per-variant source roots. Use this to keep stock CPROVER async source separate from improved pipeline source. |
+| `sources` | Yes | Yes | Files compiled by `goto-cc`, relative to the selected variant root. |
+| `include_dirs` | Yes | Yes | Include directories, relative to the selected variant root; runner converts these to `-I<root>/<dir>`. |
+| `isr_sources` | Yes | Yes | Files containing ISR functions. Improved `goto-cc` receives these through `--interleaving-source-files`. |
+| `isr_functions` | Yes | Yes | ISR function names. Used by `stock_naive`; retained as manifest metadata for the preferred variants. |
+| `entry_function` | Yes | Yes | Function passed to `cbmc --function`. Usually `main`. |
+| `properties` | No | Yes | Optional list of property IDs passed with `--property`. Empty means CBMC uses the command's default checks. |
+| `unwind` | Yes | Yes | Value passed to `cbmc --unwind`. |
+| `defines` | No | Yes | Macro definitions passed to `goto-cc` as `-D...`. |
+| `expected_result` | No | Metadata | Expected relationship between variants. It is documented but not enforced. |
+| `expected_summary` | No | Metadata | Expected CBMC summary class for later review, for example `success`, `failed`, or `pending`. |
+| `case_origin` | No | Metadata | Upstream corpus path used to normalize the case. |
+| `min_compile_loc` | No | Yes | Minimum LOC across files in `sources` for each selected variant root. Enabled cases below this gate fail manifest validation. |
+| `timeout_sec` | Yes | Yes | Per-command wall-clock timeout. Runner kills the command and records `TIMEOUT_AFTER_<n>s`. |
+| `memory_limit_mb` | Yes | Yes | Per-command peak RSS limit. Runner kills the command and records `MEMORY_LIMIT_EXCEEDED_<n>MB`. |
 
-## Cac suite hien co
+## Current Suites
 
-| Suite | Enabled | Muc dich |
+| Suite | Enabled | Purpose |
 | --- | --- | --- |
-| `local-smoke.json` | Co | Smoke test nho cho single-file ISR, file da inject san, va multi-file ISR toy case trong `simple-benchmarks`. Nen chay nhanh de kiem tra framework. |
-| `osek-local.json` | Co | OSEK event/priority local demos. Mot so regression case disabled vi chua co ISR source rieng. |
-| `trampoline-current.json` | Co | Benchmark chinh hien tai: Trampoline `alarms_s1_non`, 32 source file, ISR `isr1/isr2/isr3`, property `main.assertion.1..3`. |
-| `trampoline-c-async.json` | Co | Tree Trampoline lich su dung de so sanh voi cach CPROVER async. |
-| `trampoline-expanded.json` | Khong | Placeholder de mo rong them case Trampoline lon hon sau khi stub hardware-specific input. |
-| `icbmc-interrupts.json` | Khong | Placeholder cho benchmark interrupt tu i-CBMC/CProver artifact sau khi import va ghi ro license/provenance. |
-| `intabs-interrupts.json` | Khong | Placeholder cho benchmark IntAbs interrupt-driven sau khi import va normalize helper `__VERIFIER_*`. |
+| `local-smoke.json` | Yes | Small local ISR smoke tests under `simple-benchmarks`. They keep the legacy `stock_naive`/`improved_targeted` flow for fast framework checks. |
+| `osek-local.json` | Yes | Local OSEK event/priority demos. Some regression cases remain disabled until they have explicit ISR source metadata. |
+| `trampoline-current.json` | Yes | Main Trampoline `alarms_s1_non` benchmark. Stock uses `stock-cprover-async`; improved uses `improved-pipeline`. |
+| `trampoline-c-async.json` | Yes | Historical stock-only Trampoline CPROVER async tree. |
+| `trampoline-expanded.json` | No | Placeholder for larger Trampoline cases after hardware-specific inputs are stubbed. |
+| `icbmc-interrupts.json` | No | Full i-CBMC corpus is collected under `benchmark-sources/icbmc/upstream`; current Logger case is smoke-only until larger cases are normalized. |
+| `intabs-interrupts.json` | No | Full IntAbs corpus is collected under `benchmark-sources/intabs/upstream`; current Logger2 case is smoke-only until larger cases are normalized. |
+| `icbmc-large.json` | No | Staged normalized large i-CBMC cases under `benchmark-sources/icbmc/cases`. Cases stay disabled until both variants compile and verify in Docker. |
+| `intabs-large.json` | No | Staged normalized large IntAbs cases under `benchmark-sources/intabs/cases`. Cases stay disabled until both variants compile and verify in Docker. |
 
-## Output va log
+## Output and Logs
 
-CSV co cac cot:
+CSV columns:
 
-| Cot | Y nghia |
+| Column | Meaning |
 | --- | --- |
-| `benchmark` | Ten suite. |
-| `case` | Ten case. |
-| `variant` | `stock_naive` hoac `improved_targeted`. |
-| `phase` | `prepare`, `compile`, `verify`, `manifest`, hoac `inject`. |
-| `run` | Run id. Hien tai runner ghi `1` cho phase do va `0` cho prepare. |
-| `exit_code` | Exit code command. CBMC tra `10` khi verification failed. |
-| `time_ms` | Wall-clock time do runner do. |
-| `max_rss_kb` / `max_rss_mb` | Peak RSS sample tu `/proc/<pid>/status`. Can Linux/WSL/Docker de co so nay. |
-| `summary` | Dong tom tat tu log, vi du `VERIFICATION FAILED`, `VERIFICATION SUCCESSFUL`, hoac loi start command. |
+| `benchmark` | Suite name. |
+| `case` | Case name. |
+| `variant` | Variant name, for example `stock_cprover_async` or `improved_pipeline`. |
+| `phase` | `prepare`, `compile`, `verify`, `manifest`, or `inject`. |
+| `run` | Run id within `run_kind`. Measured and warmup phases start at `1`; prepare rows use the same run id as the variant run they describe. |
+| `run_kind` | `warmup`, `measure`, or `prepare`. Report generation ignores `warmup`. |
+| `exit_code` | Command exit code. CBMC commonly returns `10` for verification failure. |
+| `time_ms` | Wall-clock time measured by the runner. |
+| `max_rss_kb` / `max_rss_mb` | Peak RSS sampled from `/proc/<pid>/status`; use Docker/WSL/Linux for meaningful values. |
+| `summary` | Short result extracted from the log, such as `VERIFICATION FAILED`, `VERIFICATION SUCCESSFUL`, or `CBMC_UNSUPPORTED_CONCURRENCY`. |
 
-Log chi tiet nam trong `$WORK/logs` voi ten:
+Detailed logs are written to `$WORK/logs`:
 
 ```text
 <suite>.<case>.<variant>.<phase>.<run>.log
 ```
 
-Source tam trong `$WORK/<suite>/<case>/`:
+Typical generated source folders under `$WORK/<suite>/<case>/`:
 
-| Thu muc/file | Y nghia |
+| Folder/file | Meaning |
 | --- | --- |
-| `original/` | Source goc copy tu `root`. |
-| `stock_naive/` | Source da inject naive ISR cho CBMC goc. |
-| `improved_original/` | Source copy cho improved `goto-cc` sinh manifest. |
-| `improved_targeted/` | Source da `aib` inject theo interleaving manifest. |
-| `stock_naive.out` | GOTO binary cua `stock_naive`. |
-| `improved_manifest.out` | GOTO binary tao trong phase manifest. |
-| `improved_targeted.out` | GOTO binary cua source targeted da inject. |
-| `interleaving_pipeline.json` | Manifest do improved `goto-cc` sinh ra. |
-| `stock_naive_insertions.csv` | So diem inject naive theo tung source va tong `TOTAL`. |
+| `stock_cprover_async/` | Stock source tree using CPROVER async labels. |
+| `improved_pipeline_original/` | Improved source tree before AIB injection. |
+| `improved_pipeline/` | Source tree after AIB injection. |
+| `stock_naive/` | Legacy source tree after naive ISR insertion. |
+| `*.out` | GOTO binaries produced by `goto-cc`. |
+| `*_interleaving_pipeline.json` | Manifest emitted by improved `goto-cc`. |
+| `interleaving_pipeline_injected.json` | Manifest emitted by `aib` for the injected tree. |
+| `stock_naive_insertions.csv` | Legacy naive insertion counts. |
 
-## Cach them benchmark moi
+## Adding a Benchmark
 
-1. Dat source o `check-src/simple-benchmarks/<ten-case>` hoac import vao
-   `check-src/external` neu la artifact ngoai.
-2. Tao hoac sua file `check-src/benchmarks/suites/<suite>.json`.
-3. Dien `root`, `sources`, `include_dirs`, `isr_sources`, `isr_functions`,
-   `entry_function`, `unwind`, `timeout_sec`, `memory_limit_mb`.
-4. Chay dry-run:
+1. Put runnable source under `check-src/benchmark-sources/<corpus>/<case>/`.
+2. Prefer two variant roots: `stock-cprover-async` and `improved-pipeline`.
+3. Create or update `check-src/benchmarks/suites/<suite>.json`.
+4. Fill `variant_roots`, `sources`, `include_dirs`, `isr_sources`, `isr_functions`, `entry_function`, `unwind`, `timeout_sec`, and `memory_limit_mb`.
+5. Run a dry-run:
 
 ```bash
 bash check-src/benchmarks/run_suite.sh check-src/benchmarks/suites/<suite>.json --dry-run
 ```
 
-5. Chay benchmark that trong Docker/WSL/Linux de lay RSS:
+6. Run the real benchmark inside Docker/WSL/Linux to collect RSS:
 
 ```bash
 bash check-src/benchmarks/run_suite.sh check-src/benchmarks/suites/<suite>.json
 ```
 
-6. Neu can summary tu CSV:
+7. Regenerate the Markdown report:
 
 ```bash
-bash check-src/benchmarks/common/report.sh check-src/benchmarks/results
+python3 check-src/benchmarks/common/report_benchmark.py
 ```
+
+External i-CBMC and IntAbs cases must remain out of headline reports until the
+suite has at least five enabled normalized cases or at least 5000 enabled
+compile LOC, and every enabled case has comparable or explicitly not-comparable
+verification outcomes.

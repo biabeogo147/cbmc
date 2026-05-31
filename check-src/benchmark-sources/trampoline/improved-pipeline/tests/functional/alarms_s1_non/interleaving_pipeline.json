@@ -1,0 +1,24 @@
+{
+  "project": {
+    "project_root": "/tmp/cbmc/check-src/benchmark-sources/trampoline/improved-pipeline",
+    "interleaving_source_files": ["tests/functional/alarms_s1_non/isr_define/isr.c"],
+    "translation_units": ["machines/posix/tpl_machine_posix.c", "machines/posix/tpl_posix_autosar.c", "machines/posix/tpl_posix_context.c", "machines/posix/tpl_posix_irq.c", "machines/posix/tpl_posixvp_irq_gen.c", "machines/posix/tpl_viper_interface.c", "os/tpl_os_action.c", "os/tpl_os_alarm_kernel.c", "os/tpl_os_error.c", "os/tpl_os_interrupt_kernel.c", "os/tpl_os_kernel.c", "os/tpl_os_os.c", "os/tpl_os_os_kernel.c", "os/tpl_os_resource_kernel.c", "os/tpl_os_task_kernel.c", "os/tpl_os_timeobj_kernel.c", "tests/embUnit/AssertImpl.c", "tests/embUnit/RepeatedTest.c", "tests/embUnit/SchedulingCheck.c", "tests/embUnit/TestCaller.c", "tests/embUnit/TestCase.c", "tests/embUnit/TestResult.c", "tests/embUnit/TestRunner.c", "tests/embUnit/TestSuite.c", "tests/embUnit/stdImpl.c", "tests/functional/alarms_s1_non/alarms_s1.c", "tests/functional/alarms_s1_non/alarms_s1_non/tpl_app_config.c", "tests/functional/alarms_s1_non/alarms_s1_non/tpl_os.c", "tests/functional/alarms_s1_non/isr_define/isr.c", "tests/functional/alarms_s1_non/task1_instance.c", "tests/machines/common/commonTestConfig.c", "tests/machines/posix/archTestConfig.c"]
+  },
+  "interleaving": [
+  {
+    "name": "isr1",
+    "write_global_var": ["alarms_irq_guard_1", "enable_irq_1"],
+    "line_added_block_with_file": [{ "file": "tests/functional/alarms_s1_non/alarms_s1.c", "line": [46, 50] }]
+  },
+  {
+    "name": "isr2",
+    "write_global_var": ["alarms_irq_guard_2", "enable_irq_2"],
+    "line_added_block_with_file": [{ "file": "tests/functional/alarms_s1_non/alarms_s1.c", "line": [47, 51] }]
+  },
+  {
+    "name": "isr3",
+    "write_global_var": ["alarms_irq_guard_3", "enable_irq_3"],
+    "line_added_block_with_file": [{ "file": "tests/functional/alarms_s1_non/alarms_s1.c", "line": [48, 52] }]
+  }
+  ]
+}

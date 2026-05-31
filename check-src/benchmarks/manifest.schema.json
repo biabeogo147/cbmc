@@ -34,9 +34,20 @@
           "enabled": { "type": "boolean" },
           "reason": { "type": "string" },
           "root": { "type": "string" },
+          "variant_roots": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
           "sources": {
             "type": "array",
             "items": { "type": "string" }
+          },
+          "variant_sources": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           "include_dirs": {
             "type": "array",
@@ -45,6 +56,13 @@
           "isr_sources": {
             "type": "array",
             "items": { "type": "string" }
+          },
+          "variant_isr_sources": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           "isr_functions": {
             "type": "array",
@@ -61,6 +79,9 @@
             "items": { "type": "string" }
           },
           "expected_result": { "type": "string" },
+          "expected_summary": { "type": "string" },
+          "case_origin": { "type": "string" },
+          "min_compile_loc": { "type": "integer", "minimum": 0 },
           "timeout_sec": { "type": "integer", "minimum": 1 },
           "memory_limit_mb": { "type": "integer", "minimum": 1 }
         }

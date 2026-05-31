@@ -6,7 +6,7 @@ Import the IntAbs interrupt-driven benchmarks manually from:
   https://github.com/ChunghaSung/intAbs
 
 Place sources under:
-  check-src/external/intabs/
+  check-src/benchmark-sources/intabs/
 
 Then update:
   check-src/benchmarks/suites/intabs-interrupts.json

@@ -4,12 +4,15 @@
   "enabled": true,
   "runs": 1,
   "warmups": 0,
-  "variants": ["stock_naive", "improved_targeted"],
+  "variants": ["stock_cprover_async"],
   "cases": [
     {
       "name": "trampoline-c-async-alarms-s1-non",
       "enabled": true,
-      "root": "check-src/simple-benchmarks/trampoline_c_async",
+      "root": "check-src/benchmark-sources/trampoline/stock-cprover-async",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/trampoline/stock-cprover-async"
+      },
       "sources": [
         "tests/embUnit/AssertImpl.c",
         "tests/embUnit/RepeatedTest.c",

@@ -1,0 +1,178 @@
+{
+  "suite_name": "intabs-large",
+  "description": "Large IntAbs interrupt benchmark cases normalized from chunghasung/intabs.",
+  "enabled": true,
+  "runs": 5,
+  "warmups": 1,
+  "variants": ["stock_cprover_async", "improved_pipeline"],
+  "cases": [
+    {
+      "name": "wdt-pci-2",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c", "isr.c"]
+      },
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr.c"]
+      },
+      "isr_functions": ["closer3", "writer3", "closer1", "writer1"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/wdt_pci_2/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-3",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-3/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-3/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-3/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c", "isr.c"]
+      },
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "closer3", "closer4"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/wdt_pci_3/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-src-3",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-3/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-3/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-3/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c", "isr.c"]
+      },
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "closer3", "closer4"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/wdt_pci_3/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "sc520wdt-1",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/intabs/cases/sc520wdt-1/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/sc520wdt-1/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/sc520wdt-1/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c", "isr.c"]
+      },
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/sc520wdt_1/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "sc520wdt-2",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/intabs/cases/sc520wdt-2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/sc520wdt-2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/sc520wdt-2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c", "isr.c"]
+      },
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/sc520wdt_2/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger3",
+      "enabled": false,
+      "reason": "Normalized as a control case but below the large-case LOC gate; do not use as a headline IntAbs result.",
+      "root": "check-src/benchmark-sources/intabs/cases/logger3/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/logger3/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/logger3/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["task_communicate", "task_measure1", "task_measure2", "task_measure3"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/logger3/main.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 300,
+      "memory_limit_mb": 4096
+    }
+  ]
+}

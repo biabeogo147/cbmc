@@ -1,0 +1,148 @@
+{
+  "suite_name": "icbmc-large",
+  "description": "Large i-CBMC interrupt benchmark cases normalized from CPROVER interrupt artifacts.",
+  "enabled": true,
+  "runs": 5,
+  "warmups": 1,
+  "variants": ["stock_cprover_async", "improved_pipeline"],
+  "cases": [
+    {
+      "name": "blink",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["VirtualizeTimerC_0_updateFromTimer_runTask", "AlarmToTimerC_0_fired_runTask"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/blink/blink.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "blink-bug",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-bug/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-bug/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-bug/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["AlarmToTimerC_0_fired_runTask", "VirtualizeTimerC_0_updateFromTimer_runTask"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/blink/blink_bug.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "rc-core",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/icbmc/cases/rc-core/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/rc-core/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/rc-core/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["show_protocols_ldvwrapper", "ir_devnode_ldvwrapper", "store_protocols_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/rc-core/rc_core.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "rc-core-bug",
+      "enabled": true,
+      "reason": "Large normalized source is staged; enable only after stock_cprover_async and improved_pipeline compile and verify in Docker.",
+      "root": "check-src/benchmark-sources/icbmc/cases/rc-core-bug/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/rc-core-bug/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/rc-core-bug/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["store_protocols_ldvwrapper", "show_protocols_ldvwrapper", "ir_devnode_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/rc-core/rc_core_bug.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger",
+      "enabled": false,
+      "reason": "Normalized as a control case but below the large-case LOC gate; do not use as a headline i-CBMC result.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["task_communicate", "task_measure"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/logger1+2/logger.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 300,
+      "memory_limit_mb": 4096
+    },
+    {
+      "name": "logger-bug",
+      "enabled": false,
+      "reason": "Normalized as a control case but below the large-case LOC gate; do not use as a headline i-CBMC result.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger-bug/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger-bug/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger-bug/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["main.c"],
+      "isr_functions": ["task_measure", "task_communicate"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/logger1+2/logger_bug.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 300,
+      "memory_limit_mb": 4096
+    }
+  ]
+}

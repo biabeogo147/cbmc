@@ -4,12 +4,16 @@
   "enabled": true,
   "runs": 5,
   "warmups": 1,
-  "variants": ["stock_naive", "improved_targeted"],
+  "variants": ["stock_cprover_async", "improved_pipeline"],
   "cases": [
     {
       "name": "trampoline-alarms-s1-non",
       "enabled": true,
-      "root": "check-src/simple-benchmarks/trampoline",
+      "root": "check-src/benchmark-sources/trampoline/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/trampoline/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/trampoline/improved-pipeline"
+      },
       "sources": [
         "tests/embUnit/AssertImpl.c",
         "tests/embUnit/RepeatedTest.c",

@@ -6,7 +6,7 @@ Import the i-CBMC interrupt benchmarks manually from:
   https://www.cprover.org/interrupts/
 
 Place sources under:
-  check-src/external/icbmc/
+  check-src/benchmark-sources/icbmc/
 
 Then update:
   check-src/benchmarks/suites/icbmc-interrupts.json

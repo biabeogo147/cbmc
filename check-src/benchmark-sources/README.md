@@ -1,0 +1,55 @@
+# Benchmark Source Corpora
+
+This directory is the single managed location for benchmark source corpora.
+
+## Layout
+
+| Path | Meaning |
+| --- | --- |
+| `trampoline/stock-cprover-async/` | Trampoline source modeled with CPROVER async labels for stock CBMC. |
+| `trampoline/improved-pipeline/` | Trampoline source modeled for the improved CBMC interleaving pipeline. |
+| `icbmc/upstream/` | Full collected i-CBMC benchmark artifacts from the CPROVER interrupt benchmark page. |
+| `icbmc/cases/` | Staged normalized i-CBMC cases. Each case has `stock-cprover-async`, `improved-pipeline`, and `CASE.md`. |
+| `icbmc/logger/` | Small smoke-only normalized i-CBMC Logger case. Not a headline benchmark. |
+| `intabs/upstream/` | Full collected IntAbs repository snapshot from GitHub. |
+| `intabs/cases/` | Staged normalized IntAbs cases. Each case has `stock-cprover-async`, `improved-pipeline`, and `CASE.md`. |
+| `intabs/logger2/` | Small smoke-only normalized IntAbs Logger2 case. Not a headline benchmark. |
+
+## Collected Corpus Size
+
+| Corpus | Location | C/H/I files | LOC |
+| --- | --- | ---: | ---: |
+| i-CBMC all artifacts | `icbmc/upstream` | 232 | 216799 |
+| i-CBMC `po-code` | `icbmc/upstream/extracted/po-code` | 32 | 31302 |
+| i-CBMC `seq-code` | `icbmc/upstream/extracted/seq-code` | 72 | 79314 |
+| i-CBMC `conc-code` | `icbmc/upstream/extracted/conc-code` | 128 | 106183 |
+| IntAbs repository | `intabs/upstream/repository` | 120 | 87868 |
+| IntAbs `icbmc` cases | `intabs/upstream/repository/icbmc` | 64 | 50459 |
+| IntAbs `src/test` cases | `intabs/upstream/repository/src/test` | 47 | 36088 |
+
+## Policy
+
+Do not report i-CBMC or IntAbs headline benchmark numbers from the tiny normalized
+Logger smoke cases. First select larger upstream cases, create both benchmark
+variants, validate that stock and improved variants compile, and only then enable
+the corresponding suite manifest.
+
+## Staged Normalized Cases
+
+The first staged case batch is intentionally conservative: source directories are
+ready for validation, but suite entries stay disabled until both variants compile
+and verification outcomes are classified in Docker.
+
+| Corpus | Staged cases | Suite |
+| --- | --- | --- |
+| i-CBMC | `blink`, `blink-bug`, `rc-core`, `rc-core-bug`, `logger`, `logger-bug` | `check-src/benchmarks/suites/icbmc-large.json` |
+| IntAbs | `wdt-pci-2`, `wdt-pci-3`, `wdt-pci-src-3`, `sc520wdt-1`, `sc520wdt-2`, `logger3` | `check-src/benchmarks/suites/intabs-large.json` |
+
+## Headline Benchmark Gate
+
+External i-CBMC and IntAbs benchmark suites are headline-ready only when:
+
+- the suite has at least 5 enabled normalized cases, or at least 5000 compile LOC;
+- every enabled case has `stock-cprover-async` and `improved-pipeline` variants;
+- both variants compile in Docker;
+- verification outcomes are classified as comparable or explicitly not comparable.

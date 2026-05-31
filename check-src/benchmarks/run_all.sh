@@ -12,3 +12,7 @@ print(json.loads(pathlib.Path(sys.argv[1]).read_text()).get("enabled", False))
 PY
   bash "$(dirname "${BASH_SOURCE[0]}")/run_suite.sh" "$manifest" "$@"
 done
+
+if [ "${1:-}" != "--dry-run" ]; then
+  "${PYTHON:-python3}" "$(dirname "${BASH_SOURCE[0]}")/common/report_benchmark.py"
+fi

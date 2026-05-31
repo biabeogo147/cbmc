@@ -1,27 +1,31 @@
 {
   "suite_name": "icbmc-interrupts",
-  "description": "Planned i-CBMC interrupt benchmark suite from CProver interrupt artifacts.",
+  "description": "i-CBMC interrupt benchmark suite. Full upstream corpus is collected; large runnable cases are pending normalization.",
   "enabled": false,
   "runs": 5,
   "warmups": 1,
-  "variants": ["stock_naive", "improved_targeted"],
+  "variants": ["stock_cprover_async", "improved_pipeline"],
   "cases": [
     {
-      "name": "placeholder-logger",
+      "name": "icbmc-logger",
       "enabled": false,
-      "reason": "Import CProver i-CBMC sources and record license before enabling.",
-      "root": "check-src/simple-benchmarks",
-      "sources": ["t_isr.c"],
+      "reason": "Smoke-only normalized case. Do not use as the headline i-CBMC benchmark; enable after selecting and normalizing larger collected upstream cases.",
+      "root": "check-src/benchmark-sources/icbmc/logger/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/logger/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/logger/improved-pipeline"
+      },
+      "sources": ["main.c", "model.c", "isr.c"],
       "include_dirs": ["."],
-      "isr_sources": ["t_isr.c"],
-      "isr_functions": ["isr1"],
+      "isr_sources": ["isr.c"],
+      "isr_functions": ["task_measure", "task_communicate"],
       "entry_function": "main",
       "properties": [],
       "unwind": 3,
       "defines": [],
       "expected_result": "same-result",
-      "timeout_sec": 900,
-      "memory_limit_mb": 16384
+      "timeout_sec": 300,
+      "memory_limit_mb": 4096
     }
   ]
 }

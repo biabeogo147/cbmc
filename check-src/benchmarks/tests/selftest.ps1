@@ -19,6 +19,21 @@ function Assert-Json {
 
 $checkSrc = Join-Path $Root "check-src"
 $bench = Join-Path $checkSrc "benchmarks"
+$pythonCommand = $null
+$bundledPython = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+foreach ($candidate in @("python", "python3", $bundledPython, "py")) {
+  if ((Test-Path -LiteralPath $candidate) -or (Get-Command $candidate -ErrorAction SilentlyContinue)) {
+    & $candidate --version *> $null
+    if ($LASTEXITCODE -ne 0) {
+      continue
+    }
+    $pythonCommand = $candidate
+    break
+  }
+}
+if (-not $pythonCommand) {
+  throw "Missing Python command: expected python, python3, or py"
+}
 
 Assert-Path (Join-Path $checkSrc "README.md")
 Assert-Path (Join-Path $bench "manifest.schema.json")
@@ -30,6 +45,7 @@ Assert-Path (Join-Path $bench "common\inject_naive_isr.sh")
 Assert-Path (Join-Path $bench "common\report.sh")
 Assert-Path (Join-Path $bench "common\runner.py")
 Assert-Path (Join-Path $bench "common\inject_naive.py")
+Assert-Path (Join-Path $bench "common\atomic_wrap_functions.py")
 Assert-Path (Join-Path $bench "VERIFICATION_PROTOCOL.md")
 
 $suiteNames = @(
@@ -94,6 +110,38 @@ foreach ($item in $topLevelItems) {
   if ($readme -notmatch [regex]::Escape($item)) {
     throw "Top-level check-src item is not documented in README: $item"
   }
+}
+
+$atomicTestDir = Join-Path ([System.IO.Path]::GetTempPath()) ("cbmc-atomic-wrap-" + [System.Guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Path $atomicTestDir | Out-Null
+try {
+  $atomicFixture = Join-Path $atomicTestDir "fixture.c"
+  Set-Content -LiteralPath $atomicFixture -Encoding ASCII -Value @"
+int shared;
+
+void isr_fixture(void) {
+  if (shared) {
+    return;
+  }
+  shared++;
+}
+"@
+  & $pythonCommand (Join-Path $bench "common\atomic_wrap_functions.py") $atomicFixture isr_fixture | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    throw "atomic_wrap_functions.py failed on fixture"
+  }
+  $atomicOutput = Get-Content -LiteralPath $atomicFixture -Raw
+  if ($atomicOutput -notmatch "__CPROVER_atomic_begin\(\);") {
+    throw "atomic wrapper did not add atomic begin"
+  }
+  if ($atomicOutput -notmatch "__CPROVER_atomic_end\(\);\s*return;") {
+    throw "atomic wrapper did not guard early return"
+  }
+  if ($atomicOutput -match "#define\s+__CPROVER_atomic_begin") {
+    throw "atomic wrapper must not replace CBMC atomic builtins with no-op macros"
+  }
+} finally {
+  Remove-Item -LiteralPath $atomicTestDir -Recurse -Force
 }
 
 Write-Output "selftest ok"

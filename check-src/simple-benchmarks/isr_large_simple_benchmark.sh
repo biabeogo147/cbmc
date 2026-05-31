@@ -9,7 +9,7 @@ AIB=${AIB:-./cmake-build-debug-cbmc/bin/aib}
 WORK=${WORK:-/tmp/cbmc_isr_large_benchmark}
 METRICS="$WORK/metrics.csv"
 
-TRAMPOLINE_ROOT=check-src/simple-benchmarks/trampoline
+TRAMPOLINE_ROOT=check-src/benchmark-sources/trampoline/improved-pipeline
 REL_SOURCES=(
   tests/embUnit/AssertImpl.c
   tests/embUnit/RepeatedTest.c
