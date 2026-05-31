@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""Count source files and LOC for managed benchmark corpora.
+
+Inputs:
+  - --repo-root: repository root, default current directory.
+  - Known corpus directories under check-src/benchmark-sources.
+
+Outputs:
+  - Markdown inventory at check-src/benchmark-sources/INVENTORY.md by default.
+  - Optional JSON inventory when --json-out is provided.
+
+The generated Markdown table is consumed by report_benchmark.py and copied into
+check-src/benchmark.md.
+"""
+
 import argparse
 import json
 from pathlib import Path
@@ -8,6 +22,14 @@ SOURCE_SUFFIXES = {".c", ".h", ".i"}
 
 
 def count_source(root: Path):
+    """Return number of C/H/I files and total line count under root.
+
+    Args:
+        root: Directory to scan recursively.
+
+    Returns:
+        Dictionary with file count and LOC count.
+    """
     files = [path for path in root.rglob("*") if path.is_file() and path.suffix in SOURCE_SUFFIXES]
     loc = 0
     for path in files:
@@ -16,6 +38,15 @@ def count_source(root: Path):
 
 
 def main(argv=None):
+    """CLI entry point that writes Markdown/JSON inventory files.
+
+    Args:
+        argv: Optional command-line argument list. When None, argparse reads
+            from sys.argv.
+
+    Returns:
+        Process-style exit code. Returns 0 on success.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--json-out")

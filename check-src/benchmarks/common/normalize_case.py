@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+"""Normalize a single upstream C case into stock and improved variant roots.
+
+Inputs:
+  - --corpus: target corpus name, currently icbmc or intabs.
+  - --case: normalized case directory name.
+  - --source: upstream source file path, relative to repo root.
+  - --compile-name: filename to use inside each variant root, default main.c.
+  - --isr-functions: comma-separated ISR/task names for generated CASE.md.
+
+Outputs:
+  - check-src/benchmark-sources/<corpus>/cases/<case>/stock-cprover-async/
+  - check-src/benchmark-sources/<corpus>/cases/<case>/improved-pipeline/
+  - check-src/benchmark-sources/<corpus>/cases/<case>/CASE.md
+
+This helper edits normalized copies only. It does not modify upstream corpus
+files in place.
+"""
+
 import argparse
 import re
 import shutil
@@ -15,6 +33,14 @@ PTHREAD_CREATE_RE = re.compile(
 
 
 def strip_async_labels(source: str) -> str:
+    """Remove active __CPROVER_ASYNC_* labels from source text.
+
+    Args:
+        source: C source text.
+
+    Returns:
+        Source text without standalone CPROVER async labels.
+    """
     lines = []
     for line in source.splitlines():
         if ASYNC_LABEL_RE.match(line):
@@ -24,6 +50,15 @@ def strip_async_labels(source: str) -> str:
 
 
 def stock_async_model(source: str) -> str:
+    """Convert active pthread_create calls to CPROVER async-style direct calls.
+
+    Args:
+        source: C source text from the upstream case.
+
+    Returns:
+        Stock-model source text where pthread_create calls become
+        __CPROVER_ASYNC-labeled direct calls.
+    """
     lines = []
     async_index = 1
     for line in source.splitlines():
@@ -44,6 +79,15 @@ def stock_async_model(source: str) -> str:
 
 
 def improved_pipeline_model(source: str) -> str:
+    """Remove active thread launch statements for improved pipeline modeling.
+
+    Args:
+        source: C source text from the upstream case.
+
+    Returns:
+        Improved-model source text without active async labels or pthread_create
+        launch statements.
+    """
     lines = []
     for line in strip_async_labels(source).splitlines():
         if line.lstrip().startswith("//"):
@@ -56,6 +100,20 @@ def improved_pipeline_model(source: str) -> str:
 
 
 def copy_case(repo, corpus, case_name, source, compile_name, isr_functions, force):
+    """Create variant roots and provenance notes for one normalized case.
+
+    Args:
+        repo: Repository root.
+        corpus: Target corpus folder name, for example icbmc or intabs.
+        case_name: Normalized benchmark case directory name.
+        source: Upstream source path relative to repo.
+        compile_name: File name to write inside each variant root.
+        isr_functions: Comma-separated ISR/task function names.
+        force: Whether to delete an existing normalized case directory first.
+
+    Returns:
+        Path to the generated case directory.
+    """
     source_path = (repo / source).resolve()
     if not source_path.exists():
         raise FileNotFoundError(source_path)
@@ -100,6 +158,15 @@ def copy_case(repo, corpus, case_name, source, compile_name, isr_functions, forc
 
 
 def main(argv=None):
+    """CLI entry point for one case normalization.
+
+    Args:
+        argv: Optional command-line argument list. When None, argparse reads
+            from sys.argv.
+
+    Returns:
+        Process-style exit code. Returns 0 on success.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--corpus", required=True, choices=["icbmc", "intabs"])

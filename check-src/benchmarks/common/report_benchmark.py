@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+"""Generate check-src/benchmark.md from raw suite CSV files.
+
+Inputs:
+  - CSV files from check-src/benchmarks/results/*.csv.
+  - Suite manifests from check-src/benchmarks/suites/*.json.
+  - Optional source inventory table from check-src/benchmark-sources/INVENTORY.md.
+
+Output:
+  - check-src/benchmark.md by default, or --out <path>.
+
+The report summarizes measured rows only; warmup rows are ignored. It reports
+median phase time and peak RSS, then decides whether stock and improved results
+are comparable before printing speed/RAM deltas.
+"""
+
 import argparse
 import csv
 import json
@@ -24,6 +39,14 @@ IMPROVED_VARIANTS = {"improved_pipeline"}
 
 
 def load_manifests(suite_dir):
+    """Load suite JSON files keyed by suite_name.
+
+    Args:
+        suite_dir: Directory containing suite manifest JSON files.
+
+    Returns:
+        Dictionary mapping suite_name to loaded manifest dictionaries.
+    """
     manifests = {}
     for path in sorted(suite_dir.glob("*.json")):
         try:
@@ -35,6 +58,14 @@ def load_manifests(suite_dir):
 
 
 def load_rows(results_dir):
+    """Load raw CSV rows and drop warmup rows from report calculations.
+
+    Args:
+        results_dir: Directory containing raw benchmark CSV files.
+
+    Returns:
+        List of CSV rows as dictionaries. Warmup rows are excluded.
+    """
     rows = []
     for path in sorted(results_dir.glob("*.csv")):
         with path.open(newline="", encoding="utf-8", errors="replace") as csv_file:
@@ -50,6 +81,16 @@ def load_rows(results_dir):
 
 
 def summary_class(summary, exit_code):
+    """Map log summary text and exit code to a comparable outcome class.
+
+    Args:
+        summary: Summary text extracted from a command log.
+        exit_code: Recorded command exit code.
+
+    Returns:
+        Normalized outcome class such as success, failed, unsupported, timeout,
+        memory_limit, exit_<code>, or ok.
+    """
     text = (summary or "").strip()
     if "CBMC_UNSUPPORTED_CONCURRENCY" in text:
         return "unsupported"
@@ -67,6 +108,14 @@ def summary_class(summary, exit_code):
 
 
 def display_summary(item):
+    """Return the report-facing summary string for one phase item.
+
+    Args:
+        item: Phase statistics dictionary.
+
+    Returns:
+        Explicit summary when present, OK for zero exit, or EXIT_<code>.
+    """
     summary = item["summary"]
     if summary:
         return summary
@@ -76,6 +125,15 @@ def display_summary(item):
 
 
 def summarize(rows):
+    """Bucket rows by suite/case/variant/phase and compute medians.
+
+    Args:
+        rows: Measured CSV rows.
+
+    Returns:
+        Dictionary keyed by (suite, case, variant, phase) with median time,
+        median RSS, exit code, summary, and run count.
+    """
     buckets = defaultdict(list)
     for row in rows:
         if row.get("phase") not in MEASURED_PHASES:
@@ -99,6 +157,17 @@ def summarize(rows):
 
 
 def phase_set(phases, suite, case, variant):
+    """Return all available phase summaries for one case variant.
+
+    Args:
+        phases: Summarized phase dictionary from summarize().
+        suite: Suite name.
+        case: Case name.
+        variant: Variant name.
+
+    Returns:
+        Dictionary mapping phase name to phase statistics.
+    """
     return {
         phase: phases[(suite, case, variant, phase)]
         for phase in MEASURED_PHASES
@@ -107,12 +176,28 @@ def phase_set(phases, suite, case, variant):
 
 
 def variant_phases(variant):
+    """Return the expected phase order for a variant.
+
+    Args:
+        variant: Variant name.
+
+    Returns:
+        Ordered phase list for report display and total-time calculation.
+    """
     if variant in IMPROVED_VARIANTS:
         return IMPROVED_PHASES
     return STOCK_PHASES
 
 
 def comparison_variants(manifest):
+    """Resolve stock and improved variants from a suite manifest.
+
+    Args:
+        manifest: Loaded suite manifest, or None.
+
+    Returns:
+        Tuple of stock variant name and improved variant name.
+    """
     variants = list((manifest or {}).get("variants") or [])
     stock = next((variant for variant in variants if variant in STOCK_VARIANTS), "stock_cprover_async")
     improved = next((variant for variant in variants if variant in IMPROVED_VARIANTS), "improved_pipeline")
@@ -120,16 +205,41 @@ def comparison_variants(manifest):
 
 
 def total_time(phase_stats, ordered_phases):
+    """Sum median time across selected phases.
+
+    Args:
+        phase_stats: Phase statistics for one variant.
+        ordered_phases: Phases to include in the total.
+
+    Returns:
+        Total median time in milliseconds.
+    """
     return sum(phase_stats[phase]["time_ms"] for phase in ordered_phases if phase in phase_stats)
 
 
 def peak_rss(phase_stats):
+    """Return the maximum median RSS across phases.
+
+    Args:
+        phase_stats: Phase statistics for one variant.
+
+    Returns:
+        Peak median RSS in MiB, or 0.0 when no phases exist.
+    """
     if not phase_stats:
         return 0.0
     return max(item["rss_mb"] for item in phase_stats.values())
 
 
 def verify_class(phase_stats):
+    """Return the normalized verification outcome for one variant.
+
+    Args:
+        phase_stats: Phase statistics for one variant.
+
+    Returns:
+        Verification outcome class, or missing_verify when no verify phase exists.
+    """
     if "verify" not in phase_stats:
         return "missing_verify"
     item = phase_stats["verify"]
@@ -137,6 +247,15 @@ def verify_class(phase_stats):
 
 
 def comparable(stock_stats, improved_stats):
+    """Return whether the report may print speed/RAM percentage deltas.
+
+    Args:
+        stock_stats: Phase statistics for the stock variant.
+        improved_stats: Phase statistics for the improved variant.
+
+    Returns:
+        Tuple of (is_comparable, reason_text).
+    """
     for item in improved_stats.values():
         if item.get("summary") == "NO_INJECTION_CANDIDATES":
             return False, "Not comparable: improved variant had no injection candidates."
@@ -155,6 +274,16 @@ def comparable(stock_stats, improved_stats):
 
 
 def percent_delta(stock_value, improved_value, lower_is_better=True):
+    """Format a percent difference between stock and improved values.
+
+    Args:
+        stock_value: Baseline numeric value.
+        improved_value: Improved variant numeric value.
+        lower_is_better: Whether smaller values indicate improvement.
+
+    Returns:
+        Human-readable percentage delta string.
+    """
     if stock_value == 0:
         return "n/a"
     delta = (stock_value - improved_value) / stock_value * 100
@@ -168,6 +297,15 @@ def percent_delta(stock_value, improved_value, lower_is_better=True):
 
 
 def suite_case_names(rows, manifests):
+    """Collect all case names that should appear in the report.
+
+    Args:
+        rows: Measured CSV rows.
+        manifests: Loaded suite manifests.
+
+    Returns:
+        Dictionary mapping suite name to sorted case name list.
+    """
     names = defaultdict(set)
     for row in rows:
         names[row["benchmark"]].add(row["case"])
@@ -178,6 +316,15 @@ def suite_case_names(rows, manifests):
 
 
 def compile_loc(case, manifest=None):
+    """Estimate enabled compile LOC for suite readiness reporting.
+
+    Args:
+        case: Loaded case dictionary.
+        manifest: Optional loaded suite manifest for variant information.
+
+    Returns:
+        Maximum compile LOC across variants for the case.
+    """
     totals = []
     variants = list((manifest or {}).get("variants") or ["default"])
     variant_roots = case.get("variant_roots") or {}
@@ -195,6 +342,15 @@ def compile_loc(case, manifest=None):
 
 
 def suite_readiness(manifest):
+    """Compute report readiness metadata for a suite.
+
+    Args:
+        manifest: Loaded suite manifest.
+
+    Returns:
+        Tuple of staged case count, enabled case count, enabled compile LOC, and
+        headline-readiness boolean.
+    """
     cases = manifest.get("cases", [])
     enabled = [case for case in cases if case.get("enabled", True)]
     enabled_loc = sum(compile_loc(case, manifest) for case in enabled)
@@ -204,6 +360,19 @@ def suite_readiness(manifest):
 
 
 def append_case(lines, suite, case, phases, manifest, headline_ready):
+    """Append one case section with phase tables and comparison status.
+
+    Args:
+        lines: Markdown line buffer to mutate.
+        suite: Suite name.
+        case: Case name.
+        phases: Summarized phase dictionary from summarize().
+        manifest: Loaded suite manifest.
+        headline_ready: Whether speed/RAM deltas may be headline results.
+
+    Returns:
+        None. Appends Markdown lines in place.
+    """
     stock_variant, improved_variant = comparison_variants(manifest)
     stock = phase_set(phases, suite, case, stock_variant)
     improved = phase_set(phases, suite, case, improved_variant)
@@ -262,6 +431,16 @@ def append_case(lines, suite, case, phases, manifest, headline_ready):
 
 
 def build_report(rows, phases, manifests):
+    """Compose the full Markdown report as a string.
+
+    Args:
+        rows: Measured CSV rows.
+        phases: Summarized phase dictionary from summarize().
+        manifests: Loaded suite manifests.
+
+    Returns:
+        Complete Markdown report text.
+    """
     lines = [
         "# ISR Benchmark Results",
         "",
@@ -317,6 +496,15 @@ def build_report(rows, phases, manifests):
 
 
 def main(argv=None):
+    """CLI entry point for benchmark Markdown report generation.
+
+    Args:
+        argv: Optional command-line argument list. When None, argparse reads
+            from sys.argv.
+
+    Returns:
+        Process-style exit code. Returns 0 on success.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default=BENCHMARK_DIR / "results")
     parser.add_argument("--suite-dir", default=BENCHMARK_DIR / "suites")

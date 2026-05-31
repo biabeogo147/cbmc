@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""Scan imported corpora and rank likely interrupt/concurrency benchmark files.
+
+Inputs:
+  - --repo-root: repository root, default current directory.
+  - Imported i-CBMC and IntAbs upstream source trees under check-src/benchmark-sources.
+
+Output:
+  - Markdown candidate table at check-src/benchmark-sources/CANDIDATES.md by default.
+
+The score is only a triage heuristic. It favors larger files with main(),
+CPROVER async labels, pthread_create, verifier thread metadata, and assertions.
+It does not prove that a candidate is runnable without normalization.
+"""
+
 import argparse
 import re
 from dataclasses import dataclass
@@ -21,6 +35,14 @@ class Candidate:
 
     @property
     def score(self):
+        """Compute the heuristic ranking score.
+
+        Args:
+            None.
+
+        Returns:
+            Numeric score used to sort candidate files descending.
+        """
         return (
             self.loc
             + self.async_labels * 500
@@ -31,6 +53,15 @@ class Candidate:
 
 
 def inspect_file(path: Path, repo: Path):
+    """Count concurrency/assertion markers for one source file.
+
+    Args:
+        path: Source file to inspect.
+        repo: Repository root used to store a relative path in the result.
+
+    Returns:
+        Candidate metadata with LOC and marker counts.
+    """
     text = path.read_text(errors="ignore")
     loc = len(text.splitlines())
     return Candidate(
@@ -46,6 +77,15 @@ def inspect_file(path: Path, repo: Path):
 
 
 def scan(root: Path, repo: Path):
+    """Return ranked candidate files from one corpus root.
+
+    Args:
+        root: Corpus directory to scan recursively.
+        repo: Repository root used for relative paths.
+
+    Returns:
+        Candidate list sorted by descending heuristic score.
+    """
     candidates = []
     for path in root.rglob("*"):
         if not path.is_file() or path.suffix not in SOURCE_SUFFIXES:
@@ -59,6 +99,15 @@ def scan(root: Path, repo: Path):
 
 
 def main(argv=None):
+    """CLI entry point that writes the candidate Markdown report.
+
+    Args:
+        argv: Optional command-line argument list. When None, argparse reads
+            from sys.argv.
+
+    Returns:
+        Process-style exit code. Returns 0 on success.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--limit", type=int, default=30)

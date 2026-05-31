@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+# Shared environment defaults for benchmark shell entry points.
+#
+# Inputs:
+#   - Optional environment overrides supplied by Docker/WSL/Linux callers.
+#   - Repository layout relative to this file.
+#
+# Outputs:
+#   - Exports shell variables used by run_suite.sh and runner.py.
+#   - Ensures WORK and RESULTS_DIR directories exist.
+#
+# Important variables:
+#   IMPROVED_CBMC / IMPROVED_GOTOCC: improved toolchain under test.
+#   STOCK_CBMC / STOCK_GOTOCC: stock baseline toolchain.
+#   AIB: interleaving injector used by improved_pipeline.
+#   WORK: copied source trees, generated GOTO files, and logs.
+#   RESULTS_DIR: suite CSV output directory.
 set -euo pipefail
 
 BENCHMARK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
