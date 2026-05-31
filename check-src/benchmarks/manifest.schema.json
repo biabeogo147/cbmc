@@ -11,7 +11,10 @@
     "warmups": { "type": "integer", "minimum": 0 },
     "variants": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string",
+        "enum": ["stock_cprover_async", "improved_pipeline"]
+      }
     },
     "cases": {
       "type": "array",

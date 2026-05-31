@@ -15,14 +15,12 @@ REPO_ROOT = BENCHMARK_DIR.parent.parent
 VARIANT_LABELS = {
     "stock_cprover_async": "Stock CPROVER async",
     "improved_pipeline": "Improved pipeline",
-    "stock_naive": "Stock naive",
-    "improved_targeted": "Improved targeted",
 }
 MEASURED_PHASES = {"compile", "verify", "manifest", "inject"}
 STOCK_PHASES = ["compile", "verify"]
 IMPROVED_PHASES = ["manifest", "inject", "compile", "verify"]
-STOCK_VARIANTS = {"stock_cprover_async", "stock_naive"}
-IMPROVED_VARIANTS = {"improved_pipeline", "improved_targeted"}
+STOCK_VARIANTS = {"stock_cprover_async"}
+IMPROVED_VARIANTS = {"improved_pipeline"}
 
 
 def load_manifests(suite_dir):
@@ -272,7 +270,7 @@ def build_report(rows, phases, manifests):
         "This report is generated from `check-src/benchmarks/results/*.csv` by `check-src/benchmarks/common/report_benchmark.py`.",
         "Warmup rows are ignored; measured rows are summarized with median time and median peak RSS per phase.",
         "",
-        "Comparison labels: Stock CPROVER async, Improved pipeline, Stock naive, Improved targeted, Comparable, Not comparable, Median, Peak RSS.",
+        "Comparison labels: Stock CPROVER async, Improved pipeline, Comparable, Not comparable, Median, Peak RSS.",
         "",
         "## Source Inventory",
         "",

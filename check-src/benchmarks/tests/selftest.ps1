@@ -40,13 +40,17 @@ Assert-Path (Join-Path $bench "manifest.schema.json")
 Assert-Path (Join-Path $bench "run_suite.sh")
 Assert-Path (Join-Path $bench "run_all.sh")
 Assert-Path (Join-Path $bench "common\env.sh")
-Assert-Path (Join-Path $bench "common\measure.sh")
-Assert-Path (Join-Path $bench "common\inject_naive_isr.sh")
-Assert-Path (Join-Path $bench "common\report.sh")
 Assert-Path (Join-Path $bench "common\runner.py")
-Assert-Path (Join-Path $bench "common\inject_naive.py")
 Assert-Path (Join-Path $bench "common\atomic_wrap_functions.py")
 Assert-Path (Join-Path $bench "VERIFICATION_PROTOCOL.md")
+
+foreach ($legacyPath in @(
+  (Join-Path $bench ("common\inject" + "_naive.py"))
+)) {
+  if (Test-Path -LiteralPath $legacyPath) {
+    throw "Legacy benchmark file must be removed: $legacyPath"
+  }
+}
 
 $suiteNames = @(
   "local-smoke",
@@ -54,8 +58,8 @@ $suiteNames = @(
   "trampoline-current",
   "trampoline-c-async",
   "trampoline-expanded",
-  "icbmc-interrupts",
-  "intabs-interrupts"
+  "icbmc-large",
+  "intabs-large"
 )
 
 foreach ($suite in $suiteNames) {
@@ -65,6 +69,11 @@ foreach ($suite in $suiteNames) {
   foreach ($field in @("suite_name", "description", "enabled", "cases")) {
     if (-not $data.PSObject.Properties.Name.Contains($field)) {
       throw "$suite.json missing required field: $field"
+    }
+  }
+  foreach ($variant in @($data.variants)) {
+    if ($variant -in @(("stock" + "_naive"), ("improved" + "_targeted"))) {
+      throw "$suite.json uses legacy variant: $variant"
     }
   }
   foreach ($case in $data.cases) {
@@ -97,6 +106,23 @@ foreach ($suite in $suiteNames) {
     }
     if (@($case.isr_functions).Count -eq 0) {
       throw "$suite.json case has no isr_functions: $($case.name)"
+    }
+  }
+}
+
+$legacyTerms = @(("inject" + "_naive"), ("stock" + "_naive"), ("improved" + "_targeted"))
+$docPaths = @(
+  (Join-Path $checkSrc "README.md"),
+  (Join-Path $bench "README.md"),
+  (Join-Path $bench "PIPELINE.md"),
+  (Join-Path $bench "manifest.schema.json")
+)
+foreach ($docPath in $docPaths) {
+  Assert-Path $docPath
+  $docText = Get-Content -LiteralPath $docPath -Raw
+  foreach ($term in $legacyTerms) {
+    if ($docText -match [regex]::Escape($term)) {
+      throw "Legacy term '$term' remains in $docPath"
     }
   }
 }

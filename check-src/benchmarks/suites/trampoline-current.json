@@ -1,6 +1,6 @@
 {
   "suite_name": "trampoline-current",
-  "description": "Current check-src Trampoline alarms_s1_non ISR benchmark formerly encoded in isr_large_benchmark.sh.",
+  "description": "Current check-src Trampoline alarms_s1_non ISR benchmark.",
   "enabled": true,
   "runs": 5,
   "warmups": 1,

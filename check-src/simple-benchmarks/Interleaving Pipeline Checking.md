@@ -257,15 +257,3 @@ Notes:
 - if the program has loops, add the unwind bound you want, for example
   `--unwind 10`
 
-# Manifest runner note
-
-The preferred entry point for the refactored benchmark flow is now:
-
-```bash
-bash check-src/benchmarks/run_suite.sh check-src/benchmarks/suites/local-smoke.json --dry-run
-bash check-src/benchmarks/run_suite.sh check-src/benchmarks/suites/trampoline-current.json
-```
-
-The historical `check-src/isr_large_benchmark.sh` script is kept as a
-compatibility wrapper. The original one-off implementation is preserved in
-`check-src/simple-benchmarks/isr_large_simple_benchmark.sh`.

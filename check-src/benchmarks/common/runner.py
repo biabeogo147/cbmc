@@ -48,9 +48,9 @@ def summarize_log(log_path):
     return summary
 
 
-IMPROVED_VARIANTS = {"improved_targeted", "improved_pipeline"}
+IMPROVED_VARIANTS = {"improved_pipeline"}
 STOCK_ASYNC_VARIANTS = {"stock_cprover_async"}
-LEGACY_VARIANTS = {"stock_naive", "improved_targeted"}
+DEFAULT_VARIANTS = ["stock_cprover_async", "improved_pipeline"]
 
 
 def measure(
@@ -128,7 +128,7 @@ def measure(
 
 
 def variants_for(manifest, case):
-    return case.get("variants", manifest.get("variants", ["stock_naive", "improved_targeted"]))
+    return case.get("variants", manifest.get("variants", DEFAULT_VARIANTS))
 
 
 def sources_for(case, variant=None):
@@ -324,66 +324,6 @@ def filtered_interleaving_manifest(source_manifest, filtered_manifest, allowed_f
     return len(filtered)
 
 
-def run_stock_naive(csv_writer, manifest_path, suite, case, name, case_work, logs, run_id, run_kind):
-    stock_naive = case_work / "stock_naive"
-    stock_cbmc, stock_gotocc, _, _, _ = command_paths()
-
-    inject_cmd = [
-        sys.executable,
-        str(SCRIPT_DIR / "inject_naive.py"),
-        str(manifest_path),
-        name,
-        str(stock_naive),
-    ]
-    result = subprocess.run(inject_cmd, capture_output=True, text=True, check=False)
-    (case_work / "stock_naive_insertions.csv").write_text(result.stdout + result.stderr)
-    write_prepare_row(
-        csv_writer,
-        suite,
-        name,
-        "stock_naive",
-        run_id,
-        f"isr_insertions_log={case_work / 'stock_naive_insertions.csv'}",
-    )
-
-    stock_out = case_work / "stock_naive.out"
-    stock_compile = [
-        str(stock_gotocc),
-        *rel_args(stock_naive, case["include_dirs"], "-I"),
-        *define_args(case),
-        *source_args(stock_naive, case["sources"]),
-        "-o",
-        str(stock_out),
-    ]
-    if measure(
-        csv_writer,
-        logs,
-        suite,
-        name,
-        "stock_naive",
-        "compile",
-        run_id,
-        run_kind,
-        stock_compile,
-        case["timeout_sec"],
-        case["memory_limit_mb"],
-    ) == 0:
-        stock_verify = [str(stock_cbmc), str(stock_out), *verify_args(case, "stock_naive")]
-        measure(
-            csv_writer,
-            logs,
-            suite,
-            name,
-            "stock_naive",
-            "verify",
-            run_id,
-            run_kind,
-            stock_verify,
-            case["timeout_sec"],
-            case["memory_limit_mb"],
-        )
-
-
 def run_stock_cprover_async(csv_writer, suite, case, name, case_work, logs, run_id, run_kind):
     stock_async = case_work / "stock_cprover_async"
     copy_variant_source(case, "stock_cprover_async", stock_async)
@@ -557,9 +497,7 @@ def run_variant_set(csv_writer, manifest_path, suite, case, manifest, work_root,
     case_work.mkdir(parents=True, exist_ok=True)
 
     for variant in variants:
-        if variant == "stock_naive":
-            run_stock_naive(csv_writer, manifest_path, suite, case, name, case_work, logs, run_id, run_kind)
-        elif variant in STOCK_ASYNC_VARIANTS:
+        if variant in STOCK_ASYNC_VARIANTS:
             run_stock_cprover_async(csv_writer, suite, case, name, case_work, logs, run_id, run_kind)
         elif variant in IMPROVED_VARIANTS:
             run_improved_pipeline(csv_writer, suite, case, name, case_work, logs, variant, run_id, run_kind)

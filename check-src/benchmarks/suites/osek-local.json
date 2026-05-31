@@ -4,7 +4,7 @@
   "enabled": true,
   "runs": 1,
   "warmups": 0,
-  "variants": ["stock_naive", "improved_targeted"],
+  "variants": ["stock_cprover_async", "improved_pipeline"],
   "cases": [
     {
       "name": "osek-event-interleaving",
