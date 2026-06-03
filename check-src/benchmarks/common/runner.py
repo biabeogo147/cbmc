@@ -243,6 +243,22 @@ def isr_sources_for(case, variant=None):
     return case["isr_sources"]
 
 
+def include_dirs_for(case, variant=None):
+    """Return include directories for a case variant.
+
+    Args:
+        case: Loaded case dictionary.
+        variant: Optional variant name.
+
+    Returns:
+        List of include directories relative to the selected variant root.
+    """
+    variant_include_dirs = case.get("variant_include_dirs", {})
+    if variant in variant_include_dirs:
+        return variant_include_dirs[variant]
+    return case["include_dirs"]
+
+
 def case_root(case, variant=None):
     """Resolve the repository-absolute source root for a case variant.
 
@@ -257,6 +273,49 @@ def case_root(case, variant=None):
     if variant in roots:
         return REPO_ROOT / roots[variant]
     return REPO_ROOT / case["root"]
+
+
+def translation_units_from_manifest(manifest_path):
+    """Read compile units from an interleaving manifest.
+
+    Args:
+        manifest_path: JSON manifest emitted by improved goto-cc or aib.
+
+    Returns:
+        List of source paths from project.translation_units.
+
+    Raises:
+        ValueError: If the manifest does not contain translation units.
+    """
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    units = data.get("project", {}).get("translation_units", [])
+    if not units:
+        raise ValueError(f"{manifest_path}: missing project.translation_units")
+    return units
+
+
+def write_synthetic_injected_manifest(manifest_path, project_root, isr_sources, translation_units):
+    """Write an injected-manifest substitute when no aib process runs.
+
+    Args:
+        manifest_path: Output manifest path inside the targeted run tree.
+        project_root: Root of the copied project tree.
+        isr_sources: ISR source paths relative to project_root.
+        translation_units: Compile source paths relative to project_root.
+
+    Returns:
+        None.
+    """
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "project": {
+            "project_root": str(project_root),
+            "interleaving_source_files": list(isr_sources),
+            "translation_units": list(translation_units),
+        },
+        "interleaving": [],
+    }
+    manifest_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
 def compile_loc(root, sources):
@@ -327,7 +386,10 @@ def validate_manifest(manifest):
                 path = root / source
                 if not path.exists():
                     raise ValueError(f"{case['name']}: missing source {path}")
-            for include_dir in case["include_dirs"]:
+            root_include_dirs = []
+            for variant in root_variants:
+                root_include_dirs.extend(include_dirs_for(case, variant))
+            for include_dir in sorted(set(root_include_dirs)):
                 path = root / include_dir
                 if not path.exists():
                     raise ValueError(f"{case['name']}: missing include dir {path}")
@@ -419,12 +481,41 @@ def define_args(case):
     return [f"-D{define}" for define in case.get("defines", [])]
 
 
-def verify_args(case, variant):
+def cbmc_extra_args(case, variant, root):
+    """Build extra CBMC arguments for a case variant.
+
+    Args:
+        case: Loaded case dictionary.
+        variant: Variant name.
+        root: Source root used to resolve relative file arguments.
+
+    Returns:
+        List of CBMC arguments with path-valued options resolved.
+    """
+    args = []
+    args.extend(case.get("cbmc_args", []))
+    args.extend(case.get("variant_cbmc_args", {}).get(variant, []))
+    resolved = []
+    path_options = {"--osek-oil"}
+    index = 0
+    while index < len(args):
+        item = args[index]
+        resolved.append(item)
+        if item in path_options and index + 1 < len(args):
+            index += 1
+            value = Path(args[index])
+            resolved.append(str(value if value.is_absolute() else root / value))
+        index += 1
+    return resolved
+
+
+def verify_args(case, variant, root):
     """Build common cbmc verification arguments for stock and improved variants.
 
     Args:
         case: Loaded case dictionary.
         variant: Variant name.
+        root: Source root used to resolve relative file arguments.
 
     Returns:
         List of cbmc verification arguments.
@@ -435,6 +526,7 @@ def verify_args(case, variant):
     args.extend(["--unwind", str(case["unwind"])])
     for prop in case.get("properties", []):
         args.extend(["--property", prop])
+    args.extend(cbmc_extra_args(case, variant, root))
     return args
 
 
@@ -585,7 +677,7 @@ def run_stock_cprover_async(csv_writer, suite, case, name, case_work, logs, run_
     stock_out = case_work / "stock_cprover_async.out"
     stock_compile = [
         str(stock_gotocc),
-        *rel_args(stock_async, case["include_dirs"], "-I"),
+        *rel_args(stock_async, include_dirs_for(case, "stock_cprover_async"), "-I"),
         *define_args(case),
         *source_args(stock_async, sources_for(case, "stock_cprover_async")),
         "-o",
@@ -604,7 +696,11 @@ def run_stock_cprover_async(csv_writer, suite, case, name, case_work, logs, run_
         case["timeout_sec"],
         case["memory_limit_mb"],
     ) == 0:
-        stock_verify = [str(stock_cbmc), str(stock_out), *verify_args(case, "stock_cprover_async")]
+        stock_verify = [
+            str(stock_cbmc),
+            str(stock_out),
+            *verify_args(case, "stock_cprover_async", stock_async),
+        ]
         measure(
             csv_writer,
             logs,
@@ -649,7 +745,7 @@ def run_improved_pipeline(csv_writer, suite, case, name, case_work, logs, varian
     interleaving_sources = [str(original / path) for path in variant_isr_sources]
     improved_manifest_cmd = [
         str(improved_gotocc),
-        *rel_args(original, case["include_dirs"], "-I"),
+        *rel_args(original, include_dirs_for(case, variant), "-I"),
         *define_args(case),
         *source_args(original, variant_sources),
         "--interleaving-project-root",
@@ -681,10 +777,17 @@ def run_improved_pipeline(csv_writer, suite, case, name, case_work, logs, varian
             case.get("isr_functions", []),
         )
         inject_exit = 0
+        injected_manifest = targeted / "interleaving_pipeline_injected.json"
         if injection_candidates == 0:
             # No injection candidate is a measured outcome, but no external aib
             # process runs here. The report treats it as not comparable.
             copy_tree(original, targeted)
+            write_synthetic_injected_manifest(
+                injected_manifest,
+                targeted,
+                variant_isr_sources,
+                variant_sources,
+            )
             write_phase_row(
                 csv_writer,
                 suite,
@@ -697,7 +800,6 @@ def run_improved_pipeline(csv_writer, suite, case, name, case_work, logs, varian
                 "NO_INJECTION_CANDIDATES",
             )
         else:
-            injected_manifest = targeted / "interleaving_pipeline_injected.json"
             aib_cmd = [str(aib), str(original), str(aib_input_json), str(targeted), str(injected_manifest)]
             inject_exit = measure(
                 csv_writer,
@@ -714,11 +816,12 @@ def run_improved_pipeline(csv_writer, suite, case, name, case_work, logs, varian
             )
         if inject_exit == 0:
             improved_out = case_work / f"{variant}.out"
+            injected_sources = translation_units_from_manifest(injected_manifest)
             improved_compile = [
                 str(improved_gotocc),
-                *rel_args(targeted, case["include_dirs"], "-I"),
+                *rel_args(targeted, include_dirs_for(case, variant), "-I"),
                 *define_args(case),
-                *source_args(targeted, variant_sources),
+                *source_args(targeted, injected_sources),
                 "-o",
                 str(improved_out),
             ]
@@ -735,7 +838,7 @@ def run_improved_pipeline(csv_writer, suite, case, name, case_work, logs, varian
                 case["timeout_sec"],
                 case["memory_limit_mb"],
             ) == 0:
-                improved_verify = [str(improved_cbmc), str(improved_out), *verify_args(case, variant)]
+                improved_verify = [str(improved_cbmc), str(improved_out), *verify_args(case, variant, targeted)]
                 measure(
                     csv_writer,
                     logs,

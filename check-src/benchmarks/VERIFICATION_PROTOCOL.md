@@ -10,8 +10,10 @@ Use this protocol for headline stock CBMC vs improved CBMC numbers.
 4. Report median `time_ms` and `max_rss_mb`.
 5. Refuse headline speed/RAM deltas when stock and improved verification
    summaries differ.
-6. Store raw logs under `$WORK` and CSV/Markdown summaries under
-   `check-src/benchmarks/results`.
+6. Store raw logs under `$WORK`, CSV summaries under
+   `check-src/benchmarks/results`, comparable Markdown results in
+   `check-src/benchmark.md`, and non-comparable cases in
+   `check-src/uncomparable.md`.
 7. On Windows without WSL, structural self-tests may run, but benchmark RAM
    numbers require Linux/WSL because the sampler reads `/proc/<pid>/status`.
 

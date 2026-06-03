@@ -21,7 +21,8 @@ PowerShell -ExecutionPolicy Bypass -File .\check-src\benchmarks\tests\selftest.p
 
 | Item | Role | Notes |
 | --- | --- | --- |
-| `benchmark.md` | Latest benchmark report | Docker-measured stock CBMC vs improved CBMC results. Non-comparable outcomes are reported without speed/RAM percentage claims. |
+| `benchmark.md` | Comparable benchmark report | Docker-measured stock CBMC vs improved CBMC cases whose verification outcomes can be compared. |
+| `uncomparable.md` | Non-comparable benchmark report | Cases that cannot be compared directly, including unsupported concurrency, different verification outcomes, missing measured rows, or no injection candidates. |
 | `benchmark-sources/` | Managed source corpora | Runnable benchmark source roots. Each larger case should keep stock CPROVER async and improved pipeline variants here. |
 | `benchmarks/` | Framework | Suite manifests, runner, measurement, documentation, logs, and result output. |
 | `simple-benchmarks/` | Legacy local inputs | Small demos and OSEK cases retained for smoke tests. Trampoline was moved out to `benchmark-sources/`. |
@@ -45,10 +46,6 @@ PowerShell -ExecutionPolicy Bypass -File .\check-src\benchmarks\tests\selftest.p
 | Item | Suite or role | Notes |
 | --- | --- | --- |
 | `simple-benchmarks/Interleaving Pipeline Checking.md` | Documentation | Original pipeline notes, now linked to manifest runner. |
-| `simple-benchmarks/interleaving_adding_config.json` | Documentation/config | Small historical AIB config example. |
-| `simple-benchmarks/t_interleaving.c` | `local-smoke.json` | Small interleaving smoke input. |
-| `simple-benchmarks/t_isr.c` | `local-smoke.json` | Small ISR smoke input. |
-| `simple-benchmarks/t_isr_added.c` | `local-smoke.json` | Previously injected ISR smoke input. |
 | `simple-benchmarks/t_isr_multifile/` | `local-smoke.json` | Multi-file ISR pipeline smoke case. |
 | `simple-benchmarks/osek_event_interleaving/` | `osek-local.json` | OSEK event interleaving demo. |
 | `simple-benchmarks/osek_event_regression/` | `osek-local.json` | OSEK event regression cases. |

@@ -56,6 +56,13 @@
             "type": "array",
             "items": { "type": "string" }
           },
+          "variant_include_dirs": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
           "isr_sources": {
             "type": "array",
             "items": { "type": "string" }
@@ -80,6 +87,17 @@
           "defines": {
             "type": "array",
             "items": { "type": "string" }
+          },
+          "cbmc_args": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "variant_cbmc_args": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           "expected_result": { "type": "string" },
           "expected_summary": { "type": "string" },

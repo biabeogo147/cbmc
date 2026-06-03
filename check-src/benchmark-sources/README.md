@@ -10,10 +10,8 @@ This directory is the single managed location for benchmark source corpora.
 | `trampoline/improved-pipeline/` | Trampoline source modeled for the improved CBMC interleaving pipeline. |
 | `icbmc/upstream/` | Full collected i-CBMC benchmark artifacts from the CPROVER interrupt benchmark page. |
 | `icbmc/cases/` | Staged normalized i-CBMC cases. Each case has `stock-cprover-async`, `improved-pipeline`, and `CASE.md`. |
-| `icbmc/logger/` | Small smoke-only normalized i-CBMC Logger case. Not a headline benchmark. |
 | `intabs/upstream/` | Full collected IntAbs repository snapshot from GitHub. |
 | `intabs/cases/` | Staged normalized IntAbs cases. Each case has `stock-cprover-async`, `improved-pipeline`, and `CASE.md`. |
-| `intabs/logger2/` | Small smoke-only normalized IntAbs Logger2 case. Not a headline benchmark. |
 
 ## Collected Corpus Size
 
@@ -33,6 +31,13 @@ Do not report i-CBMC or IntAbs headline benchmark numbers from the tiny normaliz
 Logger smoke cases. First select larger upstream cases, create both benchmark
 variants, validate that stock and improved variants compile, and only then enable
 the corresponding suite manifest.
+
+For improved-pipeline headline cases, ISR/task entry definitions must live under
+`isr_define/isr.c` or an explicitly documented deeper `isr_define/` path. For
+monolithic upstream files with heavy `static` state, keep `main.c` as the direct
+compile unit and include `isr_define/isr.c` at the original definition point.
+The suite should then compile `main.c` but pass `isr_define/isr.c` through
+`variant_isr_sources.improved_pipeline`.
 
 ## Staged Normalized Cases
 

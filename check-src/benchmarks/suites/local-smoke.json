@@ -8,7 +8,8 @@
   "cases": [
     {
       "name": "t-isr-single-file",
-      "enabled": true,
+      "enabled": false,
+      "reason": "Legacy single-file smoke input was removed; kept only as historical report context.",
       "root": "check-src/simple-benchmarks",
       "sources": ["t_isr.c"],
       "include_dirs": ["."],
@@ -24,7 +25,8 @@
     },
     {
       "name": "t-isr-added-single-file",
-      "enabled": true,
+      "enabled": false,
+      "reason": "Legacy pre-injected single-file smoke input was removed; kept only as historical report context.",
       "root": "check-src/simple-benchmarks",
       "sources": ["t_isr_added.c"],
       "include_dirs": ["."],

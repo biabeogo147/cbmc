@@ -17,7 +17,13 @@
       },
       "sources": ["main.c"],
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
       "isr_functions": ["VirtualizeTimerC_0_updateFromTimer_runTask", "AlarmToTimerC_0_fired_runTask"],
       "entry_function": "main",
       "properties": [],
@@ -40,7 +46,13 @@
       },
       "sources": ["main.c"],
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
       "isr_functions": ["AlarmToTimerC_0_fired_runTask", "VirtualizeTimerC_0_updateFromTimer_runTask"],
       "entry_function": "main",
       "properties": [],
@@ -63,7 +75,13 @@
       },
       "sources": ["main.c"],
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
       "isr_functions": ["show_protocols_ldvwrapper", "ir_devnode_ldvwrapper", "store_protocols_ldvwrapper"],
       "entry_function": "main",
       "properties": [],
@@ -86,7 +104,13 @@
       },
       "sources": ["main.c"],
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
       "isr_functions": ["store_protocols_ldvwrapper", "show_protocols_ldvwrapper", "ir_devnode_ldvwrapper"],
       "entry_function": "main",
       "properties": [],

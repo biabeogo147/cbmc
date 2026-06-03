@@ -1,9 +1,10 @@
-# ISR Benchmark Results
+# ISR Comparable Benchmark Results
 
-Generated: 2026-05-31 02:24:32 UTC
+Generated: 2026-06-03 13:36:06 UTC
 
 This report is generated from `check-src/benchmarks/results/*.csv` by `check-src/benchmarks/common/report_benchmark.py`.
 Warmup rows are ignored; measured rows are summarized with median time and median peak RSS per phase.
+This file contains cases whose stock and improved verification outcomes are comparable.
 
 Comparison labels: Stock CPROVER async, Improved pipeline, Comparable, Not comparable, Median, Peak RSS.
 
@@ -27,350 +28,65 @@ Comparison labels: Stock CPROVER async, Improved pipeline, Comparable, Not compa
 | --- | --- | ---: | ---: | ---: | --- |
 | `icbmc-large` | true | 6 | 4 | 23166 | yes |
 | `intabs-large` | true | 6 | 5 | 5882 | yes |
-| `local-smoke` | true | 4 | 3 | 142 | no |
+| `local-smoke` | true | 4 | 1 | 54 | no |
 | `osek-local` | true | 6 | 2 | 199 | no |
 | `trampoline-c-async` | true | 1 | 1 | 7605 | yes |
 | `trampoline-current` | true | 1 | 1 | 7605 | yes |
 | `trampoline-expanded` | true | 1 | 1 | 7605 | yes |
 
-## icbmc-large
-
-### blink
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 105 | 14.8 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 84 | 14.5 | `EXIT_6` |
-| Improved pipeline | manifest | 5 | 0 | 265 | 16.1 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 0 | 0.0 | `NO_INJECTION_CANDIDATES` |
-| Improved pipeline | compile | 5 | 0 | 226 | 16.2 | `OK` |
-| Improved pipeline | verify | 5 | 6 | 186 | 19.5 | `EXIT_6` |
-
-Not comparable: improved variant had no injection candidates.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 189 ms | 677 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 14.8 MB | 19.5 MB | Not reported for not-comparable verification outcomes. |
-
-### blink-bug
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 145 | 14.5 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 105 | 13.8 | `EXIT_6` |
-| Improved pipeline | manifest | 5 | 0 | 267 | 16.2 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 0 | 0.0 | `NO_INJECTION_CANDIDATES` |
-| Improved pipeline | compile | 5 | 0 | 288 | 16.1 | `OK` |
-| Improved pipeline | verify | 5 | 6 | 254 | 19.7 | `EXIT_6` |
-
-Not comparable: improved variant had no injection candidates.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 250 ms | 809 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 14.5 MB | 19.7 MB | Not reported for not-comparable verification outcomes. |
-
-### logger
-
-No measured CSV rows are available yet.
-
-### logger-bug
-
-No measured CSV rows are available yet.
-
-### rc-core
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 306 | 33.8 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 249 | 30.4 | `EXIT_6` |
-| Improved pipeline | manifest | 5 | 0 | 642 | 35.4 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 0 | 0.0 | `NO_INJECTION_CANDIDATES` |
-| Improved pipeline | compile | 5 | 0 | 650 | 35.9 | `OK` |
-| Improved pipeline | verify | 5 | 6 | 873 | 32.0 | `EXIT_6` |
-
-Not comparable: improved variant had no injection candidates.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 555 ms | 2165 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 33.8 MB | 35.9 MB | Not reported for not-comparable verification outcomes. |
-
-### rc-core-bug
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 267 | 33.8 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 246 | 30.7 | `EXIT_6` |
-| Improved pipeline | manifest | 5 | 0 | 651 | 36.1 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 0 | 0.0 | `NO_INJECTION_CANDIDATES` |
-| Improved pipeline | compile | 5 | 0 | 651 | 35.9 | `OK` |
-| Improved pipeline | verify | 5 | 6 | 794 | 32.2 | `EXIT_6` |
-
-Not comparable: improved variant had no injection candidates.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 513 ms | 2096 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 33.8 MB | 36.1 MB | Not reported for not-comparable verification outcomes. |
-
 ## intabs-large
-
-### logger3
-
-No measured CSV rows are available yet.
 
 ### sc520wdt-1
 
 | Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 128 | 10.6 | `OK` |
-| Stock CPROVER async | verify | 5 | 0 | 105 | 14.5 | `VERIFICATION SUCCESSFUL` |
-| Improved pipeline | manifest | 5 | 0 | 266 | 12.3 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 85 | 3.8 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 267 | 12.2 | `OK` |
-| Improved pipeline | verify | 5 | 0 | 125 | 15.6 | `VERIFICATION SUCCESSFUL` |
+| Stock CPROVER async | compile | 5 | 0 | 142 | 12.3 | `OK` |
+| Stock CPROVER async | verify | 5 | 0 | 188 | 18.9 | `VERIFICATION SUCCESSFUL` |
+| Improved pipeline | manifest | 5 | 0 | 143 | 12.3 | `OK` |
+| Improved pipeline | inject | 5 | 0 | 22 | 0.0 | `OK` |
+| Improved pipeline | compile | 5 | 0 | 143 | 12.3 | `OK` |
+| Improved pipeline | verify | 5 | 0 | 83 | 15.5 | `VERIFICATION SUCCESSFUL` |
 
 Comparable: both variants reached the same verification outcome.
 
 | Metric | Stock | Improved | Difference |
 | --- | ---: | ---: | --- |
-| Full measured time | 233 ms | 743 ms | improved is 218.9% slower |
-| Peak RSS | 14.5 MB | 15.6 MB | improved uses 7.6% more RAM |
-
-### sc520wdt-2
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 206 | 13.2 | `OK` |
-| Stock CPROVER async | verify | 5 | 0 | 328 | 35.3 | `VERIFICATION SUCCESSFUL` |
-| Improved pipeline | manifest | 5 | 0 | 327 | 14.4 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 105 | 3.9 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 287 | 14.6 | `OK` |
-| Improved pipeline | verify | 5 | 10 | 145 | 16.6 | `VERIFICATION FAILED` |
-
-Not comparable: verification outcomes differ (success vs failed).
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 534 ms | 864 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 35.3 MB | 16.6 MB | Not reported for not-comparable verification outcomes. |
-
-### wdt-pci-2
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 166 | 10.8 | `OK` |
-| Stock CPROVER async | verify | 5 | 0 | 64 | 10.0 | `VERIFICATION SUCCESSFUL` |
-| Improved pipeline | manifest | 5 | 0 | 275 | 12.5 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 105 | 3.9 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 246 | 12.3 | `OK` |
-| Improved pipeline | verify | 5 | 6 | 124 | 15.5 | `EXIT_6` |
-
-Not comparable: verification outcomes differ (success vs exit_6).
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 230 ms | 750 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 10.8 MB | 15.5 MB | Not reported for not-comparable verification outcomes. |
+| Full measured time | 330 ms | 391 ms | improved is 18.5% slower |
+| Peak RSS | 18.9 MB | 15.5 MB | improved uses 18.0% less RAM |
 
 ### wdt-pci-3
 
 | Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 166 | 10.6 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 90 | 12.7 | `EXIT_6` |
-| Improved pipeline | manifest | 5 | 0 | 266 | 12.7 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 106 | 3.9 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 266 | 13.0 | `OK` |
-| Improved pipeline | verify | 5 | 6 | 105 | 15.8 | `EXIT_6` |
+| Stock CPROVER async | compile | 5 | 0 | 122 | 12.7 | `OK` |
+| Stock CPROVER async | verify | 5 | 6 | 143 | 18.4 | `EXIT_6` |
+| Improved pipeline | manifest | 5 | 0 | 143 | 12.8 | `OK` |
+| Improved pipeline | inject | 5 | 0 | 62 | 3.9 | `OK` |
+| Improved pipeline | compile | 5 | 0 | 144 | 12.7 | `OK` |
+| Improved pipeline | verify | 5 | 6 | 103 | 15.2 | `EXIT_6` |
 
 Comparable: both variants reached the same verification outcome.
 
 | Metric | Stock | Improved | Difference |
 | --- | ---: | ---: | --- |
-| Full measured time | 256 ms | 743 ms | improved is 190.2% slower |
-| Peak RSS | 12.7 MB | 15.8 MB | improved uses 24.4% more RAM |
+| Full measured time | 265 ms | 452 ms | improved is 70.6% slower |
+| Peak RSS | 18.4 MB | 15.2 MB | improved uses 17.4% less RAM |
 
 ### wdt-pci-src-3
 
 | Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 145 | 10.0 | `OK` |
-| Stock CPROVER async | verify | 5 | 0 | 105 | 14.2 | `VERIFICATION SUCCESSFUL` |
-| Improved pipeline | manifest | 5 | 0 | 246 | 12.3 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 124 | 3.9 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 267 | 12.5 | `OK` |
-| Improved pipeline | verify | 5 | 0 | 146 | 16.4 | `VERIFICATION SUCCESSFUL` |
+| Stock CPROVER async | compile | 5 | 0 | 142 | 12.2 | `OK` |
+| Stock CPROVER async | verify | 5 | 0 | 184 | 18.6 | `VERIFICATION SUCCESSFUL` |
+| Improved pipeline | manifest | 5 | 0 | 143 | 12.3 | `OK` |
+| Improved pipeline | inject | 5 | 0 | 42 | 3.9 | `OK` |
+| Improved pipeline | compile | 5 | 0 | 143 | 12.3 | `OK` |
+| Improved pipeline | verify | 5 | 0 | 123 | 16.1 | `VERIFICATION SUCCESSFUL` |
 
 Comparable: both variants reached the same verification outcome.
 
 | Metric | Stock | Improved | Difference |
 | --- | ---: | ---: | --- |
-| Full measured time | 250 ms | 783 ms | improved is 213.2% slower |
-| Peak RSS | 14.2 MB | 16.4 MB | improved uses 15.5% more RAM |
-
-## local-smoke
-
-### t-interleaving
-
-No measured CSV rows are available yet.
-
-### t-isr-added-single-file
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 1 | 0 | 661 | 10.5 | `OK` |
-| Stock CPROVER async | verify | 1 | 10 | 859 | 16.4 | `VERIFICATION FAILED` |
-| Improved pipeline | manifest | 1 | 0 | 825 | 10.6 | `OK` |
-| Improved pipeline | inject | 1 | 0 | 0 | 0.0 | `NO_INJECTION_CANDIDATES` |
-| Improved pipeline | compile | 1 | 0 | 589 | 10.6 | `OK` |
-| Improved pipeline | verify | 1 | 10 | 1394 | 15.5 | `VERIFICATION FAILED` |
-
-Not comparable: improved variant had no injection candidates.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 1520 ms | 2808 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 16.4 MB | 15.5 MB | Not reported for not-comparable verification outcomes. |
-
-### t-isr-multifile
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 1 | 0 | 806 | 10.2 | `OK` |
-| Stock CPROVER async | verify | 1 | 0 | 1367 | 14.8 | `VERIFICATION SUCCESSFUL` |
-| Improved pipeline | manifest | 1 | 0 | 876 | 10.0 | `OK` |
-| Improved pipeline | inject | 1 | 0 | 136 | 3.8 | `OK` |
-| Improved pipeline | compile | 1 | 0 | 702 | 10.0 | `OK` |
-| Improved pipeline | verify | 1 | 10 | 1399 | 15.0 | `VERIFICATION FAILED` |
-
-Not comparable: verification outcomes differ (success vs failed).
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 2173 ms | 3113 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 14.8 MB | 15.0 MB | Not reported for not-comparable verification outcomes. |
-
-### t-isr-single-file
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 1 | 0 | 1121 | 9.8 | `OK` |
-| Stock CPROVER async | verify | 1 | 0 | 1913 | 15.0 | `VERIFICATION SUCCESSFUL` |
-| Improved pipeline | manifest | 1 | 0 | 707 | 10.0 | `OK` |
-| Improved pipeline | inject | 1 | 0 | 0 | 0.0 | `NO_INJECTION_CANDIDATES` |
-| Improved pipeline | compile | 1 | 0 | 704 | 10.0 | `OK` |
-| Improved pipeline | verify | 1 | 0 | 1239 | 15.0 | `VERIFICATION SUCCESSFUL` |
-
-Not comparable: improved variant had no injection candidates.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 3034 ms | 2650 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 15.0 MB | 15.0 MB | Not reported for not-comparable verification outcomes. |
-
-## osek-local
-
-### osek-event-basic
-
-No measured CSV rows are available yet.
-
-### osek-event-interleaving
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 1 | 0 | 586 | 9.7 | `OK` |
-| Stock CPROVER async | verify | 1 | 10 | 1028 | 15.2 | `VERIFICATION FAILED` |
-| Improved pipeline | manifest | 1 | 0 | 609 | 9.5 | `OK` |
-| Improved pipeline | inject | 1 | 0 | 90 | 3.0 | `OK` |
-| Improved pipeline | compile | 1 | 0 | 638 | 9.8 | `OK` |
-| Improved pipeline | verify | 1 | 10 | 1861 | 15.2 | `VERIFICATION FAILED` |
-
-Comparable: both variants reached the same verification outcome.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 1614 ms | 3198 ms | Not reported because the suite is not headline-ready. |
-| Peak RSS | 15.2 MB | 15.2 MB | Not reported because the suite is not headline-ready. |
-
-### osek-event-multi-bits
-
-No measured CSV rows are available yet.
-
-### osek-event-wait-block
-
-No measured CSV rows are available yet.
-
-### osek-event-wait-noblock
-
-No measured CSV rows are available yet.
-
-### osek-priority-interleaving
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 1 | 0 | 717 | 9.7 | `OK` |
-| Stock CPROVER async | verify | 1 | 10 | 1432 | 15.0 | `VERIFICATION FAILED` |
-| Improved pipeline | manifest | 1 | 0 | 840 | 9.5 | `OK` |
-| Improved pipeline | inject | 1 | 0 | 112 | 3.6 | `OK` |
-| Improved pipeline | compile | 1 | 0 | 824 | 9.7 | `OK` |
-| Improved pipeline | verify | 1 | 10 | 1065 | 15.3 | `VERIFICATION FAILED` |
-
-Comparable: both variants reached the same verification outcome.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 2149 ms | 2841 ms | Not reported because the suite is not headline-ready. |
-| Peak RSS | 15.0 MB | 15.3 MB | Not reported because the suite is not headline-ready. |
-
-## trampoline-c-async
-
-### trampoline-c-async-alarms-s1-non
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 1 | 0 | 32508 | 23.0 | `OK` |
-| Stock CPROVER async | verify | 1 | 6 | 409 | 19.3 | `CBMC_UNSUPPORTED_CONCURRENCY` |
-
-## trampoline-current
-
-### trampoline-alarms-s1-non
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 57756 | 23.6 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 807 | 20.7 | `CBMC_UNSUPPORTED_CONCURRENCY` |
-| Improved pipeline | manifest | 5 | 0 | 56952 | 25.7 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 4508 | 3.9 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 66419 | 25.9 | `OK` |
-| Improved pipeline | verify | 5 | 10 | 2914 | 29.2 | `VERIFICATION FAILED` |
-
-Not comparable: stock CBMC reports unsupported concurrency.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 58563 ms | 130793 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 23.6 MB | 29.2 MB | Not reported for not-comparable verification outcomes. |
-
-## trampoline-expanded
-
-### trampoline-expanded-alarms-s1-non-full-source
-
-| Variant | Phase | Runs | Exit | Median time (ms) | Peak RSS (MB) | Summary |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| Stock CPROVER async | compile | 5 | 0 | 55157 | 23.7 | `OK` |
-| Stock CPROVER async | verify | 5 | 6 | 809 | 20.8 | `CBMC_UNSUPPORTED_CONCURRENCY` |
-| Improved pipeline | manifest | 5 | 0 | 59194 | 25.7 | `OK` |
-| Improved pipeline | inject | 5 | 0 | 4328 | 3.9 | `OK` |
-| Improved pipeline | compile | 5 | 0 | 56496 | 25.5 | `OK` |
-| Improved pipeline | verify | 5 | 10 | 2850 | 29.0 | `VERIFICATION FAILED` |
-
-Not comparable: stock CBMC reports unsupported concurrency.
-
-| Metric | Stock | Improved | Difference |
-| --- | ---: | ---: | --- |
-| Full measured time | 55966 ms | 122868 ms | Not reported for not-comparable verification outcomes. |
-| Peak RSS | 23.7 MB | 29.0 MB | Not reported for not-comparable verification outcomes. |
+| Full measured time | 326 ms | 451 ms | improved is 38.3% slower |
+| Peak RSS | 18.6 MB | 16.1 MB | improved uses 13.4% less RAM |
 

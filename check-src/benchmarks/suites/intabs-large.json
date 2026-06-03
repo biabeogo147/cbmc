@@ -17,12 +17,15 @@
       },
       "sources": ["main.c"],
       "variant_sources": {
-        "improved_pipeline": ["main.c", "isr.c"]
+        "improved_pipeline": ["main.c", "isr_define/isr.c"]
       },
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
       "variant_isr_sources": {
-        "improved_pipeline": ["isr.c"]
+        "improved_pipeline": ["isr_define/isr.c"]
       },
       "isr_functions": ["closer3", "writer3", "closer1", "writer1"],
       "entry_function": "main",
@@ -46,12 +49,15 @@
       },
       "sources": ["main.c"],
       "variant_sources": {
-        "improved_pipeline": ["main.c", "isr.c"]
+        "improved_pipeline": ["main.c", "isr_define/isr.c"]
       },
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
       "variant_isr_sources": {
-        "improved_pipeline": ["isr.c"]
+        "improved_pipeline": ["isr_define/isr.c"]
       },
       "isr_functions": ["closer1", "closer2", "closer3", "closer4"],
       "entry_function": "main",
@@ -75,12 +81,15 @@
       },
       "sources": ["main.c"],
       "variant_sources": {
-        "improved_pipeline": ["main.c", "isr.c"]
+        "improved_pipeline": ["main.c", "isr_define/isr.c"]
       },
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
       "variant_isr_sources": {
-        "improved_pipeline": ["isr.c"]
+        "improved_pipeline": ["isr_define/isr.c"]
       },
       "isr_functions": ["closer1", "closer2", "closer3", "closer4"],
       "entry_function": "main",
@@ -104,12 +113,15 @@
       },
       "sources": ["main.c"],
       "variant_sources": {
-        "improved_pipeline": ["main.c", "isr.c"]
+        "improved_pipeline": ["main.c", "isr_define/isr.c"]
       },
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
       "variant_isr_sources": {
-        "improved_pipeline": ["isr.c"]
+        "improved_pipeline": ["isr_define/isr.c"]
       },
       "isr_functions": ["writer1", "writer2", "closer"],
       "entry_function": "main",
@@ -133,12 +145,15 @@
       },
       "sources": ["main.c"],
       "variant_sources": {
-        "improved_pipeline": ["main.c", "isr.c"]
+        "improved_pipeline": ["main.c", "isr_define/isr.c"]
       },
       "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
       "isr_sources": ["main.c"],
       "variant_isr_sources": {
-        "improved_pipeline": ["isr.c"]
+        "improved_pipeline": ["isr_define/isr.c"]
       },
       "isr_functions": ["writer1", "writer2", "writer3", "writer4", "closer"],
       "entry_function": "main",

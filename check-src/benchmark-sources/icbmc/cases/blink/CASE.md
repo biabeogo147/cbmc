@@ -4,10 +4,10 @@ Origin: `check-src/benchmark-sources/icbmc/upstream/extracted/po-code/blink/blin
 
 Normalization:
 - `stock-cprover-async`: preserves upstream CPROVER async labels and converts active `pthread_create` launches to CPROVER async calls.
-- `improved-pipeline`: removes active `__CPROVER_ASYNC_*:` labels and active `pthread_create` launches, leaving ISR/task functions in the compile unit for pipeline validation.
+- `improved-pipeline`: removes active `__CPROVER_ASYNC_*:` labels and active `pthread_create` launches, keeps `main.c` as the compile translation unit, and includes extracted ISR/task definitions from `isr_define/isr.c` so `--interleaving-source-files` has a dedicated ISR source.
 
 Compile files:
-- `main.c`
+- `main.c` includes `isr_define/isr.c`
 
 ISR/task functions:
 - `VirtualizeTimerC_0_updateFromTimer_runTask`

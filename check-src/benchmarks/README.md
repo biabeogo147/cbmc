@@ -37,7 +37,7 @@ Supported benchmark variants:
 | `common/env.sh` | Default environment variables for repo paths, stock/improved tools, `aib`, `WORK`, `RESULTS_DIR`, and `PYTHON`. |
 | `common/runner.py` | Main runner. It validates manifests, copies variant sources, runs phases, samples peak RSS from `/proc/<pid>/status`, enforces timeout/RSS limits, and writes CSV rows. |
 | `common/atomic_wrap_functions.py` | Ensures staged ISR/task entry functions are wrapped in `__CPROVER_atomic_begin/end` when normalizing benchmark inputs. |
-| `common/report_benchmark.py` | Generates `check-src/benchmark.md` from measured CSV files, suite manifests, and source inventory. It computes medians and refuses speed/RAM deltas for not-comparable verification outcomes. |
+| `common/report_benchmark.py` | Generates `check-src/benchmark.md` for comparable cases and `check-src/uncomparable.md` for cases that cannot be compared directly. It computes medians and refuses speed/RAM deltas for not-comparable verification outcomes. |
 | `common/corpus_inventory.py` | Counts C/H/I files and LOC in managed benchmark corpora and writes `benchmark-sources/INVENTORY.md`. |
 | `common/candidate_scan.py` | Ranks upstream i-CBMC/IntAbs candidate source files by LOC and interrupt/concurrency markers. |
 | `common/normalize_case.py` | Creates staged normalized case directories with `stock-cprover-async` and `improved-pipeline` variants from selected single-file upstream cases. |
@@ -120,7 +120,7 @@ Typical generated source folders under `$WORK/<suite>/<case>/`:
 | `improved_pipeline/` | Source tree after AIB injection. |
 | `*.out` | GOTO binaries produced by `goto-cc`. |
 | `*_interleaving_pipeline.json` | Manifest emitted by improved `goto-cc`. |
-| `interleaving_pipeline_injected.json` | Manifest emitted by `aib` for the injected tree. |
+| `interleaving_pipeline_injected.json` | Manifest emitted by `aib` for the injected tree. Runner rebuilds improved sources from this manifest's `project.translation_units`. |
 
 ## Adding a Benchmark
 
@@ -128,6 +128,8 @@ Typical generated source folders under `$WORK/<suite>/<case>/`:
 2. Use two variant roots: `stock-cprover-async` and `improved-pipeline`.
 3. Create or update `check-src/benchmarks/suites/<suite>.json`.
 4. Fill `variant_roots`, `sources`, `include_dirs`, `isr_sources`, `isr_functions`, `entry_function`, `unwind`, `timeout_sec`, and `memory_limit_mb`.
+   Use `variant_include_dirs`, `variant_isr_sources`, and `variant_cbmc_args` when improved layout or verification options differ from stock.
+   Improved headline cases should keep ISR definitions under `isr_define/isr.c` or an explicitly documented deeper `isr_define/` path.
 5. Run a dry-run:
 
 ```bash
@@ -140,7 +142,7 @@ bash check-src/benchmarks/run_suite.sh check-src/benchmarks/suites/<suite>.json 
 bash check-src/benchmarks/run_suite.sh check-src/benchmarks/suites/<suite>.json
 ```
 
-7. Regenerate the Markdown report:
+7. Regenerate the Markdown reports:
 
 ```bash
 python3 check-src/benchmarks/common/report_benchmark.py

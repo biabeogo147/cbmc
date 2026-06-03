@@ -38,12 +38,15 @@ For each enabled case, `runner.py` reads these fields:
 | `sources` | Compile units passed to `goto-cc`. |
 | `variant_sources` | Variant-specific compile units, used when improved source is split differently. |
 | `include_dirs` | Include paths passed to `goto-cc` as `-I...`. |
+| `variant_include_dirs` | Variant-specific include paths, used when improved keeps ISR headers or included source under `isr_define/`. |
 | `isr_sources` | Files passed to improved `goto-cc --interleaving-source-files`. |
 | `variant_isr_sources` | Variant-specific ISR files. |
 | `isr_functions` | ISR/task entry names used to filter generated interleaving candidates. |
 | `entry_function` | Function passed to `cbmc --function`. |
 | `properties` | Optional property IDs passed to `cbmc --property`. |
 | `unwind` | Value passed to `cbmc --unwind`. |
+| `cbmc_args` | Extra CBMC arguments applied to all variants of one case. |
+| `variant_cbmc_args` | Variant-specific CBMC arguments, for example OSEK `--osek-oil` paths. |
 | `timeout_sec` | Per-command wall-clock timeout. |
 | `memory_limit_mb` | Per-command RSS kill threshold as observed by the runner. |
 
@@ -78,13 +81,24 @@ Minimal runnable shape:
         "improved_pipeline": "check-src/benchmark-sources/my-corpus/my-case/improved-pipeline"
       },
       "sources": ["main.c", "driver.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c", "isr_define/isr.c"]
+      },
       "include_dirs": [".", "include"],
-      "isr_sources": ["isr.c"],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "include", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
       "isr_functions": ["timer_isr"],
       "entry_function": "main",
       "properties": [],
       "unwind": 3,
       "defines": [],
+      "cbmc_args": [],
+      "variant_cbmc_args": {},
       "expected_result": "same-result",
       "timeout_sec": 600,
       "memory_limit_mb": 8192
@@ -115,15 +129,18 @@ Minimal runnable shape:
 | `root` | Yes | `"check-src/benchmark-sources/.../improved-pipeline"` | Default source root. Usually point it to the improved root because `variant_roots` overrides stock. |
 | `variant_roots` | Strongly recommended | See example | Use separate roots when stock uses C_ASYNC_PROVER modeling and improved uses the interleaving pipeline model. |
 | `sources` | Yes | `["main.c", "driver.c"]` | Compile units passed to `goto-cc`, relative to the selected variant root. Include only files that should be compiled directly. |
-| `variant_sources` | No | `{ "improved_pipeline": ["main.c", "isr.c"] }` | Use when one variant needs a different compile list, for example split ISR files in the improved case. |
+| `variant_sources` | No | `{ "improved_pipeline": ["main.c", "isr_define/isr.c"] }` | Use when one variant needs a different compile list, for example split ISR files in the improved case. For include-based splits, keep only `main.c` here and put the included ISR file in `variant_isr_sources`. |
 | `include_dirs` | Yes | `[".", "include"]` | Include directories relative to each selected variant root. |
-| `isr_sources` | Yes | `["isr.c"]` | Files containing ISR/task functions. Improved `goto-cc` receives these through `--interleaving-source-files`. |
-| `variant_isr_sources` | No | `{ "improved_pipeline": ["isr.c"] }` | Use when ISR files differ by variant. |
+| `variant_include_dirs` | No | `{ "improved_pipeline": [".", "isr_define"] }` | Use when include directories differ by variant. |
+| `isr_sources` | Yes | `["main.c"]` | Default files containing ISR/task functions. Improved `goto-cc` receives variant-specific overrides through `--interleaving-source-files`. |
+| `variant_isr_sources` | No | `{ "improved_pipeline": ["isr_define/isr.c"] }` | Use when ISR files differ by variant. Headline improved cases should use `isr_define/isr.c` or an explicitly documented deeper `isr_define/` path. |
 | `isr_functions` | Yes | `["timer_isr", "uart_isr"]` | Function names used to filter improved interleaving candidates. These functions should be atomic in the benchmark source. |
 | `entry_function` | Yes | `"main"` | Function passed to `cbmc --function`. |
 | `properties` | No | `["main.assertion.1"]` | Optional property ids passed to `cbmc --property`. Empty means CBMC uses its default selected checks. |
 | `unwind` | Yes | `3` | Bound passed to `cbmc --unwind`. Keep equal between stock and improved. |
 | `defines` | No | `["CONFIG_X=1"]` | Macro definitions passed to `goto-cc` as `-D...`. |
+| `cbmc_args` | No | `["--unwinding-assertions"]` | Extra CBMC arguments shared by stock and improved. |
+| `variant_cbmc_args` | No | `{ "improved_pipeline": ["--os-api", "osek", "--osek-oil", "app.oil"] }` | Extra CBMC arguments for one variant. Relative path values for `--osek-oil` are resolved under the variant run root. |
 | `expected_result` | No | `"same-result"` | Documentation only; report comparability is based on actual verification summaries. |
 | `expected_summary` | No | `"pending"` | Documentation hint for later review. |
 | `case_origin` | No | `"check-src/benchmark-sources/.../upstream/file.c"` | Traceability back to upstream corpus source. |
@@ -142,7 +159,9 @@ check-src/benchmark-sources/<corpus>/cases/<case>/
     ...
   improved-pipeline/
     main.c
-    isr.c
+    isr_define/
+      isr.c
+      isr.h
     ...
   CASE.md
 ```
@@ -150,6 +169,17 @@ check-src/benchmark-sources/<corpus>/cases/<case>/
 The stock root should model interrupts in the style stock CBMC expects. The
 improved root should keep ISR/task entry functions visible to the interleaving
 pipeline and atomic where required by the benchmark model.
+
+For monolithic upstream files with heavy `static` state, keep `main.c` as the
+only direct compile source and include the extracted ISR source at the original
+definition point:
+
+```c
+#include "isr_define/isr.c"
+```
+
+In that layout, `variant_sources.improved_pipeline` remains `["main.c"]`, while
+`variant_isr_sources.improved_pipeline` is `["isr_define/isr.c"]`.
 
 ### Common Configuration Patterns
 
@@ -328,11 +358,18 @@ Pipeline:
    phase=inject, summary=NO_INJECTION_CANDIDATES, time_ms=0, max_rss_mb=0.0
    ```
 
-5. Compile the injected improved source:
+5. Compile the injected improved source from the injected manifest:
 
    ```bash
-   $IMPROVED_GOTOCC -I<include_dirs> -D<defines> <variant_sources> -o improved_pipeline.out
+   # Read project.translation_units from:
+   # <improved_pipeline>/interleaving_pipeline_injected.json
+   $IMPROVED_GOTOCC -I<variant_include_dirs> -D<defines> <injected_translation_units> -o improved_pipeline.out
    ```
+
+   The runner resolves every injected translation unit under
+   `<improved_pipeline>/`. It does not reuse the original suite `sources` list
+   after `aib`, because `aib` may filter ignored files or rewrite the effective
+   project manifest.
 
    CSV row:
 
@@ -382,7 +419,7 @@ Columns:
 
 Warmup rows are written to CSV but ignored by `report_benchmark.py`.
 
-## Markdown Report
+## Markdown Reports
 
 After CSVs exist, generate:
 
@@ -390,25 +427,30 @@ After CSVs exist, generate:
 python3 check-src/benchmarks/common/report_benchmark.py
 ```
 
-The report reads:
+The report generator reads:
 
 1. `check-src/benchmarks/results/*.csv`
 2. `check-src/benchmarks/suites/*.json`
 3. `check-src/benchmark-sources/INVENTORY.md`
 
-It writes:
+It writes two files:
 
-```text
-check-src/benchmark.md
-```
+| File | Content |
+| --- | --- |
+| `check-src/benchmark.md` | Cases whose stock and improved verification outcomes are comparable. |
+| `check-src/uncomparable.md` | Cases that cannot be compared directly, such as unsupported concurrency, different verification outcomes, missing measured rows, or no injection candidates. |
 
-The report uses medians across measured runs and refuses speed/RAM deltas when:
+Both reports use medians across measured runs. The generator sends a case to
+`uncomparable.md` when:
 
 - stock and improved verification outcomes differ
 - stock CBMC reports unsupported concurrency
 - a timeout or memory limit is hit
 - the improved variant has `NO_INJECTION_CANDIDATES`
-- the suite is not headline-ready
+- one variant is missing measured rows
+
+Comparable cases can still be non-headline. In that situation the case remains
+in `benchmark.md`, but the report does not print headline speed/RAM deltas.
 
 ## Current Measurement Limitations
 

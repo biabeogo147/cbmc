@@ -16,8 +16,13 @@
       "isr_functions": ["isr_touch_shared"],
       "entry_function": "main",
       "properties": [],
-      "unwind": 3,
+      "unwind": 8,
       "defines": [],
+      "cbmc_args": ["--unwinding-assertions"],
+      "variant_cbmc_args": {
+        "stock_cprover_async": ["--os-api", "osek", "--osek-oil", "app.oil"],
+        "improved_pipeline": ["--os-api", "osek", "--osek-oil", "app.oil"]
+      },
       "expected_result": "same-result",
       "timeout_sec": 180,
       "memory_limit_mb": 4096
@@ -32,8 +37,13 @@
       "isr_functions": ["isr_boost_shared"],
       "entry_function": "main",
       "properties": [],
-      "unwind": 3,
+      "unwind": 6,
       "defines": [],
+      "cbmc_args": ["--unwinding-assertions"],
+      "variant_cbmc_args": {
+        "stock_cprover_async": ["--os-api", "osek", "--osek-oil", "app.oil"],
+        "improved_pipeline": ["--os-api", "osek", "--osek-oil", "app.oil"]
+      },
       "expected_result": "same-result",
       "timeout_sec": 180,
       "memory_limit_mb": 4096

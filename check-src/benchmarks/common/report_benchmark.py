@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Generate check-src/benchmark.md from raw suite CSV files.
+"""Generate benchmark Markdown reports from raw suite CSV files.
 
 Inputs:
   - CSV files from check-src/benchmarks/results/*.csv.
   - Suite manifests from check-src/benchmarks/suites/*.json.
   - Optional source inventory table from check-src/benchmark-sources/INVENTORY.md.
 
-Output:
-  - check-src/benchmark.md by default, or --out <path>.
+Outputs:
+  - check-src/benchmark.md for comparable cases by default, or --out <path>.
+  - check-src/uncomparable.md for cases that cannot be compared, or
+    --uncomparable-out <path>.
 
 The report summarizes measured rows only; warmup rows are ignored. It reports
 median phase time and peak RSS, then decides whether stock and improved results
@@ -359,6 +361,30 @@ def suite_readiness(manifest):
     return staged, len(enabled), enabled_loc, ready
 
 
+def case_comparison_status(phases, suite, case, manifest):
+    """Classify whether one case is comparable.
+
+    Args:
+        phases: Summarized phase dictionary from summarize().
+        suite: Suite name.
+        case: Case name.
+        manifest: Loaded suite manifest.
+
+    Returns:
+        Tuple of stock phase stats, improved phase stats, comparable boolean,
+        and reason text.
+    """
+    stock_variant, improved_variant = comparison_variants(manifest)
+    stock = phase_set(phases, suite, case, stock_variant)
+    improved = phase_set(phases, suite, case, improved_variant)
+    if not stock and not improved:
+        return stock, improved, False, "No measured CSV rows are available yet."
+    if not stock or not improved:
+        return stock, improved, False, "Not comparable: one variant has no measured CSV rows."
+    is_comparable, reason = comparable(stock, improved)
+    return stock, improved, is_comparable, reason
+
+
 def append_case(lines, suite, case, phases, manifest, headline_ready):
     """Append one case section with phase tables and comparison status.
 
@@ -371,17 +397,16 @@ def append_case(lines, suite, case, phases, manifest, headline_ready):
         headline_ready: Whether speed/RAM deltas may be headline results.
 
     Returns:
-        None. Appends Markdown lines in place.
+        True when the case is comparable, otherwise False.
     """
     stock_variant, improved_variant = comparison_variants(manifest)
-    stock = phase_set(phases, suite, case, stock_variant)
-    improved = phase_set(phases, suite, case, improved_variant)
+    stock, improved, is_comparable, reason = case_comparison_status(phases, suite, case, manifest)
     if not stock and not improved:
         lines.append(f"### {case}")
         lines.append("")
         lines.append("No measured CSV rows are available yet.")
         lines.append("")
-        return
+        return False
 
     lines.append(f"### {case}")
     lines.append("")
@@ -401,7 +426,6 @@ def append_case(lines, suite, case, phases, manifest, headline_ready):
     lines.append("")
 
     if stock and improved:
-        is_comparable, reason = comparable(stock, improved)
         lines.append(reason)
         lines.append("")
         stock_total = total_time(stock, variant_phases(stock_variant))
@@ -428,26 +452,39 @@ def append_case(lines, suite, case, phases, manifest, headline_ready):
                 f"| Peak RSS | {stock_peak:.1f} MB | {improved_peak:.1f} MB | {percent_delta(stock_peak, improved_peak, False)} |"
             )
         lines.append("")
+    elif reason:
+        lines.append(reason)
+        lines.append("")
+    return is_comparable
 
 
-def build_report(rows, phases, manifests):
+def build_report(rows, phases, manifests, report_kind="comparable"):
     """Compose the full Markdown report as a string.
 
     Args:
         rows: Measured CSV rows.
         phases: Summarized phase dictionary from summarize().
         manifests: Loaded suite manifests.
+        report_kind: Either comparable or uncomparable.
 
     Returns:
         Complete Markdown report text.
     """
+    comparable_report = report_kind == "comparable"
+    title = "ISR Comparable Benchmark Results" if comparable_report else "ISR Uncomparable Benchmark Results"
+    scope = (
+        "This file contains cases whose stock and improved verification outcomes are comparable."
+        if comparable_report
+        else "This file contains cases that cannot be compared directly."
+    )
     lines = [
-        "# ISR Benchmark Results",
+        f"# {title}",
         "",
         f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
         "",
         "This report is generated from `check-src/benchmarks/results/*.csv` by `check-src/benchmarks/common/report_benchmark.py`.",
         "Warmup rows are ignored; measured rows are summarized with median time and median peak RSS per phase.",
+        scope,
         "",
         "Comparison labels: Stock CPROVER async, Improved pipeline, Comparable, Not comparable, Median, Peak RSS.",
         "",
@@ -476,21 +513,30 @@ def build_report(rows, phases, manifests):
     lines.append("")
 
     names = suite_case_names(rows, manifests)
+    appended_cases = 0
     for suite in sorted(names):
-        lines.append(f"## {suite}")
-        lines.append("")
+        suite_lines = [f"## {suite}", ""]
         manifest = manifests.get(suite)
         headline_ready = True
         if manifest:
             _, _, _, headline_ready = suite_readiness(manifest)
         if manifest and not manifest.get("enabled", False):
-            lines.append("Suite manifest is disabled; any listed cases are staged or smoke-only until validation gates pass.")
-            lines.append("")
+            suite_lines.append("Suite manifest is disabled; any listed cases are staged or smoke-only until validation gates pass.")
+            suite_lines.append("")
         for case in names[suite]:
-            append_case(lines, suite, case, phases, manifest, headline_ready)
+            _, _, is_comparable, _ = case_comparison_status(phases, suite, case, manifest)
+            if comparable_report != is_comparable:
+                continue
+            appended_cases += 1
+            append_case(suite_lines, suite, case, phases, manifest, headline_ready)
+        if len(suite_lines) > 2:
+            lines.extend(suite_lines)
 
     if not rows:
         lines.append("No CSV rows were loaded.")
+        lines.append("")
+    elif appended_cases == 0:
+        lines.append("No cases matched this report scope.")
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -509,19 +555,24 @@ def main(argv=None):
     parser.add_argument("--results-dir", default=BENCHMARK_DIR / "results")
     parser.add_argument("--suite-dir", default=BENCHMARK_DIR / "suites")
     parser.add_argument("--out", default=REPO_ROOT / "check-src" / "benchmark.md")
+    parser.add_argument("--uncomparable-out", default=REPO_ROOT / "check-src" / "uncomparable.md")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
     rows = load_rows(Path(args.results_dir))
     manifests = load_manifests(Path(args.suite_dir))
     phases = summarize(rows)
-    report = build_report(rows, phases, manifests)
+    comparable_report = build_report(rows, phases, manifests, "comparable")
+    uncomparable_report = build_report(rows, phases, manifests, "uncomparable")
     print(f"report rows loaded: {len(rows)}")
     if args.dry_run:
         return 0
     out = Path(args.out)
-    out.write_text(report, encoding="utf-8")
+    uncomparable_out = Path(args.uncomparable_out)
+    out.write_text(comparable_report, encoding="utf-8")
+    uncomparable_out.write_text(uncomparable_report, encoding="utf-8")
     print(f"report: {out}")
+    print(f"uncomparable report: {uncomparable_out}")
     return 0
 
 
