@@ -123,6 +123,238 @@
       "memory_limit_mb": 8192
     },
     {
+      "name": "rc-core-conc",
+      "enabled": false,
+      "reason": "Disabled during Phase 5 hardening: the improved source retains active pthread launches and reports no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/rc-core-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/rc-core-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/rc-core-conc/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["show_protocols_ldvwrapper", "ir_devnode_ldvwrapper", "store_protocols_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/rc-core/nobug/rc_core_conc.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "rc-core-conc-cprover",
+      "enabled": false,
+      "reason": "Disabled during Phase 5 hardening: extracted ISR functions are not atomic from function entry and the improved pipeline reports no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/rc-core-conc-cprover/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/rc-core-conc-cprover/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/rc-core-conc-cprover/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["show_protocols_ldvwrapper", "ir_devnode_ldvwrapper", "store_protocols_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/rc-core/nobug/rc_core_conc_cprover.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "rc-core-bug-conc",
+      "enabled": false,
+      "reason": "Disabled during Phase 5 hardening: the improved source retains active pthread launches and reports no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/rc-core-bug-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/rc-core-bug-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/rc-core-bug-conc/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["store_protocols_ldvwrapper", "show_protocols_ldvwrapper", "ir_devnode_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/rc-core/bug/rc_core_bug_conc.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "rc-core-bug-conc-cprover",
+      "enabled": false,
+      "reason": "Disabled during Phase 5 hardening: extracted ISR functions are not atomic from function entry and the improved pipeline reports no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/rc-core-bug-conc-cprover/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/rc-core-bug-conc-cprover/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/rc-core-bug-conc-cprover/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["store_protocols_ldvwrapper", "show_protocols_ldvwrapper", "ir_devnode_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/rc-core/bug/rc_core_bug_conc_cprover.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "blink-conc",
+      "enabled": true,
+      "reason": "Phase 2 intake case; normalized conc-code syntax compiles in Docker smoke, but improved pipeline reports no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-conc/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["VirtualizeTimerC_0_updateFromTimer_runTask", "AlarmToTimerC_0_fired_runTask"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/blink/nobug/blink_conc.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "blink-bug-conc",
+      "enabled": true,
+      "reason": "Phase 2 intake case; normalized conc-code syntax compiles in Docker smoke, but improved pipeline reports no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-bug-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-bug-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-bug-conc/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["AlarmToTimerC_0_fired_runTask", "VirtualizeTimerC_0_updateFromTimer_runTask"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/blink/bug/blink_bug_conc.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "blink-seq",
+      "enabled": false,
+      "reason": "Disabled after 30-minute review: stock verification reaches the available 14000 MB RSS cap before timeout and the improved pipeline has no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-seq/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-seq/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-seq/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["VirtualizeTimerC_0_updateFromTimer_runTask", "AlarmToTimerC_0_fired_runTask"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/seq-code/blink/nobug/blink_por_seq.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "blink-bug-seq",
+      "enabled": false,
+      "reason": "Disabled after 30-minute review: stock verification reaches the available 14000 MB RSS cap before timeout and the improved pipeline has no injection candidates.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-bug-seq/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-bug-seq/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-bug-seq/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["AlarmToTimerC_0_fired_runTask", "VirtualizeTimerC_0_updateFromTimer_runTask"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/seq-code/blink/bug/blink_bug_por_seq.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
       "name": "logger",
       "enabled": false,
       "reason": "Normalized as a control case but below the large-case LOC gate; do not use as a headline i-CBMC result.",
@@ -167,6 +399,296 @@
       "expected_summary": "pending",
       "timeout_sec": 300,
       "memory_limit_mb": 4096
+    },
+    {
+      "name": "logger2-conc",
+      "enabled": false,
+      "reason": "Disabled after 30-minute review: stock verification fails while improved verification exits with code 6; retained as staged Logger2 coverage.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-conc/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_ext_power", "task_communicate", "task_communicate2", "task_measure"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/nobug/logger2_conc.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2-bug-conc",
+      "enabled": false,
+      "reason": "Disabled after 30-minute review: stock verification fails while improved verification exits with code 6; retained as staged Logger2 coverage.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_ext_power", "task_communicate", "task_communicate2", "task_measure"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/bug/logger2_bug_conc.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2-conc-cprover",
+      "enabled": false,
+      "reason": "Disabled after 30-minute review: stock verification fails while improved verification exits with code 6; improved ISR entries were normalized to whole-function atomic regions.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-conc-cprover/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-conc-cprover/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-conc-cprover/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_ext_power", "task_communicate", "task_communicate2", "task_measure"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/nobug/logger2_conc_cprover.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2-bug-conc-cprover",
+      "enabled": false,
+      "reason": "Disabled after 30-minute review: stock verification fails while improved verification exits with code 6; improved ISR entries were normalized to whole-function atomic regions.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc-cprover/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc-cprover/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc-cprover/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_ext_power", "task_communicate", "task_communicate2", "task_measure"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/bug/logger2_bug_conc_cprover.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "brake2-1-po",
+      "enabled": true,
+      "reason": "Phase 3 Brake breadth/control case; both variants compile and improved pipeline runs AIB, while stock CBMC reports unsupported concurrency.",
+      "root": "check-src/benchmark-sources/icbmc/cases/brake2-1-po/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/brake2-1-po/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/brake2-1-po/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_RR_Wheel", "task_RL_Wheel", "task_FR_Wheel", "task_FL_Wheel", "task_compute"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/brake/brake2_1_po.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 30,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "brake2-2-po",
+      "enabled": true,
+      "reason": "Phase 3 Brake breadth/control case; both variants compile and improved pipeline runs AIB, while stock CBMC reports unsupported concurrency.",
+      "root": "check-src/benchmark-sources/icbmc/cases/brake2-2-po/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/brake2-2-po/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/brake2-2-po/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_RR_Wheel", "task_RL_Wheel", "task_FR_Wheel", "task_FL_Wheel", "task_compute"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/brake/brake2_2_po.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 30,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "brake2-3-po",
+      "enabled": true,
+      "reason": "Phase 3 Brake breadth/control case; both variants compile and improved pipeline runs AIB, while stock CBMC reports unsupported concurrency.",
+      "root": "check-src/benchmark-sources/icbmc/cases/brake2-3-po/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/brake2-3-po/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/brake2-3-po/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_RR_Wheel", "task_RL_Wheel", "task_FR_Wheel", "task_FL_Wheel", "task_compute"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/brake/brake2_3_po.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 30,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "brake2-1-bug-po",
+      "enabled": true,
+      "reason": "Phase 3 Brake breadth/control case; both variants compile and improved pipeline runs AIB, while stock CBMC reports unsupported concurrency.",
+      "root": "check-src/benchmark-sources/icbmc/cases/brake2-1-bug-po/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/brake2-1-bug-po/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/brake2-1-bug-po/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_RR_Wheel", "task_RL_Wheel", "task_FR_Wheel", "task_FL_Wheel", "task_compute"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": ["CBMC"],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/brake/brake2_1_bug_po.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 30,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "brake2-2-bug-po",
+      "enabled": true,
+      "reason": "Phase 3 Brake breadth/control case; both variants compile and improved pipeline runs AIB, while stock CBMC reports unsupported concurrency.",
+      "root": "check-src/benchmark-sources/icbmc/cases/brake2-2-bug-po/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/brake2-2-bug-po/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/brake2-2-bug-po/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_RR_Wheel", "task_RL_Wheel", "task_FR_Wheel", "task_FL_Wheel", "task_compute"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": ["CBMC"],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/brake/brake2_2_bug_po.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 30,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "brake2-3-bug-po",
+      "enabled": true,
+      "reason": "Phase 3 Brake breadth/control case; both variants compile and improved pipeline runs AIB, while stock CBMC reports unsupported concurrency.",
+      "root": "check-src/benchmark-sources/icbmc/cases/brake2-3-bug-po/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/brake2-3-bug-po/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/brake2-3-bug-po/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_RR_Wheel", "task_RL_Wheel", "task_FR_Wheel", "task_FL_Wheel", "task_compute"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": ["CBMC"],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code/brake/brake2_3_bug_po.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 30,
+      "memory_limit_mb": 8192
     }
   ]
 }

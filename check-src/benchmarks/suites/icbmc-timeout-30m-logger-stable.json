@@ -1,0 +1,193 @@
+{
+  "suite_name": "icbmc-timeout-30m-logger-stable",
+  "description": "Stable five-run measurement of historical Logger2 timeout cases that completed during 30-minute screening.",
+  "enabled": false,
+  "runs": 5,
+  "warmups": 1,
+  "variants": [
+    "stock_cprover_async",
+    "improved_pipeline"
+  ],
+  "cases": [
+    {
+      "name": "logger2-conc",
+      "enabled": true,
+      "reason": "Stable 30-minute timeout review measurement; the screening run completed before timeout.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-conc/improved-pipeline"
+      },
+      "sources": [
+        "main.c"
+      ],
+      "include_dirs": [
+        "."
+      ],
+      "variant_include_dirs": {
+        "improved_pipeline": [
+          ".",
+          "isr_define"
+        ]
+      },
+      "isr_sources": [
+        "main.c"
+      ],
+      "variant_isr_sources": {
+        "improved_pipeline": [
+          "isr_define/isr.c"
+        ]
+      },
+      "isr_functions": [
+        "task_ext_power",
+        "task_communicate",
+        "task_communicate2",
+        "task_measure"
+      ],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/nobug/logger2_conc.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2-bug-conc",
+      "enabled": true,
+      "reason": "Stable 30-minute timeout review measurement; the screening run completed before timeout.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc/improved-pipeline"
+      },
+      "sources": [
+        "main.c"
+      ],
+      "include_dirs": [
+        "."
+      ],
+      "variant_include_dirs": {
+        "improved_pipeline": [
+          ".",
+          "isr_define"
+        ]
+      },
+      "isr_sources": [
+        "main.c"
+      ],
+      "variant_isr_sources": {
+        "improved_pipeline": [
+          "isr_define/isr.c"
+        ]
+      },
+      "isr_functions": [
+        "task_ext_power",
+        "task_communicate",
+        "task_communicate2",
+        "task_measure"
+      ],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/bug/logger2_bug_conc.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2-conc-cprover",
+      "enabled": true,
+      "reason": "Stable 30-minute timeout review measurement; the screening run completed before timeout.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-conc-cprover/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-conc-cprover/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-conc-cprover/improved-pipeline"
+      },
+      "sources": [
+        "main.c"
+      ],
+      "include_dirs": [
+        "."
+      ],
+      "variant_include_dirs": {
+        "improved_pipeline": [
+          ".",
+          "isr_define"
+        ]
+      },
+      "isr_sources": [
+        "main.c"
+      ],
+      "variant_isr_sources": {
+        "improved_pipeline": [
+          "isr_define/isr.c"
+        ]
+      },
+      "isr_functions": [
+        "task_ext_power",
+        "task_communicate",
+        "task_communicate2",
+        "task_measure"
+      ],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/nobug/logger2_conc_cprover.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2-bug-conc-cprover",
+      "enabled": true,
+      "reason": "Stable 30-minute timeout review measurement; the screening run completed before timeout.",
+      "root": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc-cprover/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc-cprover/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/logger2-bug-conc-cprover/improved-pipeline"
+      },
+      "sources": [
+        "main.c"
+      ],
+      "include_dirs": [
+        "."
+      ],
+      "variant_include_dirs": {
+        "improved_pipeline": [
+          ".",
+          "isr_define"
+        ]
+      },
+      "isr_sources": [
+        "main.c"
+      ],
+      "variant_isr_sources": {
+        "improved_pipeline": [
+          "isr_define/isr.c"
+        ]
+      },
+      "isr_functions": [
+        "task_ext_power",
+        "task_communicate",
+        "task_communicate2",
+        "task_measure"
+      ],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code/logger2/bug/logger2_bug_conc_cprover.c",
+      "min_compile_loc": 0,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 8192
+    }
+  ]
+}

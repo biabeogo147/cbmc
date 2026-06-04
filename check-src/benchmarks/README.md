@@ -86,6 +86,9 @@ Use these sections when adding or changing benchmark cases:
 | `trampoline-c-async.json` | Yes | Historical stock-only Trampoline CPROVER async tree. |
 | `trampoline-expanded.json` | Yes | Full-source Trampoline/OSEK suite using the same normalized source family as the current benchmark. |
 | `icbmc-large.json` | Yes | Normalized large i-CBMC cases under `benchmark-sources/icbmc/cases`. |
+| `icbmc-timeout-30m.json` | No | One-run diagnostic screening of all historical i-CBMC timeout cases with a 30-minute timeout. |
+| `icbmc-timeout-30m-logger-stable.json` | No | Five-run stable measurement of Logger2 cases that completed during 30-minute screening. |
+| `icbmc-timeout-30m-blink-highmem.json` | No | One-run high-memory follow-up for blink cases that reached the screening RSS cap. |
 | `intabs-large.json` | Yes | Normalized large IntAbs cases under `benchmark-sources/intabs/cases`. |
 
 ## Output and Logs

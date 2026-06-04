@@ -1,0 +1,99 @@
+{
+  "suite_name": "icbmc-timeout-30m-blink-highmem",
+  "description": "High-memory diagnostic rerun of historical blink timeout cases with a 30-minute timeout and 14000 MB RSS cap.",
+  "enabled": false,
+  "runs": 1,
+  "warmups": 0,
+  "variants": [
+    "stock_cprover_async",
+    "improved_pipeline"
+  ],
+  "cases": [
+    {
+      "name": "blink-seq",
+      "enabled": true,
+      "reason": "30-minute timeout review with a 14000 MB process RSS cap after the initial 8192 MB screening cap was reached.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-seq/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-seq/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-seq/improved-pipeline"
+      },
+      "sources": [
+        "main.c"
+      ],
+      "include_dirs": [
+        "."
+      ],
+      "variant_include_dirs": {
+        "improved_pipeline": [
+          ".",
+          "isr_define"
+        ]
+      },
+      "isr_sources": [
+        "main.c"
+      ],
+      "variant_isr_sources": {
+        "improved_pipeline": [
+          "isr_define/isr.c"
+        ]
+      },
+      "isr_functions": [
+        "VirtualizeTimerC_0_updateFromTimer_runTask",
+        "AlarmToTimerC_0_fired_runTask"
+      ],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/seq-code/blink/nobug/blink_por_seq.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 14000
+    },
+    {
+      "name": "blink-bug-seq",
+      "enabled": true,
+      "reason": "30-minute timeout review with a 14000 MB process RSS cap after the initial 8192 MB screening cap was reached.",
+      "root": "check-src/benchmark-sources/icbmc/cases/blink-bug-seq/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/icbmc/cases/blink-bug-seq/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/icbmc/cases/blink-bug-seq/improved-pipeline"
+      },
+      "sources": [
+        "main.c"
+      ],
+      "include_dirs": [
+        "."
+      ],
+      "variant_include_dirs": {
+        "improved_pipeline": [
+          ".",
+          "isr_define"
+        ]
+      },
+      "isr_sources": [
+        "main.c"
+      ],
+      "variant_isr_sources": {
+        "improved_pipeline": [
+          "isr_define/isr.c"
+        ]
+      },
+      "isr_functions": [
+        "AlarmToTimerC_0_fired_runTask",
+        "VirtualizeTimerC_0_updateFromTimer_runTask"
+      ],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/icbmc/upstream/extracted/seq-code/blink/bug/blink_bug_por_seq.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 1800,
+      "memory_limit_mb": 14000
+    }
+  ]
+}

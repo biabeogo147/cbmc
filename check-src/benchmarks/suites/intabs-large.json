@@ -167,6 +167,224 @@
       "memory_limit_mb": 8192
     },
     {
+      "name": "wdt-pci-1",
+      "enabled": true,
+      "reason": "Phase 1 intake case; both variants compile and reach classifiable verification outcomes in Docker smoke. Report as uncomparable when stock and improved outcomes differ.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-1/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-1/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-1/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "writer1", "writer2"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/wdt_pci_1/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-src-1",
+      "enabled": true,
+      "reason": "Phase 1 intake case; both variants compile and reach classifiable verification outcomes in Docker smoke. Report as uncomparable when stock and improved outcomes differ.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-1/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-1/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-1/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "writer1", "writer2"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/wdt_pci_1/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "sc1200wdt-1",
+      "enabled": true,
+      "reason": "Phase 1 intake case; both variants compile and verify successfully in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/sc1200wdt-1/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/sc1200wdt-1/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/sc1200wdt-1/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/sc1200wdt_1/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "sc1200wdt-2",
+      "enabled": true,
+      "reason": "Phase 1 intake case; both variants compile and find the same verification failure in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/sc1200wdt-2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/sc1200wdt-2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/sc1200wdt-2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/sc1200wdt_2/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "i8xx-tco-2",
+      "enabled": true,
+      "reason": "Phase 1 intake case; both variants compile and reach classifiable verification outcomes in Docker smoke. Report as uncomparable when stock and improved outcomes differ.",
+      "root": "check-src/benchmark-sources/intabs/cases/i8xx-tco-2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/i8xx-tco-2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/i8xx-tco-2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "writer1", "writer2"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/i8xx_tco_2/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "i8xx-tco-3",
+      "enabled": true,
+      "reason": "Phase 1 intake case; both variants compile and reach classifiable verification outcomes in Docker smoke. Report as uncomparable when stock and improved outcomes differ.",
+      "root": "check-src/benchmark-sources/intabs/cases/i8xx-tco-3/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/i8xx-tco-3/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/i8xx-tco-3/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "closer3", "writer1", "writer2", "writer3"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/i8xx_tco_3/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 600,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "logger2",
+      "enabled": false,
+      "reason": "Legacy normalized control case; disabled because the stock tree has no CPROVER async modeling and the original upstream source metadata was not recorded.",
+      "root": "check-src/benchmark-sources/intabs/cases/logger2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/logger2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/logger2/improved-pipeline"
+      },
+      "sources": ["main.c", "model.c"],
+      "include_dirs": ["."],
+      "isr_sources": ["isr.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["task_measure1", "task_measure2", "task_communicate"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "legacy normalized control case; upstream origin not recorded",
+      "min_compile_loc": 0,
+      "expected_summary": "disabled",
+      "timeout_sec": 300,
+      "memory_limit_mb": 4096
+    },
+    {
       "name": "logger3",
       "enabled": false,
       "reason": "Normalized as a control case but below the large-case LOC gate; do not use as a headline IntAbs result.",
@@ -188,6 +406,326 @@
       "expected_summary": "pending",
       "timeout_sec": 300,
       "memory_limit_mb": 4096
+    },
+    {
+      "name": "wdt-pci-1-main2",
+      "enabled": true,
+      "reason": "Phase 4 WDT PCI main2 case; both variants compile, improved pipeline runs AIB, and both verification outcomes are successful in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-1-main2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-1-main2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-1-main2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "writer23", "writer24", "writer25", "writer26", "writer27", "writer28", "writer29", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/wdt_pci_1/main2.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-2-main2",
+      "enabled": true,
+      "reason": "Phase 4 WDT PCI main2 case; both variants compile, improved pipeline runs AIB, and both verification outcomes are successful in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-2-main2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-2-main2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-2-main2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "writer23", "writer24", "writer25", "writer26", "writer27", "writer28", "writer29", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/wdt_pci_2/main2.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-3-main2",
+      "enabled": true,
+      "reason": "Phase 4 WDT PCI main2 case; both variants compile, improved pipeline runs AIB, and both verification outcomes are successful in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-3-main2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-3-main2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-3-main2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "writer23", "writer24", "writer25", "writer26", "writer27", "writer28", "writer29", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/wdt_pci_3/main2.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-src-1-main2",
+      "enabled": true,
+      "reason": "Phase 4 WDT PCI main2 case; both variants compile, improved pipeline runs AIB, and both verification outcomes are successful in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-1-main2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-1-main2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-1-main2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "writer23", "writer24", "writer25", "writer26", "writer27", "writer28", "writer29", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/wdt_pci_1/main2.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-src-2-main2",
+      "enabled": true,
+      "reason": "Phase 4 WDT PCI main2 case; both variants compile, improved pipeline runs AIB, and both verification outcomes are successful in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-2-main2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-2-main2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-2-main2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "writer23", "writer24", "writer25", "writer26", "writer27", "writer28", "writer29", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/wdt_pci_2/main2.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "wdt-pci-src-3-main2",
+      "enabled": true,
+      "reason": "Phase 4 WDT PCI main2 case; both variants compile, improved pipeline runs AIB, and both verification outcomes are successful in Docker smoke.",
+      "root": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-3-main2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-3-main2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/wdt-pci-src-3-main2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "writer2", "writer3", "writer4", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21", "writer22", "writer23", "writer24", "writer25", "writer26", "writer27", "writer28", "writer29", "closer"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/wdt_pci_3/main2.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "i8xx-tco-1",
+      "enabled": true,
+      "reason": "Phase 4 i8xx TCO case; both variants compile and improved pipeline runs AIB, but stock verification fails while improved verification succeeds.",
+      "root": "check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/i8xx-tco-1/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["writer1", "closer1", "closer2"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/icbmc/i8xx_tco_1/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "i8xx-tco-src-2",
+      "enabled": true,
+      "reason": "Phase 4 i8xx TCO case; both variants compile and improved pipeline runs AIB, but stock verification fails while improved verification succeeds.",
+      "root": "check-src/benchmark-sources/intabs/cases/i8xx-tco-src-2/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/i8xx-tco-src-2/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/i8xx-tco-src-2/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "writer1", "writer2", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/i8xx_tco_2/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "i8xx-tco-src-3",
+      "enabled": true,
+      "reason": "Phase 4 i8xx TCO case; both variants compile and improved pipeline runs AIB, but stock verification fails while improved verification succeeds.",
+      "root": "check-src/benchmark-sources/intabs/cases/i8xx-tco-src-3/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/i8xx-tco-src-3/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/i8xx-tco-src-3/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["closer1", "closer2", "closer3", "writer1", "writer2", "writer3", "writer5", "writer6", "writer7", "writer8", "writer9", "writer10", "writer11", "writer12", "writer13", "writer14", "writer15", "writer16", "writer17", "writer18", "writer19", "writer20", "writer21"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/i8xx_tco_3/main.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
+    },
+    {
+      "name": "rcmain",
+      "enabled": true,
+      "reason": "Phase 4 rcmain case; both variants compile, stock CBMC reports unsupported concurrency, and improved pipeline reports no injection candidates.",
+      "root": "check-src/benchmark-sources/intabs/cases/rcmain/improved-pipeline",
+      "variant_roots": {
+        "stock_cprover_async": "check-src/benchmark-sources/intabs/cases/rcmain/stock-cprover-async",
+        "improved_pipeline": "check-src/benchmark-sources/intabs/cases/rcmain/improved-pipeline"
+      },
+      "sources": ["main.c"],
+      "variant_sources": {
+        "improved_pipeline": ["main.c"]
+      },
+      "include_dirs": ["."],
+      "variant_include_dirs": {
+        "improved_pipeline": [".", "isr_define"]
+      },
+      "isr_sources": ["main.c"],
+      "variant_isr_sources": {
+        "improved_pipeline": ["isr_define/isr.c"]
+      },
+      "isr_functions": ["ir_devnode_ldvwrapper", "store_protocols_ldvwrapper", "show_protocols_ldvwrapper", "rc_dev_uevent_ldvwrapper", "rc_dev_release_ldvwrapper"],
+      "entry_function": "main",
+      "properties": [],
+      "unwind": 3,
+      "defines": [],
+      "case_origin": "check-src/benchmark-sources/intabs/upstream/repository/src/test/rcmain/rc_core.c",
+      "min_compile_loc": 500,
+      "expected_summary": "pending",
+      "timeout_sec": 120,
+      "memory_limit_mb": 8192
     }
   ]
 }

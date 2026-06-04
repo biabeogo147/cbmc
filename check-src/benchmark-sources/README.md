@@ -12,6 +12,7 @@ This directory is the single managed location for benchmark source corpora.
 | `icbmc/cases/` | Staged normalized i-CBMC cases. Each case has `stock-cprover-async`, `improved-pipeline`, and `CASE.md`. |
 | `intabs/upstream/` | Full collected IntAbs repository snapshot from GitHub. |
 | `intabs/cases/` | Staged normalized IntAbs cases. Each case has `stock-cprover-async`, `improved-pipeline`, and `CASE.md`. |
+| `CASE_INTAKE.md` | Intake workflow for moving upstream sources into comparable benchmark cases. |
 
 ## Collected Corpus Size
 
@@ -35,20 +36,21 @@ the corresponding suite manifest.
 For improved-pipeline headline cases, ISR/task entry definitions must live under
 `isr_define/isr.c` or an explicitly documented deeper `isr_define/` path. For
 monolithic upstream files with heavy `static` state, keep `main.c` as the direct
-compile unit and include `isr_define/isr.c` at the original definition point.
-The suite should then compile `main.c` but pass `isr_define/isr.c` through
-`variant_isr_sources.improved_pipeline`.
+compile unit and include `isr_define/isr.c` at the last extracted definition
+location. This keeps globals declared between upstream task definitions visible
+to every extracted ISR. The suite should then compile `main.c` but pass
+`isr_define/isr.c` through `variant_isr_sources.improved_pipeline`.
 
 ## Staged Normalized Cases
 
-The first staged case batch is intentionally conservative: source directories are
-ready for validation, but suite entries stay disabled until both variants compile
-and verification outcomes are classified in Docker.
+Normalized source directories remain staged even when their suite entries are
+disabled. Enable them only after both variants compile and verification outcomes
+are classified in Docker.
 
-| Corpus | Staged cases | Suite |
-| --- | --- | --- |
-| i-CBMC | `blink`, `blink-bug`, `rc-core`, `rc-core-bug`, `logger`, `logger-bug` | `check-src/benchmarks/suites/icbmc-large.json` |
-| IntAbs | `wdt-pci-2`, `wdt-pci-3`, `wdt-pci-src-3`, `sc520wdt-1`, `sc520wdt-2`, `logger3` | `check-src/benchmarks/suites/intabs-large.json` |
+| Corpus | Staged cases | Enabled cases | Suite |
+| --- | ---: | ---: | --- |
+| i-CBMC | 24 | 12 | `check-src/benchmarks/suites/icbmc-large.json` |
+| IntAbs | 23 | 21 | `check-src/benchmarks/suites/intabs-large.json` |
 
 ## Headline Benchmark Gate
 
