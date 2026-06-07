@@ -71,7 +71,7 @@
  *	http://www.cymru.net
  *
  *	This driver is provided under the GNU General Public License, incorporated
- *	herein by reference. The driver is provided without warranty or 
+ *	herein by reference. The driver is provided without warranty or
  *	support.
  *
  *	Release 0.04.
@@ -231,7 +231,7 @@ static void wdtpci_ctr_mode(int ctr, int mode)
   do { \
     ctr * 2 * 2 * 2 * 2 * 2 * 2; \
     outb_p(ctr, wdt_ctr_port); \
-  } while (false) 
+  } while (false)
 
 #if 0
 static void wdtpci_ctr_load(int ctr, int val)
@@ -239,11 +239,11 @@ static void wdtpci_ctr_load(int ctr, int val)
 	outb_p(val&0xFF, WDT_COUNT0+ctr);
 	outb_p(val>>8, WDT_COUNT0+ctr);
 }
-#endif 
+#endif
 #define wdt_ctr_load(ctr, val) \
   do { \
     /* hardware not modeled */ \
-  } while (false) 
+  } while (false)
 
 /**
  *	wdtpci_start:
@@ -340,7 +340,7 @@ static int wdtpci_ping(void)
     wdt_ctr_load(1,wd_heartbeat);	/* Heartbeat */ \
     outb_p(0, wdt_dc_port);		/* Enable watchdog */ \
 	  spin_unlock(wdtpci_lock0); \
-  } while (false) 
+  } while (false)
 
 /**
  *	wdtpci_set_heartbeat:
@@ -951,26 +951,23 @@ void writer1();
 void writer2();
 void writer3();
 
-
-void closer1(void ) {
-    __CPROVER_atomic_begin();
-
+static void closer1_body(void) {
     //while(cnt1 < LIMIT) {
         wdtpci_write_buf = 'V';
         expect_close = 42;
         count = 1;
-        // function inline 
-        if (count) { 
-            if (!nowayout) { 
+        // function inline
+        if (count) {
+            if (!nowayout) {
                 /* note: just in case someone wrote the magic character
-                 * five months ago... */ 
-                //expect_close = 0; 
+                 * five months ago... */
+                //expect_close = 0;
                 /* markus: originally, the buffer would be looped-over here */
-                if (wdtpci_write_buf != 'V') { 
+                if (wdtpci_write_buf != 'V') {
                     expect_close = 0;
-                } 
-            } 
-        } 
+                }
+            }
+        }
 
         // function inline wdtpci_release
         if (expect_close != 42) {
@@ -982,6 +979,11 @@ void closer1(void ) {
         //up(open_sem);
         cnt1++;
     //}
+}
+
+void closer1(void ) {
+    __CPROVER_atomic_begin();
+    closer1_body();
     __CPROVER_atomic_end();
     return NULL;
 }
@@ -992,18 +994,18 @@ void closer2(void ) {
         wdtpci_write_buf = 'V';
         expect_close = 42;
         count = 1;
-        // function inline 
-        if (count) { 
-            if (!nowayout) { 
+        // function inline
+        if (count) {
+            if (!nowayout) {
                 /* note: just in case someone wrote the magic character
-                 * five months ago... */ 
-                //expect_close = 0; 
+                 * five months ago... */
+                //expect_close = 0;
                 /* markus: originally, the buffer would be looped-over here */ \
-                if (wdtpci_write_buf != 'V') { 
+                if (wdtpci_write_buf != 'V') {
                     expect_close = 0;
-                } 
-            } 
-        } 
+                }
+            }
+        }
 
         // function inline wdtpci_release
         if (expect_close != 42) {
@@ -1018,27 +1020,47 @@ void closer2(void ) {
     return NULL;
 }
 
+static void writer1_body(void) {
+    //while (cnt3 < LIMIT) {
+        count = 0;
+        expect_close = 0;
+        // function inline
+        if (count) {
+            if (!nowayout) {
+                /* note: just in case someone wrote the magic character
+                 * five months ago... */
+                //expect_close = 0;
+                /* markus: originally, the buffer would be looped-over here */ \
+                if (wdtpci_write_buf != 'V') {
+                    expect_close = 0;
+                }
+            }
+        }
+        cnt3++;
+    //}
+}
+
 
 void closer3(void ) {
     __CPROVER_atomic_begin();
-    writer1();
+    writer1_body();
 
     //while(cnt5 < LIMIT) {
         wdtpci_write_buf = 'V';
         expect_close = 42;
         count = 1;
-        // function inline 
-        if (count) { 
-            if (!nowayout) { 
+        // function inline
+        if (count) {
+            if (!nowayout) {
                 /* note: just in case someone wrote the magic character
-                 * five months ago... */ 
-                //expect_close = 0; 
+                 * five months ago... */
+                //expect_close = 0;
                 /* markus: originally, the buffer would be looped-over here */ \
-                if (wdtpci_write_buf != 'V') { 
+                if (wdtpci_write_buf != 'V') {
                     expect_close = 0;
-                } 
-            } 
-        } 
+                }
+            }
+        }
 
         // function inline wdtpci_release
         if (expect_close != 42) {
@@ -1057,23 +1079,7 @@ void closer3(void ) {
 
 void writer1(void) {
     __CPROVER_atomic_begin();
-    //while (cnt3 < LIMIT) {
-        count = 0;
-        expect_close = 0;
-        // function inline 
-        if (count) { 
-            if (!nowayout) { 
-                /* note: just in case someone wrote the magic character
-                 * five months ago... */ 
-                //expect_close = 0; 
-                /* markus: originally, the buffer would be looped-over here */ \
-                if (wdtpci_write_buf != 'V') { 
-                    expect_close = 0;
-                } 
-            } 
-        } 
-        cnt3++;
-    //}
+    writer1_body();
     __CPROVER_atomic_end();
     return NULL;
 }
@@ -1082,18 +1088,18 @@ void writer2(void ) {
     //while (cnt4 < LIMIT) {
         count = 0;
         expect_close = 0;
-        // function inline 
-        if (count) { 
-            if (!nowayout) { 
+        // function inline
+        if (count) {
+            if (!nowayout) {
                 /* note: just in case someone wrote the magic character
-                 * five months ago... */ 
-                //expect_close = 0; 
+                 * five months ago... */
+                //expect_close = 0;
                 /* markus: originally, the buffer would be looped-over here */ \
-                if (wdtpci_write_buf != 'V') { 
+                if (wdtpci_write_buf != 'V') {
                     expect_close = 0;
-                } 
-            } 
-        } 
+                }
+            }
+        }
         cnt4++;
     //}
     return NULL;
@@ -1101,22 +1107,22 @@ void writer2(void ) {
 
 void writer3(void) {
     __CPROVER_atomic_begin();
-    closer1(); 
+    closer1_body();
     //while (cnt6 < LIMIT) {
         count = 0;
         expect_close = 0;
-        // function inline 
-        if (count) { 
-            if (!nowayout) { 
+        // function inline
+        if (count) {
+            if (!nowayout) {
                 /* note: just in case someone wrote the magic character
-                 * five months ago... */ 
-                //expect_close = 0; 
+                 * five months ago... */
+                //expect_close = 0;
                 /* markus: originally, the buffer would be looped-over here */ \
-                if (wdtpci_write_buf != 'V') { 
+                if (wdtpci_write_buf != 'V') {
                     expect_close = 0;
-                } 
-            } 
-        } 
+                }
+            }
+        }
         cnt6++;
     //}
     __CPROVER_atomic_end();
@@ -1258,4 +1264,3 @@ void *writer29(void *unused) {
 }
 
 // markus: driver code
-

@@ -6,7 +6,7 @@ Inputs:
   - Imported i-CBMC and IntAbs upstream source trees under check-src/benchmark-sources.
 
 Output:
-  - Markdown candidate table at check-src/benchmark-sources/CANDIDATES.md by default.
+  - CSV candidate table at check-src/benchmarks/results/audit/candidate-scan.csv by default.
 
 The score is only a triage heuristic. It favors larger files with main(),
 CPROVER async labels, pthread_create, verifier thread metadata, and assertions.
@@ -14,6 +14,7 @@ It does not prove that a candidate is runnable without normalization.
 """
 
 import argparse
+import csv
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -172,7 +173,7 @@ def phase_for(path: Path, corpus: str, family: str, already_staged: bool) -> str
         already_staged: Whether this source already has a normalized case.
 
     Returns:
-        Phase label used in CANDIDATES.md.
+        Phase label used in the candidate scan CSV.
     """
     if already_staged:
         return "staged"
@@ -251,7 +252,7 @@ def scan(root: Path, repo: Path, corpus: str):
 
 
 def main(argv=None):
-    """CLI entry point that writes the candidate Markdown report.
+    """CLI entry point that writes the candidate CSV report.
 
     Args:
         argv: Optional command-line argument list. When None, argparse reads
@@ -263,7 +264,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--limit", type=int, default=30)
-    parser.add_argument("--md-out", default="check-src/benchmark-sources/CANDIDATES.md")
+    parser.add_argument("--csv-out", default="check-src/benchmarks/results/audit/candidate-scan.csv")
     args = parser.parse_args(argv)
 
     repo = Path(args.repo_root).resolve()
@@ -271,25 +272,47 @@ def main(argv=None):
         ("i-CBMC", "icbmc", repo / "check-src/benchmark-sources/icbmc/upstream/extracted"),
         ("IntAbs", "intabs", repo / "check-src/benchmark-sources/intabs/upstream/repository"),
     ]
-    lines = ["# Benchmark Candidate Scan", ""]
+    rows = []
     for label, corpus, root in roots:
         items = scan(root, repo, corpus)[: args.limit]
-        lines += [
-            f"## {label}",
-            "",
-            "| Path | family | staged | phase | LOC | async labels | pthread_create | thread metadata | assert | score |",
-            "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
-        ]
         for item in items:
-            lines.append(
-                f"| `{item.path.as_posix()}` | {item.case_family} | "
-                f"{'yes' if item.already_staged else 'no'} | {item.recommended_phase} | "
-                f"{item.loc} | {item.async_labels} | "
-                f"{item.pthread_create} | {item.verifier_threads} | {item.assertions} | {item.score} |"
+            rows.append(
+                {
+                    "corpus_label": label,
+                    "corpus": corpus,
+                    "path": item.path.as_posix(),
+                    "family": item.case_family,
+                    "staged": "yes" if item.already_staged else "no",
+                    "phase": item.recommended_phase,
+                    "loc": item.loc,
+                    "async_labels": item.async_labels,
+                    "pthread_create": item.pthread_create,
+                    "thread_metadata": item.verifier_threads,
+                    "assertions": item.assertions,
+                    "score": item.score,
+                }
             )
-        lines.append("")
-    Path(args.md_out).write_text("\n".join(lines), encoding="utf-8")
-    print(f"candidate report: {args.md_out}")
+    out = Path(args.csv_out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", newline="", encoding="utf-8") as csv_file:
+        fieldnames = [
+            "corpus_label",
+            "corpus",
+            "path",
+            "family",
+            "staged",
+            "phase",
+            "loc",
+            "async_labels",
+            "pthread_create",
+            "thread_metadata",
+            "assertions",
+            "score",
+        ]
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"candidate scan: {out}")
     return 0
 
 

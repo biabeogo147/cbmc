@@ -95,9 +95,9 @@ uint16_t records[MAX_RECORDS];
 
 #define MAX_BUFFER 16
 
-uint32_t periodCounter; 
-uint16_t tickCounter;     
-uint16_t period;     
+uint32_t periodCounter;
+uint16_t tickCounter;
+uint16_t period;
 uint32_t startTime;
 
 #define IDLE 0
@@ -132,8 +132,15 @@ void restart(uint32_t _startTime,uint16_t _period)
   systemState = LOGGING;
 }
 
-extern uint16_t read_sensor_value();
-extern uint16_t process_value(uint32_t time, uint16_t value);
+extern uint8_t nondet_uint8();
+uint16_t read_sensor_value(void) {
+  return (uint16_t)nondet_uint8();
+}
+uint16_t process_value(uint32_t time, uint16_t value) {
+  (void)time;
+  (void)value;
+  return (uint16_t)nondet_uint8();
+}
 //void *task_measure(void *args) {
 void task_measure(void) {
 __VERIFIER_atomic_TRANS_atomic_assume_task_measure();
@@ -185,7 +192,7 @@ TRANS_atomic_assume_task_measure();
 TRANS_atomic_assume_task_measure();
 __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_measure();
- 
+
 __CPROVER_atomic_begin();
 TRANS_atomic_assume_task_measure();
     tickCounter = 0;
@@ -198,7 +205,7 @@ TRANS_atomic_assume_task_measure();
 TRANS_atomic_assume_task_measure();
 __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_measure();
-    
+
 __CPROVER_atomic_begin();
 TRANS_atomic_assume_task_measure();
     records[pos] =  process_value(currentTime,value);
@@ -223,7 +230,10 @@ __VERIFIER_atomic_TRANS_atomic_assume_task_measure();
 __VERIFIER_atomic_TRANS_task_measure_leave_thread();
 }
 
-extern uint8_t get_power_status();
+extern uint8_t nondet_uint8();
+uint8_t get_power_status(void) {
+  return nondet_uint8();
+}
 //void *task_ext_power(void *args) {
 void task_ext_power(void) {
 __VERIFIER_atomic_TRANS_atomic_assume_task_ext_power();
@@ -285,9 +295,9 @@ void put_uint16(uint8_t* buffer, uint8_t pos, uint16_t val) {
   buffer[pos+1] = (uint8_t)val;
 }
 uint32_t get_uint32(uint8_t* buffer, uint8_t pos) {
-  return (((uint32_t)buffer[pos])<<24) | 
-         (((uint32_t)buffer[pos+1])<<16) | 
-         (((uint32_t)buffer[pos+2])<<8) | 
+  return (((uint32_t)buffer[pos])<<24) |
+         (((uint32_t)buffer[pos+1])<<16) |
+         (((uint32_t)buffer[pos+2])<<8) |
          (uint32_t)buffer[pos+3];
 }
 void put_uint32(uint8_t* buffer, uint8_t pos, uint32_t val) {
@@ -306,7 +316,10 @@ uint8_t receive_cmd(uint8_t* buffer) {
   buffer[5] = nondet_uint8();
   buffer[6] = nondet_uint8();
 }
-extern void send_response(uint8_t* buffer, uint8_t len);
+void send_response(uint8_t* buffer, uint8_t len) {
+  (void)buffer;
+  (void)len;
+}
 uint8_t msgBuffer[MAX_BUFFER];
 
 //void *task_communicate(void *args) {
@@ -316,13 +329,13 @@ __VERIFIER_atomic_TRANS_task_communicate_enter_thread();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate();
 __CPROVER_atomic_begin();
 TRANS_atomic_assume_task_communicate();
-  uint8_t tmp_systemState; // Lihao: lift if 
+  uint8_t tmp_systemState; // Lihao: lift if
   uint8_t tmp_numberOfRecords; // Lihao: lift if
   __CPROVER_assume(systemState!=SLEEP);
 TRANS_atomic_assume_task_communicate();
 __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate();
-  // Lihao: inline 
+  // Lihao: inline
   //uint8_t len = receive_cmd(msgBuffer);
 __CPROVER_atomic_begin();
 TRANS_atomic_assume_task_communicate();
@@ -413,7 +426,7 @@ TRANS_atomic_assume_task_communicate();
 __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate();
     switch(cmd) {
-      case CMD_STOP:   
+      case CMD_STOP:
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate();
 // Lihao: lift if
 __CPROVER_atomic_begin();
@@ -715,7 +728,7 @@ __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate();
         break;
       }
-      default: 
+      default:
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate();
         break;
     }
@@ -731,13 +744,13 @@ __VERIFIER_atomic_TRANS_task_communicate2_enter_thread();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate2();
 __CPROVER_atomic_begin();
 TRANS_atomic_assume_task_communicate2();
-  uint8_t tmp_systemState; // Lihao: lift if 
+  uint8_t tmp_systemState; // Lihao: lift if
   uint8_t tmp_numberOfRecords; // Lihao: lift if
   __CPROVER_assume(systemState!=SLEEP);
 TRANS_atomic_assume_task_communicate2();
 __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate2();
-  // Lihao: inline 
+  // Lihao: inline
   //uint8_t len = receive_cmd(msgBuffer);
 __CPROVER_atomic_begin();
 TRANS_atomic_assume_task_communicate2();
@@ -828,7 +841,7 @@ TRANS_atomic_assume_task_communicate2();
 __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate2();
     switch(cmd) {
-      case CMD_STOP:   
+      case CMD_STOP:
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate2();
 // Lihao: lift if
 __CPROVER_atomic_begin();
@@ -1130,7 +1143,7 @@ __CPROVER_atomic_end();
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate2();
         break;
       }
-      default: 
+      default:
 __VERIFIER_atomic_TRANS_atomic_assume_task_communicate2();
         break;
     }

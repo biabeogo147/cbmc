@@ -37,6 +37,12 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 BENCHMARK_DIR = SCRIPT_DIR.parent
 REPO_ROOT = BENCHMARK_DIR.parent.parent
+BLOCKED_INJECTION_FUNCTIONS = {"initialize"}
+
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+import atomic_wrap_functions  # noqa: E402
 
 
 def env_path(name, default):
@@ -614,7 +620,9 @@ def filtered_interleaving_manifest(source_manifest, filtered_manifest, allowed_f
 
     Input is the JSON emitted by improved goto-cc. Output is the filtered JSON
     consumed by aib. Entries without source file/line insertion data are skipped
-    because aib cannot inject them into the copied source tree.
+    because aib cannot inject them into the copied source tree. Entries inside
+    isr_define are skipped because that directory defines ISR bodies; injecting
+    an ISR into another ISR can violate the whole-function atomic model.
 
     Args:
         source_manifest: Raw interleaving JSON from improved goto-cc.
@@ -626,24 +634,91 @@ def filtered_interleaving_manifest(source_manifest, filtered_manifest, allowed_f
     """
     data = json.loads(source_manifest.read_text(encoding="utf-8"))
     allowed = set(allowed_functions)
+    project = data.setdefault("project", {})
+    project_root = Path(project.get("project_root") or source_manifest.parent)
     filtered = []
     for entry in data.get("interleaving", []):
         if allowed and entry.get("name") not in allowed:
             continue
         file_entries = entry.get("line_added_block_with_file", [])
-        usable_entries = [
-            item
-            for item in file_entries
-            if item.get("file") and item.get("line")
-        ]
+        usable_entries = []
+        for item in file_entries:
+            usable = filtered_injection_site(project_root, item)
+            if usable:
+                usable_entries.append(usable)
         if not usable_entries:
             continue
         entry = dict(entry)
         entry["line_added_block_with_file"] = usable_entries
         filtered.append(entry)
     data["interleaving"] = filtered
+    translation_units = project.get("translation_units") or project.get("interleaving_source_files") or []
+    project["interleaving_source_files"] = [
+        source for source in translation_units if not is_isr_define_path(source)
+    ]
     filtered_manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return len(filtered)
+
+
+def filtered_injection_site(project_root, item):
+    """Return a usable insertion site with unsafe lines removed.
+
+    Args:
+        project_root: Source root referenced by the interleaving manifest.
+        item: One line_added_block_with_file entry.
+
+    Returns:
+        Filtered insertion entry, or None when no line remains usable.
+    """
+    source_file = str(item.get("file") or "").replace("\\", "/")
+    if not source_file or not item.get("line"):
+        return None
+    if is_isr_define_path(source_file):
+        return None
+
+    blocked_lines = blocked_injection_lines(project_root / source_file)
+    line_value = item.get("line")
+    line_items = line_value if isinstance(line_value, list) else [line_value]
+    usable_lines = [line for line in line_items if line not in blocked_lines]
+    if not usable_lines:
+        return None
+    filtered = dict(item)
+    filtered["line"] = usable_lines if isinstance(line_value, list) else usable_lines[0]
+    return filtered
+
+
+def blocked_injection_lines(source_path):
+    """Return source lines inside functions that must not receive ISR injection.
+
+    Args:
+        source_path: C source file path.
+
+    Returns:
+        Set of 1-based line numbers inside blocked functions.
+    """
+    if not source_path.exists():
+        return set()
+    text = source_path.read_text(encoding="utf-8", errors="replace")
+    lines = set()
+    for function_name in BLOCKED_INJECTION_FUNCTIONS:
+        for _, open_brace, close_brace in atomic_wrap_functions.function_matches(text, function_name):
+            start_line = text.count("\n", 0, open_brace) + 1
+            end_line = text.count("\n", 0, close_brace) + 1
+            lines.update(range(start_line, end_line + 1))
+    return lines
+
+
+def is_isr_define_path(path):
+    """Return whether a path points inside an improved ISR definition folder.
+
+    Args:
+        path: Source path string.
+
+    Returns:
+        True when the normalized path contains an isr_define segment.
+    """
+    parts = [part for part in str(path or "").replace("\\", "/").split("/") if part]
+    return "isr_define" in parts
 
 
 def run_stock_cprover_async(csv_writer, suite, case, name, case_work, logs, run_id, run_kind):

@@ -14,5 +14,9 @@ PY
 done
 
 if [ "${1:-}" != "--dry-run" ]; then
-  "${PYTHON:-python3}" "$(dirname "${BASH_SOURCE[0]}")/common/report_benchmark.py"
+  common_dir="$(dirname "${BASH_SOURCE[0]}")/common"
+  "${PYTHON:-python3}" "$common_dir/benchmark_inventory.py" --inventory-only
+  "${PYTHON:-python3}" "$common_dir/global_effect_scan.py"
+  "${PYTHON:-python3}" "$common_dir/outcome_mismatch_audit.py"
+  "${PYTHON:-python3}" "$common_dir/report_benchmark.py"
 fi

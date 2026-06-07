@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-"""Generate benchmark Markdown reports from raw suite CSV files.
+"""Generate the benchmark Markdown report from raw suite CSV files.
 
 Inputs:
   - CSV files from check-src/benchmarks/results/*.csv.
   - Suite manifests from check-src/benchmarks/suites/*.json.
-  - Optional source inventory table from check-src/benchmark-sources/INVENTORY.md.
+  - Source corpus directories under check-src/benchmark-sources.
 
-Outputs:
-  - check-src/benchmark.md for comparable cases by default, or --out <path>.
-  - check-src/uncomparable.md for cases that cannot be compared, or
-    --uncomparable-out <path>.
+Output:
+  - check-src/benchmark.md by default, or --out <path>.
 
 The report summarizes measured rows only; warmup rows are ignored. It reports
-median phase time and peak RSS, then decides whether stock and improved results
-are comparable before printing speed/RAM deltas.
+median phase time, peak RSS, verification output, correctness judgment, and
+speed/RAM deltas whenever both variants have measured rows.
 """
 
 import argparse
@@ -38,7 +36,8 @@ STOCK_PHASES = ["compile", "verify"]
 IMPROVED_PHASES = ["manifest", "inject", "compile", "verify"]
 STOCK_VARIANTS = {"stock_cprover_async"}
 IMPROVED_VARIANTS = {"improved_pipeline"}
-UNCOMPARABLE_CATEGORY_ORDER = [
+SOURCE_SUFFIXES = {".c", ".h", ".i"}
+DIAGNOSTIC_CATEGORY_ORDER = [
     "Verification Failed vs Successful",
     "Verification Successful vs Failed",
     "Verification Failed vs Exit 6",
@@ -52,6 +51,184 @@ UNCOMPARABLE_CATEGORY_ORDER = [
     "Not Run / Disabled Cases",
     "Other Verification Outcome Mismatches",
 ]
+CORRECTNESS_VERDICT_ORDER = [
+    "same_outcome_comparable",
+    "improved_correct",
+    "stock_correct",
+    "both_correct_different_model",
+    "both_need_fix",
+    "no_injection_true",
+    "no_injection_false",
+    "needs_manual_review",
+    "not_audited",
+]
+
+SOURCE_INVENTORY_ROOTS = {
+    "trampoline-stock-cprover-async": "check-src/benchmark-sources/trampoline/stock-cprover-async",
+    "trampoline-improved-pipeline": "check-src/benchmark-sources/trampoline/improved-pipeline",
+    "icbmc-upstream": "check-src/benchmark-sources/icbmc/upstream",
+    "icbmc-po-code": "check-src/benchmark-sources/icbmc/upstream/extracted/po-code",
+    "icbmc-seq-code": "check-src/benchmark-sources/icbmc/upstream/extracted/seq-code",
+    "icbmc-conc-code": "check-src/benchmark-sources/icbmc/upstream/extracted/conc-code",
+    "intabs-upstream": "check-src/benchmark-sources/intabs/upstream/repository",
+    "intabs-icbmc": "check-src/benchmark-sources/intabs/upstream/repository/icbmc",
+    "intabs-src-test": "check-src/benchmark-sources/intabs/upstream/repository/src/test",
+}
+
+
+def read_csv_rows(path):
+    """Read optional CSV rows.
+
+    Args:
+        path: CSV path to load.
+
+    Returns:
+        List of row dictionaries, or an empty list when the path is missing.
+    """
+    path = Path(path)
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8", errors="replace") as csv_file:
+        return list(csv.DictReader(csv_file))
+
+
+def source_inventory_rows():
+    """Return source inventory rows computed directly from corpus directories.
+
+    Args:
+        None.
+
+    Returns:
+        List of tuples (name, relative_path, source_file_count, loc).
+    """
+    rows = []
+    for name, relative in SOURCE_INVENTORY_ROOTS.items():
+        root = REPO_ROOT / relative
+        if not root.exists():
+            continue
+        files = [path for path in root.rglob("*") if path.is_file() and path.suffix in SOURCE_SUFFIXES]
+        loc = sum(len(path.read_text(errors="ignore").splitlines()) for path in files)
+        rows.append((name, relative, len(files), loc))
+    return rows
+
+
+def audit_action_for_no_injection(row):
+    """Return the report action for one no-injection audit row.
+
+    Args:
+        row: Row from no-injection-audit.csv.
+
+    Returns:
+        Human-readable action text.
+    """
+    verdict = row.get("verdict", "")
+    if verdict == "no_injection_false":
+        return "fix ISR source-effect metadata or insertion-site manifest before comparing"
+    if verdict == "no_injection_true":
+        return "keep as valid no-injection case; no ISR-written global reaches main"
+    if verdict == "needs_manual_review":
+        return "inspect unresolved ISR/global reachability before comparing"
+    return "run no-injection correctness audit"
+
+
+def summarize_audit_text(value, max_items=5, max_chars=360):
+    """Return a compact one-line audit detail.
+
+    Args:
+        value: Semicolon-separated audit detail text.
+        max_items: Maximum number of semicolon-separated items to keep.
+        max_chars: Maximum output length.
+
+    Returns:
+        Compact detail string suitable for the main Markdown report.
+    """
+    text = str(value or "").replace("\n", " ").strip()
+    if not text:
+        return ""
+    items = [item for item in text.split(";") if item]
+    if len(items) > max_items:
+        text = ";".join(items[:max_items]) + f";...(+{len(items) - max_items} more)"
+    if len(text) > max_chars:
+        return text[: max_chars - 3].rstrip() + "..."
+    return text
+
+
+def build_audit_annotations(audit_dir):
+    """Build case-level correctness notes for the benchmark report.
+
+    Args:
+        audit_dir: Directory containing audit CSV files.
+
+    Returns:
+        Dictionary keyed by (suite, case) with a short Markdown note.
+    """
+    annotations = {}
+    audit_dir = Path(audit_dir)
+    outcome_rows = read_csv_rows(audit_dir / "outcome-mismatch-audit.csv")
+    no_injection_rows = read_csv_rows(audit_dir / "no-injection-audit.csv")
+
+    for row in outcome_rows:
+        suite_case = (row.get("suite", ""), row.get("case", ""))
+        verdict = row.get("verdict", "pending_trace_review")
+        correct_variant = row.get("correct_variant", "unknown")
+        action = row.get("action", "inspect_trace")
+        evidence = summarize_audit_text(row.get("evidence", ""), max_items=2)
+        annotations[suite_case] = (
+            f"Correctness audit: `{verdict}`; correct variant: `{correct_variant}`; "
+            f"action: `{action}`. {evidence}".strip()
+        )
+
+    for row in no_injection_rows:
+        suite_case = (row.get("suite", ""), row.get("case", ""))
+        verdict = row.get("verdict", "pending_no_injection_audit")
+        action = audit_action_for_no_injection(row)
+        if row.get("candidate_globals"):
+            details = "candidate globals: " + summarize_audit_text(row.get("candidate_globals"))
+        elif row.get("unknowns"):
+            details = "unknowns: " + summarize_audit_text(row.get("unknowns"))
+        else:
+            details = summarize_audit_text(row.get("evidence", ""))
+        annotations[suite_case] = (
+            f"Correctness audit: `{verdict}`; action: `{action}`. {details}".strip()
+        )
+    return annotations
+
+
+def build_audit_records(audit_dir):
+    """Build correctness records from audit CSV files.
+
+    Args:
+        audit_dir: Directory containing audit CSV files.
+
+    Returns:
+        Dictionary keyed by (suite, case) with correctness fields.
+    """
+    records = {}
+    audit_dir = Path(audit_dir)
+    for row in read_csv_rows(audit_dir / "outcome-mismatch-audit.csv"):
+        suite_case = (row.get("suite", ""), row.get("case", ""))
+        records[suite_case] = {
+            "correctness_verdict": row.get("verdict", "needs_manual_review"),
+            "correct_variant": row.get("correct_variant", "unknown"),
+            "correctness_action": row.get("action", "inspect_trace"),
+            "evidence": row.get("evidence", ""),
+        }
+    for row in read_csv_rows(audit_dir / "no-injection-audit.csv"):
+        suite_case = (row.get("suite", ""), row.get("case", ""))
+        evidence = ""
+        if row.get("candidate_globals"):
+            evidence = "candidate globals: " + summarize_audit_text(row.get("candidate_globals"))
+        elif row.get("unknowns"):
+            evidence = "unknowns: " + summarize_audit_text(row.get("unknowns"))
+        else:
+            evidence = row.get("evidence", "")
+        records[suite_case] = {
+            "correctness_verdict": row.get("verdict", "needs_manual_review"),
+            "correct_variant": "none",
+            "correctness_action": audit_action_for_no_injection(row),
+            "evidence": evidence,
+        }
+    return records
 
 
 def load_manifests(suite_dir):
@@ -94,6 +271,20 @@ def load_rows(results_dir):
                     continue
                 rows.append(row)
     return rows
+
+
+def filter_rows_to_known_suites(rows, manifests):
+    """Drop rows whose suite manifest is no longer present.
+
+    Args:
+        rows: Raw measured CSV rows.
+        manifests: Loaded suite manifests keyed by suite name.
+
+    Returns:
+        Rows whose benchmark field refers to an existing suite manifest.
+    """
+    known = set(manifests)
+    return [row for row in rows if row.get("benchmark") in known]
 
 
 def summary_class(summary, exit_code):
@@ -411,15 +602,15 @@ def case_comparison_status(phases, suite, case, manifest):
     return stock, improved, is_comparable, reason
 
 
-def uncomparable_category(stock, improved):
-    """Return the report category for one non-comparable case.
+def diagnostic_category(stock, improved):
+    """Return the report category for one diagnostic case.
 
     Args:
         stock: Stock variant phase statistics.
         improved: Improved variant phase statistics.
 
     Returns:
-        Stable human-readable category used to group uncomparable cases.
+        Stable human-readable category used to group diagnostic cases.
     """
     if not stock and not improved:
         return "Not Run / Disabled Cases"
@@ -451,7 +642,453 @@ def uncomparable_category(stock, improved):
     return "Other Verification Outcome Mismatches"
 
 
-def append_case(lines, suite, case, phases, manifest, headline_ready, heading_level=3):
+def correctness_record_for_case(phases, suite, case, manifest, audit_records=None):
+    """Return the correctness record for one case.
+
+    Args:
+        phases: Summarized phase dictionary from summarize().
+        suite: Suite name.
+        case: Case name.
+        manifest: Loaded suite manifest.
+        audit_records: Optional records loaded from audit CSVs.
+
+    Returns:
+        Dictionary with performance_status, correctness_verdict,
+        correct_variant, correctness_action, and evidence.
+    """
+    audit_record = (audit_records or {}).get((suite, case))
+    if not audit_record:
+        same_case_records = [
+            record for (record_suite, record_case), record in (audit_records or {}).items() if record_case == case
+        ]
+        if len(same_case_records) == 1:
+            audit_record = same_case_records[0]
+    stock, improved, is_comparable, reason = case_comparison_status(phases, suite, case, manifest)
+    if is_comparable:
+        stock_variant, improved_variant = comparison_variants(manifest)
+        return {
+            "performance_status": "measured",
+            "correctness_verdict": "same_outcome_comparable",
+            "correct_variant": f"{stock_variant};{improved_variant}",
+            "correctness_action": "report_output_and_performance",
+            "evidence": reason,
+        }
+    if audit_record:
+        record = dict(audit_record)
+        record["performance_status"] = "measured_output_mismatch"
+        return record
+    verdict = "not_audited"
+    action = "inspect_trace_before_correctness_claim"
+    if stock and improved:
+        stock_verify = verify_class(stock)
+        improved_verify = verify_class(improved)
+        if stock_verify == improved_verify:
+            verdict = "same_outcome_comparable"
+            action = "report_output_and_performance_with_diagnostic_status"
+        elif any(item.get("summary") == "NO_INJECTION_CANDIDATES" for item in improved.values()):
+            verdict = "needs_manual_review"
+            action = "run_no_injection_audit"
+        else:
+            verdict = "needs_manual_review"
+    return {
+        "performance_status": "diagnostic",
+        "correctness_verdict": verdict,
+        "correct_variant": "unknown",
+        "correctness_action": action,
+        "evidence": reason,
+    }
+
+
+def measured_case_names(rows):
+    """Collect suite/case names that have measured CSV rows.
+
+    Args:
+        rows: Measured CSV rows.
+
+    Returns:
+        Dictionary mapping suite name to sorted measured case names.
+    """
+    names = defaultdict(set)
+    for row in rows:
+        names[row["benchmark"]].add(row["case"])
+    return {suite: sorted(cases) for suite, cases in names.items()}
+
+
+def measured_phase_counts(rows):
+    """Count measured rows by suite/case/variant/phase.
+
+    Args:
+        rows: Measured CSV rows.
+
+    Returns:
+        Dictionary keyed by (suite, case, variant, phase) with row counts.
+    """
+    counts = defaultdict(int)
+    for row in rows:
+        if row.get("run_kind", "measure") != "measure":
+            continue
+        counts[(row["benchmark"], row["case"], row["variant"], row["phase"])] += 1
+    return counts
+
+
+def incomplete_run_rows(rows, manifests):
+    """Return enabled cases whose measured run count is below suite.runs.
+
+    Args:
+        rows: Measured CSV rows.
+        manifests: Loaded suite manifests.
+
+    Returns:
+        List of dictionaries describing missing measured repetitions.
+    """
+    counts = measured_phase_counts(rows)
+    incomplete = []
+    for suite, manifest in sorted(manifests.items()):
+        if not manifest.get("enabled", False):
+            continue
+        expected_runs = int(manifest.get("runs") or 1)
+        stock_variant, improved_variant = comparison_variants(manifest)
+        for case in manifest.get("cases", []):
+            if case.get("enabled", True) is False:
+                continue
+            variants = list(case.get("variants") or manifest.get("variants") or [stock_variant, improved_variant])
+            for variant in variants:
+                for phase in variant_phases(variant):
+                    measured = counts.get((suite, case["name"], variant, phase), 0)
+                    if measured < expected_runs:
+                        incomplete.append(
+                            {
+                                "suite": suite,
+                                "case": case["name"],
+                                "variant": variant,
+                                "phase": phase,
+                                "expected_runs": expected_runs,
+                                "measured_runs": measured,
+                                "missing_runs": expected_runs - measured,
+                            }
+                        )
+    return incomplete
+
+
+def append_incomplete_run_notes(lines, rows, manifests):
+    """Append rerun notes for interrupted or partial benchmark executions.
+
+    Args:
+        lines: Markdown line buffer to mutate.
+        rows: Measured CSV rows.
+        manifests: Loaded suite manifests.
+
+    Returns:
+        None.
+    """
+    incomplete = incomplete_run_rows(rows, manifests)
+    lines.extend(["### Rerun Notes", ""])
+    append_table_explanation(
+        lines,
+        "This table identifies partial benchmark runs that should be rerun before final analysis.",
+        [
+            ("Suite", "Suite manifest that requested the measured repetitions."),
+            ("Case", "Enabled case whose phase has fewer measured rows than requested."),
+            ("Variant", "Benchmark variant that is missing measured repetitions."),
+            ("Phase", "Pipeline phase with incomplete measurement coverage."),
+            ("Measured runs", "Number of measured rows currently present in CSV results."),
+            ("Expected runs", "Number of measured repetitions requested by the suite manifest."),
+            ("Missing runs", "Expected runs minus measured runs."),
+        ],
+    )
+    if not incomplete:
+        lines.append("All enabled suite phases currently have the expected measured run count.")
+        lines.append("")
+        return
+    lines.append(
+        "The following enabled case phases have fewer measured runs than the suite manifest requests. Rerun these before treating medians as final."
+    )
+    lines.append("")
+    lines.append("| Suite | Case | Variant | Phase | Measured runs | Expected runs | Missing runs |")
+    lines.append("| --- | --- | --- | --- | ---: | ---: | ---: |")
+    for item in incomplete:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    markdown_cell(item["suite"]),
+                    markdown_cell(item["case"]),
+                    markdown_cell(item["variant"]),
+                    markdown_cell(item["phase"]),
+                    str(item["measured_runs"]),
+                    str(item["expected_runs"]),
+                    str(item["missing_runs"]),
+                ]
+            )
+            + " |"
+        )
+    lines.append("")
+
+
+def correctness_label(record):
+    """Return a compact report-facing correctness label.
+
+    Args:
+        record: Correctness record for a case.
+
+    Returns:
+        Label describing which output is judged correct.
+    """
+    variant = record.get("correct_variant", "unknown")
+    verdict = record.get("correctness_verdict", "")
+    if verdict == "same_outcome_comparable":
+        return "both"
+    if variant == "improved_pipeline":
+        return "improved"
+    if variant == "stock_cprover_async":
+        return "stock"
+    if variant == "both":
+        return "both"
+    if variant in {"none", "unknown", ""}:
+        return "unknown"
+    if ";" in variant:
+        return "both"
+    return variant
+
+
+def append_correctness_sections(lines, rows, phases, manifests, audit_records):
+    """Append correctness summary and verdict tables.
+
+    Args:
+        lines: Markdown line buffer to mutate.
+        rows: Measured CSV rows.
+        phases: Summarized phase dictionary from summarize().
+        manifests: Loaded suite manifests.
+        audit_records: Correctness records loaded from audit CSVs.
+
+    Returns:
+        None.
+    """
+    names = measured_case_names(rows)
+    records = []
+    for suite in sorted(names):
+        manifest = manifests.get(suite)
+        for case in names[suite]:
+            record = correctness_record_for_case(phases, suite, case, manifest, audit_records)
+            record["suite"] = suite
+            record["case"] = case
+            records.append(record)
+
+    counts = defaultdict(int)
+    for record in records:
+        counts[record["correctness_verdict"]] += 1
+
+    lines.extend(["### Correctness Summary", ""])
+    append_table_explanation(
+        lines,
+        "This table counts correctness verdicts across measured cases.",
+        [
+            ("Verdict", "Normalized correctness classification assigned by comparison and audit evidence."),
+            ("Cases", "Number of measured cases assigned to the verdict."),
+        ],
+    )
+    lines.append("| Verdict | Cases |")
+    lines.append("| --- | ---: |")
+    for verdict in CORRECTNESS_VERDICT_ORDER:
+        lines.append(f"| `{verdict}` | {counts.get(verdict, 0)} |")
+    extra_verdicts = sorted(set(counts) - set(CORRECTNESS_VERDICT_ORDER))
+    for verdict in extra_verdicts:
+        lines.append(f"| `{verdict}` | {counts[verdict]} |")
+    lines.append("")
+
+    lines.extend(["### Correctness Wins", ""])
+    append_table_explanation(
+        lines,
+        "This table lists cases where one variant is judged more faithful than the other.",
+        [
+            ("Suite", "Suite containing the audited case."),
+            ("Case", "Case with an output disagreement or correctness audit result."),
+            ("Correct variant", "Variant judged correct by the audit evidence."),
+            ("Verdict", "Correctness verdict assigned to the case."),
+            ("Evidence summary", "Short explanation of why that output is considered correct."),
+            ("Action", "Follow-up action or reporting policy for the case."),
+        ],
+    )
+    lines.append("| Suite | Case | Correct variant | Verdict | Evidence summary | Action |")
+    lines.append("| --- | --- | --- | --- | --- | --- |")
+    win_rows = [
+        record
+        for record in records
+        if record["correctness_verdict"] in {"improved_correct", "stock_correct"}
+    ]
+    if not win_rows:
+        lines.append("| n/a | n/a | n/a | n/a | No audited correctness wins yet. | n/a |")
+    for record in win_rows:
+        evidence = summarize_audit_text(record.get("evidence", ""), max_items=2)
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    record["suite"],
+                    record["case"],
+                    record["correct_variant"],
+                    f"`{record['correctness_verdict']}`",
+                    evidence.replace("|", "\\|"),
+                    record["correctness_action"],
+                ]
+            )
+            + " |"
+        )
+    lines.append("")
+
+
+def markdown_cell(value):
+    """Escape a value for a Markdown table cell.
+
+    Args:
+        value: Cell value.
+
+    Returns:
+        Escaped one-line string.
+    """
+    return str(value or "").replace("|", "\\|").replace("\n", " ")
+
+
+def append_table_explanation(lines, purpose, columns):
+    """Append a short explanation and column guide for a Markdown table.
+
+    Args:
+        lines: Markdown line buffer to mutate.
+        purpose: One-sentence table purpose.
+        columns: Ordered list of (column_name, meaning) tuples.
+
+    Returns:
+        None.
+    """
+    lines.append(purpose)
+    lines.append("")
+    lines.append("Column guide:")
+    lines.append("")
+    lines.append("| Column | Meaning |")
+    lines.append("| --- | --- |")
+    for name, meaning in columns:
+        lines.append(f"| `{markdown_cell(name)}` | {markdown_cell(meaning)} |")
+    lines.append("")
+
+
+def append_diagnostic_correctness_details(lines, audit_dir):
+    """Append folded correctness-audit details to benchmark.md.
+
+    Args:
+        lines: Markdown line buffer to mutate.
+        audit_dir: Directory containing audit CSV files.
+
+    Returns:
+        None.
+    """
+    audit_dir = Path(audit_dir)
+    inventory = read_csv_rows(audit_dir / "benchmark-inventory.csv")
+    no_injection_rows = read_csv_rows(audit_dir / "no-injection-audit.csv")
+    outcome_rows = read_csv_rows(audit_dir / "outcome-mismatch-audit.csv")
+    if not inventory and not no_injection_rows and not outcome_rows:
+        return
+
+    lines.extend(["### Diagnostic Audit Summary", ""])
+    append_table_explanation(
+        lines,
+        "This table summarizes audit CSV coverage, not raw timing coverage.",
+        [
+            ("Category", "Audit inventory category assigned before report rendering."),
+            ("Cases", "Number of cases present in the audit inventory for that category."),
+        ],
+    )
+    lines.append("| Category | Cases |")
+    lines.append("| --- | ---: |")
+    category_counts = defaultdict(int)
+    for row in inventory:
+        category_counts[row.get("category", "unknown")] += 1
+    for category in sorted(category_counts):
+        lines.append(f"| {markdown_cell(category)} | {category_counts[category]} |")
+    lines.append("")
+
+    if no_injection_rows:
+        lines.extend(["### No Injection Candidate Cases", ""])
+        append_table_explanation(
+            lines,
+            "This table audits no-injection results; such a result is valid only when no ISR-written global can affect a global reachable from `main`.",
+            [
+                ("Suite", "Suite containing the no-injection case."),
+                ("Case", "Case whose improved pipeline reported no injection candidates."),
+                ("Verdict", "Audit judgment for the no-injection result."),
+                ("Original interleavings", "Interleaving sites before filtering."),
+                ("Filtered interleavings", "Interleaving sites after ISR/global filtering."),
+                ("Candidate globals", "Globals that may connect ISR writes to main-reachable state."),
+                ("Unknowns", "Unresolved source-analysis items requiring manual review."),
+            ],
+        )
+        lines.append("| Suite | Case | Verdict | Original interleavings | Filtered interleavings | Candidate globals | Unknowns |")
+        lines.append("| --- | --- | --- | ---: | ---: | --- | --- |")
+        for row in no_injection_rows:
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        markdown_cell(row.get("suite")),
+                        markdown_cell(row.get("case")),
+                        markdown_cell(row.get("verdict")),
+                        markdown_cell(row.get("original_interleavings")),
+                        markdown_cell(row.get("filtered_interleavings")),
+                        markdown_cell(summarize_audit_text(row.get("candidate_globals", ""), max_items=4)),
+                        markdown_cell(summarize_audit_text(row.get("unknowns", ""), max_items=4)),
+                    ]
+                )
+                + " |"
+            )
+        lines.append("")
+
+    if outcome_rows:
+        lines.extend(["### Output Mismatch Audit Details", ""])
+        append_table_explanation(
+            lines,
+            "This table gives evidence for stock/improved output disagreements.",
+            [
+                ("Category", "Diagnostic category describing the output mismatch."),
+                ("Suite", "Suite containing the audited case."),
+                ("Case", "Case whose stock and improved outputs differ."),
+                ("Stock output", "Verification summary produced by stock CBMC modeling."),
+                ("Improved output", "Verification summary produced by the improved pipeline."),
+                ("Verdict", "Audit verdict for the disagreement."),
+                ("Correct output", "Which output is judged correct after audit."),
+                ("Reason", "Compact evidence supporting the audit verdict."),
+            ],
+        )
+        lines.append("| Category | Suite | Case | Stock output | Improved output | Verdict | Correct output | Reason |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        for row in outcome_rows:
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        markdown_cell(row.get("category")),
+                        markdown_cell(row.get("suite")),
+                        markdown_cell(row.get("case")),
+                        markdown_cell(row.get("stock_summary")),
+                        markdown_cell(row.get("improved_summary")),
+                        markdown_cell(row.get("verdict")),
+                        markdown_cell(correctness_label({"correct_variant": row.get("correct_variant"), "correctness_verdict": row.get("verdict")})),
+                        markdown_cell(summarize_audit_text(row.get("evidence", ""), max_items=3)),
+                    ]
+                )
+                + " |"
+            )
+        lines.append("")
+
+
+def append_case(
+    lines,
+    suite,
+    case,
+    phases,
+    manifest,
+    heading_level=3,
+    audit_annotations=None,
+    audit_records=None,
+):
     """Append one case section with phase tables and comparison status.
 
     Args:
@@ -460,8 +1097,9 @@ def append_case(lines, suite, case, phases, manifest, headline_ready, heading_le
         case: Case name.
         phases: Summarized phase dictionary from summarize().
         manifest: Loaded suite manifest.
-        headline_ready: Whether speed/RAM deltas may be headline results.
         heading_level: Markdown heading level for the case name.
+        audit_annotations: Optional dictionary of correctness-audit notes.
+        audit_records: Optional dictionary of correctness records.
 
     Returns:
         True when the case is comparable, otherwise False.
@@ -496,29 +1134,35 @@ def append_case(lines, suite, case, phases, manifest, headline_ready, heading_le
     if stock and improved:
         lines.append(reason)
         lines.append("")
+        correctness = correctness_record_for_case(phases, suite, case, manifest, audit_records)
+        evidence = summarize_audit_text(correctness.get("evidence", ""), max_items=2)
+        if not evidence:
+            evidence = reason
+        reason_cell = evidence.replace("|", "\\|")
+        lines.append("| Field | Value |")
+        lines.append("| --- | --- |")
+        lines.append(f"| Stock output | `{verify_class(stock)}` |")
+        lines.append(f"| Improved output | `{verify_class(improved)}` |")
+        lines.append(f"| Correct output | `{correctness_label(correctness)}` |")
+        lines.append(f"| Correctness verdict | `{correctness.get('correctness_verdict', 'unknown')}` |")
+        lines.append(f"| Reason | {reason_cell} |")
+        lines.append("")
+        audit_note = (audit_annotations or {}).get((suite, case))
+        if audit_note and not is_comparable:
+            lines.append(audit_note)
+            lines.append("")
         stock_total = total_time(stock, variant_phases(stock_variant))
         improved_total = total_time(improved, variant_phases(improved_variant))
         stock_peak = peak_rss(stock)
         improved_peak = peak_rss(improved)
         lines.append("| Metric | Stock | Improved | Difference |")
         lines.append("| --- | ---: | ---: | --- |")
-        if not is_comparable:
-            lines.append(f"| Full measured time | {stock_total} ms | {improved_total} ms | Not reported for not-comparable verification outcomes. |")
-            lines.append(f"| Peak RSS | {stock_peak:.1f} MB | {improved_peak:.1f} MB | Not reported for not-comparable verification outcomes. |")
-        elif not headline_ready:
-            lines.append(
-                f"| Full measured time | {stock_total} ms | {improved_total} ms | Not reported because the suite is not headline-ready. |"
-            )
-            lines.append(
-                f"| Peak RSS | {stock_peak:.1f} MB | {improved_peak:.1f} MB | Not reported because the suite is not headline-ready. |"
-            )
-        else:
-            lines.append(
-                f"| Full measured time | {stock_total} ms | {improved_total} ms | {percent_delta(stock_total, improved_total)} |"
-            )
-            lines.append(
-                f"| Peak RSS | {stock_peak:.1f} MB | {improved_peak:.1f} MB | {percent_delta(stock_peak, improved_peak, False)} |"
-            )
+        lines.append(
+            f"| Full measured time | {stock_total} ms | {improved_total} ms | {percent_delta(stock_total, improved_total)} |"
+        )
+        lines.append(
+            f"| Peak RSS | {stock_peak:.1f} MB | {improved_peak:.1f} MB | {percent_delta(stock_peak, improved_peak, False)} |"
+        )
         lines.append("")
     elif reason:
         lines.append(reason)
@@ -526,60 +1170,78 @@ def append_case(lines, suite, case, phases, manifest, headline_ready, heading_le
     return is_comparable
 
 
-def build_report(rows, phases, manifests, report_kind="comparable"):
+def build_report(
+    rows,
+    phases,
+    manifests,
+    audit_annotations=None,
+    audit_records=None,
+    audit_dir=None,
+):
     """Compose the full Markdown report as a string.
 
     Args:
         rows: Measured CSV rows.
         phases: Summarized phase dictionary from summarize().
         manifests: Loaded suite manifests.
-        report_kind: Either comparable or uncomparable.
+        audit_annotations: Optional dictionary of correctness-audit notes.
+        audit_records: Optional dictionary of correctness records.
+        audit_dir: Optional directory containing audit CSVs.
 
     Returns:
         Complete Markdown report text.
     """
-    comparable_report = report_kind == "comparable"
-    title = "ISR Comparable Benchmark Results" if comparable_report else "ISR Uncomparable Benchmark Results"
-    scope = (
-        "This file contains cases whose stock and improved verification outcomes are comparable."
-        if comparable_report
-        else "This file contains cases that cannot be compared directly."
-    )
     lines = [
-        f"# {title}",
+        "# ISR Benchmark Comparison Results",
         "",
         f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
         "",
         "This report is generated from `check-src/benchmarks/results/*.csv` by `check-src/benchmarks/common/report_benchmark.py`.",
         "Warmup rows are ignored; measured rows are summarized with median time and median peak RSS per phase.",
-        scope,
+        "This file compares stock CBMC and improved CBMC output, correctness judgment, time, and RAM for every measured case. Diagnostic and no-injection audit evidence is folded into this same report.",
         "",
-        "Comparison labels: Stock CPROVER async, Improved pipeline, Comparable, Not comparable, Median, Peak RSS.",
+        "Comparison labels: Stock CPROVER async, Improved pipeline, Correct output, Median, Peak RSS.",
         "",
-        "## Source Inventory",
+        "## Benchmark Scope",
+        "",
+        "### Source Inventory",
         "",
     ]
-    inventory = REPO_ROOT / "check-src" / "benchmark-sources" / "INVENTORY.md"
-    if inventory.exists():
-        inventory_lines = inventory.read_text(encoding="utf-8", errors="replace").splitlines()
-        table = [line for line in inventory_lines if line.startswith("|")]
-        lines.extend(table)
-    else:
-        lines.append("`check-src/benchmark-sources/INVENTORY.md` has not been generated yet.")
+    append_table_explanation(
+        lines,
+        "This table describes the source corpus size used to judge benchmark scale.",
+        [
+            ("Corpus", "Stable corpus label used by this report."),
+            ("Path", "Repository-relative source root."),
+            ("C/H/I files", "Number of C, header, and preprocessed C files."),
+            ("LOC", "Total line count across those files."),
+        ],
+    )
+    lines.append("| Corpus | Path | C/H/I files | LOC |")
+    lines.append("| --- | --- | ---: | ---: |")
+    for name, relative, files, loc in source_inventory_rows():
+        lines.append(f"| `{name}` | `{relative}` | {files} | {loc} |")
     lines.append("")
 
-    lines.append("## Suite Readiness")
+    lines.append("## Suite Coverage")
     lines.append("")
+    lines.append("### Suite Readiness")
+    lines.append("")
+    append_table_explanation(
+        lines,
+        "This table shows which suite manifests are active, staged, and large enough for headline reporting.",
+        [
+            ("Suite", "Suite manifest name used to group cases and CSV rows."),
+            ("Manifest enabled", "Whether `run_all.sh` includes this suite automatically."),
+            ("Staged cases", "Cases listed in the suite manifest, including disabled cases."),
+            ("Enabled cases", "Cases enabled for execution in that suite."),
+            ("Enabled compile LOC", "Estimated maximum compile LOC across enabled case variants."),
+            ("Headline-ready", "Whether the enabled suite is large enough for headline comparison claims."),
+        ],
+    )
     lines.append("| Suite | Manifest enabled | Staged cases | Enabled cases | Enabled compile LOC | Headline-ready |")
     lines.append("| --- | --- | ---: | ---: | ---: | --- |")
-    readiness_manifests = manifests.items()
-    if comparable_report:
-        readiness_manifests = (
-            (suite, manifest)
-            for suite, manifest in manifests.items()
-            if manifest.get("enabled", False)
-        )
-    for suite, manifest in sorted(readiness_manifests):
+    for suite, manifest in sorted(manifests.items()):
         staged, enabled, loc, ready = suite_readiness(manifest)
         headline = "yes" if ready else "no"
         lines.append(
@@ -587,73 +1249,114 @@ def build_report(rows, phases, manifests, report_kind="comparable"):
         )
     lines.append("")
 
-    names = suite_case_names(rows, manifests)
-    appended_cases = 0
-    if comparable_report:
-        for suite in sorted(names):
-            manifest = manifests.get(suite)
-            headline_ready = True
-            if manifest:
-                _, _, _, headline_ready = suite_readiness(manifest)
-            case_lines = []
-            suite_case_count = 0
-            for case in names[suite]:
-                _, _, is_comparable, _ = case_comparison_status(phases, suite, case, manifest)
-                if not is_comparable:
-                    continue
-                suite_case_count += 1
-                appended_cases += 1
-                append_case(case_lines, suite, case, phases, manifest, headline_ready)
-            if suite_case_count == 0:
-                continue
-            lines.extend([f"## {suite}", ""])
-            lines.extend(case_lines)
-    else:
-        grouped = defaultdict(lambda: defaultdict(list))
-        for suite in sorted(names):
-            manifest = manifests.get(suite)
-            for case in names[suite]:
-                stock, improved, is_comparable, _ = case_comparison_status(phases, suite, case, manifest)
-                if is_comparable:
-                    continue
-                category = uncomparable_category(stock, improved)
-                grouped[category][suite].append(case)
-                appended_cases += 1
+    append_incomplete_run_notes(lines, rows, manifests)
 
-        lines.extend(["## Uncomparable Summary", ""])
-        lines.append("| Reason | Cases |")
-        lines.append("| --- | ---: |")
-        for category in UNCOMPARABLE_CATEGORY_ORDER:
-            count = sum(len(cases) for cases in grouped.get(category, {}).values())
-            lines.append(f"| {category} | {count} |")
+    lines.append("## Correctness Results")
+    lines.append("")
+    append_correctness_sections(lines, rows, phases, manifests, audit_records or {})
+
+    diagnostic_names = suite_case_names(rows, manifests)
+    grouped = defaultdict(lambda: defaultdict(list))
+    for suite in sorted(diagnostic_names):
+        manifest = manifests.get(suite)
+        for case in diagnostic_names[suite]:
+            stock, improved, is_comparable, _ = case_comparison_status(phases, suite, case, manifest)
+            if is_comparable:
+                continue
+            category = diagnostic_category(stock, improved)
+            grouped[category][suite].append(case)
+
+    lines.extend(["## Diagnostic Results", ""])
+    lines.extend(["### Diagnostic Summary", ""])
+    append_table_explanation(
+        lines,
+        "This table groups diagnostic cases by the reason they are not clean same-output comparisons.",
+        [
+            ("Reason", "Diagnostic category derived from stock/improved verification outputs."),
+            ("Cases", "Number of cases assigned to that diagnostic category."),
+        ],
+    )
+    lines.append("| Reason | Cases |")
+    lines.append("| --- | ---: |")
+    for category in DIAGNOSTIC_CATEGORY_ORDER:
+        count = sum(len(cases) for cases in grouped.get(category, {}).values())
+        lines.append(f"| {category} | {count} |")
+    lines.append("")
+
+    if audit_dir:
+        append_diagnostic_correctness_details(lines, audit_dir)
+
+    lines.extend(["### Diagnostic Details", ""])
+    append_table_explanation(
+        lines,
+        "This table lists each diagnostic case with the stock output, improved output, and comparison reason.",
+        [
+            ("Suite", "Suite containing the diagnostic case."),
+            ("Case", "Case whose output is diagnostic rather than a clean same-output comparison."),
+            ("Stock output", "Normalized verification outcome for the stock variant."),
+            ("Improved output", "Normalized verification outcome for the improved variant."),
+            ("Reason", "Why the case is diagnostic or how to rerun disabled evidence."),
+        ],
+    )
+    for category in DIAGNOSTIC_CATEGORY_ORDER:
+        suites = grouped.get(category)
+        if not suites:
+            continue
+        lines.extend([f"#### {category}", ""])
+        lines.append("| Suite | Case | Stock output | Improved output | Reason |")
+        lines.append("| --- | --- | --- | --- | --- |")
+        for suite in sorted(suites):
+            manifest = manifests.get(suite)
+            for case in suites[suite]:
+                stock, improved, _, reason = case_comparison_status(phases, suite, case, manifest)
+                stock_output = verify_class(stock) if stock else "missing"
+                improved_output = verify_class(improved) if improved else "missing"
+                if manifest and not manifest.get("enabled", False):
+                    reason += " Suite is excluded from automatic `run_all.sh`; run it explicitly when diagnostic evidence is needed."
+                lines.append(
+                    "| "
+                    + " | ".join(
+                        [
+                            markdown_cell(suite),
+                            markdown_cell(case),
+                            markdown_cell(stock_output),
+                            markdown_cell(improved_output),
+                            markdown_cell(reason),
+                        ]
+                    )
+                    + " |"
+                )
         lines.append("")
 
-        for category in UNCOMPARABLE_CATEGORY_ORDER:
-            suites = grouped.get(category)
-            if not suites:
-                continue
-            lines.extend([f"## {category}", ""])
-            for suite in sorted(suites):
-                manifest = manifests.get(suite)
-                headline_ready = True
-                if manifest:
-                    _, _, _, headline_ready = suite_readiness(manifest)
-                lines.extend([f"### {suite}", ""])
-                if manifest and not manifest.get("enabled", False):
-                    lines.append(
-                        "Suite is excluded from automatic `run_all.sh`; run it explicitly when diagnostic evidence is needed."
-                    )
-                    lines.append("")
-                for case in suites[suite]:
-                    append_case(
-                        lines,
-                        suite,
-                        case,
-                        phases,
-                        manifest,
-                        headline_ready,
-                        heading_level=4,
-                    )
+    lines.extend(["## Per-Suite Case Measurements", ""])
+    lines.append(
+        "Each case subsection contains per-phase measurements, correctness fields, and performance deltas. "
+        "Phase tables show runs, exits, median time, peak RSS, and summaries; correctness tables show stock/improved outputs and audit judgment; metric tables compare full measured time and peak RSS."
+    )
+    lines.append("")
+    appended_cases = 0
+    names = measured_case_names(rows)
+    for suite in sorted(names):
+        manifest = manifests.get(suite)
+        case_lines = []
+        suite_case_count = 0
+        for case in names[suite]:
+            suite_case_count += 1
+            appended_cases += 1
+            append_case(
+                case_lines,
+                suite,
+                case,
+                phases,
+                manifest,
+                heading_level=4,
+                audit_annotations=audit_annotations,
+                audit_records=audit_records,
+            )
+        if suite_case_count == 0:
+            continue
+        lines.extend([f"### {suite}", ""])
+        lines.extend(case_lines)
 
     if not rows:
         lines.append("No CSV rows were loaded.")
@@ -678,24 +1381,23 @@ def main(argv=None):
     parser.add_argument("--results-dir", default=BENCHMARK_DIR / "results")
     parser.add_argument("--suite-dir", default=BENCHMARK_DIR / "suites")
     parser.add_argument("--out", default=REPO_ROOT / "check-src" / "benchmark.md")
-    parser.add_argument("--uncomparable-out", default=REPO_ROOT / "check-src" / "uncomparable.md")
+    parser.add_argument("--audit-dir", default=BENCHMARK_DIR / "results" / "audit")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
-    rows = load_rows(Path(args.results_dir))
     manifests = load_manifests(Path(args.suite_dir))
+    rows = filter_rows_to_known_suites(load_rows(Path(args.results_dir)), manifests)
     phases = summarize(rows)
-    comparable_report = build_report(rows, phases, manifests, "comparable")
-    uncomparable_report = build_report(rows, phases, manifests, "uncomparable")
+    audit_annotations = build_audit_annotations(Path(args.audit_dir))
+    audit_records = build_audit_records(Path(args.audit_dir))
+    audit_dir = Path(args.audit_dir)
+    report = build_report(rows, phases, manifests, audit_annotations, audit_records, audit_dir)
     print(f"report rows loaded: {len(rows)}")
     if args.dry_run:
         return 0
     out = Path(args.out)
-    uncomparable_out = Path(args.uncomparable_out)
-    out.write_text(comparable_report, encoding="utf-8")
-    uncomparable_out.write_text(uncomparable_report, encoding="utf-8")
+    out.write_text(report, encoding="utf-8")
     print(f"report: {out}")
-    print(f"uncomparable report: {uncomparable_out}")
     return 0
 
 

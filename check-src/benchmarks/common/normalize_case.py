@@ -6,12 +6,12 @@ Inputs:
   - --case: normalized case directory name.
   - --source: upstream source file path, relative to repo root.
   - --compile-name: filename to use inside each variant root, default main.c.
-  - --isr-functions: comma-separated ISR/task names for generated CASE.md.
+  - --isr-functions: comma-separated ISR/task names for generated CASE.txt.
 
 Outputs:
   - check-src/benchmark-sources/<corpus>/cases/<case>/stock-cprover-async/
   - check-src/benchmark-sources/<corpus>/cases/<case>/improved-pipeline/
-  - check-src/benchmark-sources/<corpus>/cases/<case>/CASE.md
+  - check-src/benchmark-sources/<corpus>/cases/<case>/CASE.txt
 
 This helper edits normalized copies only. It does not modify upstream corpus
 files in place.
@@ -283,7 +283,7 @@ def copy_case(repo, corpus, case_name, source, compile_name, isr_functions, forc
         case_md.extend(f"- `{function}`" for function in functions)
     else:
         case_md.append("- Pending explicit function selection.")
-    (case_dir / "CASE.md").write_text("\n".join(case_md) + "\n", encoding="utf-8")
+    (case_dir / "CASE.txt").write_text("\n".join(case_md) + "\n", encoding="utf-8")
     return case_dir
 
 

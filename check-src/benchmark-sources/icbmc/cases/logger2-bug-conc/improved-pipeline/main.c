@@ -22,13 +22,13 @@ void TRANS_atomic_assume_task_communicate(void) {
 __VERIFIER_assume( __TRANS_thread_running[1]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_communicate_enter_thread() {
+void TRANS_task_communicate_enter_thread() {
 __VERIFIER_assume( __TRANS_thread_running[1]==0);
 __TRANS_thread_running[0]=1;
 __VERIFIER_assume( __TRANS_thread_running[1]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_communicate_leave_thread() {
+void TRANS_task_communicate_leave_thread() {
 __VERIFIER_assume( __TRANS_thread_running[1]==0);
 __TRANS_thread_running[0]=0;
 __VERIFIER_assume( __TRANS_thread_running[1]==0);
@@ -42,13 +42,13 @@ void TRANS_atomic_assume_task_communicate2(void) {
 __VERIFIER_assume( __TRANS_thread_running[0]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_communicate2_enter_thread() {
+void TRANS_task_communicate2_enter_thread() {
 __VERIFIER_assume( __TRANS_thread_running[0]==0);
 __TRANS_thread_running[1]=1;
 __VERIFIER_assume( __TRANS_thread_running[0]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_communicate2_leave_thread() {
+void TRANS_task_communicate2_leave_thread() {
 __VERIFIER_assume( __TRANS_thread_running[0]==0);
 __TRANS_thread_running[1]=0;
 __VERIFIER_assume( __TRANS_thread_running[0]==0);
@@ -62,13 +62,13 @@ void TRANS_atomic_assume_task_measure(void) {
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_measure_enter_thread() {
+void TRANS_task_measure_enter_thread() {
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0);
 __TRANS_thread_running[2]=1;
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_measure_leave_thread() {
+void TRANS_task_measure_leave_thread() {
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0);
 __TRANS_thread_running[2]=0;
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0);
@@ -82,13 +82,13 @@ void TRANS_atomic_assume_task_ext_power(void) {
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0 && __TRANS_thread_running[2]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_ext_power_enter_thread() {
+void TRANS_task_ext_power_enter_thread() {
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0 && __TRANS_thread_running[2]==0);
 __TRANS_thread_running[3]=1;
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0 && __TRANS_thread_running[2]==0);
 }
 
-void __VERIFIER_atomic_TRANS_task_ext_power_leave_thread() {
+void TRANS_task_ext_power_leave_thread() {
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0 && __TRANS_thread_running[2]==0);
 __TRANS_thread_running[3]=0;
 __VERIFIER_assume(__TRANS_thread_running[0]==0 && __TRANS_thread_running[1]==0 && __TRANS_thread_running[2]==0);
@@ -108,9 +108,9 @@ uint16_t records[MAX_RECORDS];
 
 #define MAX_BUFFER 16
 
-uint32_t periodCounter; 
-uint16_t tickCounter;     
-uint16_t period;     
+uint32_t periodCounter;
+uint16_t tickCounter;
+uint16_t period;
 uint32_t startTime;
 
 #define IDLE 0
@@ -145,10 +145,20 @@ void restart(uint32_t _startTime,uint16_t _period)
   systemState = LOGGING;
 }
 
-extern uint16_t read_sensor_value();
-extern uint16_t process_value(uint32_t time, uint16_t value);
+extern uint8_t nondet_uint8();
+uint16_t read_sensor_value(void) {
+  return (uint16_t)nondet_uint8();
+}
+uint16_t process_value(uint32_t time, uint16_t value) {
+  (void)time;
+  (void)value;
+  return (uint16_t)nondet_uint8();
+}
 
-extern uint8_t get_power_status();
+extern uint8_t nondet_uint8();
+uint8_t get_power_status(void) {
+  return nondet_uint8();
+}
 
 uint8_t get_cmd(uint8_t* buffer, uint8_t* cmd) {
 }
@@ -161,9 +171,9 @@ void put_uint16(uint8_t* buffer, uint8_t pos, uint16_t val) {
   buffer[pos+1] = (uint8_t)val;
 }
 uint32_t get_uint32(uint8_t* buffer, uint8_t pos) {
-  return (((uint32_t)buffer[pos])<<24) | 
-         (((uint32_t)buffer[pos+1])<<16) | 
-         (((uint32_t)buffer[pos+2])<<8) | 
+  return (((uint32_t)buffer[pos])<<24) |
+         (((uint32_t)buffer[pos+1])<<16) |
+         (((uint32_t)buffer[pos+2])<<8) |
          (uint32_t)buffer[pos+3];
 }
 void put_uint32(uint8_t* buffer, uint8_t pos, uint32_t val) {
@@ -182,7 +192,10 @@ uint8_t receive_cmd(uint8_t* buffer) {
   buffer[5] = nondet_uint8();
   buffer[6] = nondet_uint8();
 }
-extern void send_response(uint8_t* buffer, uint8_t len);
+void send_response(uint8_t* buffer, uint8_t len) {
+  (void)buffer;
+  (void)len;
+}
 uint8_t msgBuffer[MAX_BUFFER];
 
 #include "isr_define/isr.c"
