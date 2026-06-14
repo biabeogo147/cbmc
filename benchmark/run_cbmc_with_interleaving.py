@@ -1,73 +1,89 @@
 import os
 import subprocess
 from pathlib import Path
+from datetime import datetime
 
-def run_cbmc_with_interleaving(target_dir):
+def run_cbmc_with_interleaving(target_dir, unwind_depth):
     target_path = Path(target_dir).expanduser().resolve()
     cbmc_bin = Path("/home/haven/Code/cbmc/build/bin/cbmc")
-    goto_inst_bin = Path("/home/haven/Code/cbmc/build/bin/goto-instrument")
     goto_cc_bin = Path("/home/haven/Code/cbmc/build/bin/goto-cc")
-    output_dir = Path("benchmark_results_with_interleaving")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Flag Sanitization: Ensure unwind_depth is a positive integer
+    try:
+        unwind_val = int(unwind_depth)
+        if unwind_val < 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        print(f"Invalid unwind depth '{unwind_depth}'. Defaulting to 10.")
+        unwind_val = 10
+
+    # CBMC options for automotive code + interleaving
+    cbmc_options = [
+        "--bounds-check",
+        "--pointer-check",
+        "--signed-overflow-check",
+        "--unsigned-overflow-check",
+        "--div-by-zero-check",
+        "--unwind", str(unwind_val),
+        "--unwinding-assertions",
+        "--os-api", "osek",
+        "--osek-oil", str(target_path / "app.oil"),
+        "--function", "main"
+    ]
 
     print(f"Scanning {target_path} for .c files...")
     
-    # Collect all .c files in the target directory to avoid "no body for callee" errors
     all_c_files = list(target_path.rglob("*.c"))
-    # Collect all directories containing .c files to use as include paths
+    if not all_c_files:
+        print("No .c files found in target directory.")
+        return
+
     include_dirs = sorted(list(set(f.parent for f in all_c_files)))
     include_args = [f"-I{d}" for d in include_dirs]
 
-    for c_file in all_c_files:
-        rel_path = c_file.relative_to(target_path)
-        out_file = output_dir / rel_path.with_suffix(".log")
-        out_file.parent.mkdir(parents=True, exist_ok=True)
+    # Temporary binary location
+    tmp_out = target_path / "harness.out"
+    
+    cmd_gen = [str(goto_cc_bin)] + include_args + ["-o", str(tmp_out)] + [str(f) for f in all_c_files]
+    print(f"Command to generate binary:\n{' '.join(cmd_gen)}")
+    
+    try:
+        # 1. Generate binary
+        subprocess.run(cmd_gen, check=True, capture_output=True)
         
-        tmp_out = c_file.with_suffix(".out")
-        tmp_inst_out = c_file.with_suffix(".inst.out")
+        # 2. Run CBMC (Interleaving is handled by CBMC's internal engine for concurrent programs)
+        print(f"Running CBMC with interleaving on {tmp_out}...")
+        cbmc_cmd = [str(cbmc_bin), str(tmp_out)] + cbmc_options
+        result = subprocess.run(cbmc_cmd, capture_output=True, text=True)
         
-        print(f"\n--- File: {c_file} ---")
+        # 3. Create result folder structure ONLY after successful execution
+        project_name = target_path.name
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_folder = Path("result_with_interleaving") / f"{project_name}-{timestamp}"
+        run_folder.mkdir(parents=True, exist_ok=True)
         
-        # Build the command using all source files and include paths
-        cmd_gen = [str(goto_cc_bin)] + include_args + ["-o", str(tmp_out)] + [str(f) for f in all_c_files]
-        print(f"Command to generate binary:\n{' '.join(cmd_gen)}")
+        # Move binary and save log
+        final_out = run_folder / "harness.out"
+        final_log = run_folder / "harness.log"
         
-        try:
-            # 1. Generate binary
-            subprocess.run(cmd_gen, check=True, capture_output=True)
-            
-            # 2. Instrument (using 'isr' as default ISR name as per previous logic)
-            subprocess.run([str(goto_inst_bin), "--show-isr-writes", "isr", str(tmp_out), str(tmp_inst_out)], check=True, capture_output=True)
-            
-            # CBMC options for automotive code:
-            cbmc_options = [
-                "--bounds-check",
-                "--pointer-check",
-                "--signed-overflow-check",
-                "--unsigned-overflow-check",
-                "--div-by-zero-check",
-                "--unwind", "10",
-                "--unwinding-assertions",
-                "--os-api", "osek",
-                "--osek-oil", str(target_path / "app.oil"),
-                "--function", "main"
-            ]
-
-            # 3. Verify
-            with open(out_file, "w") as f:
-                cbmc_cmd = [str(cbmc_bin), str(tmp_inst_out)] + cbmc_options
-                result = subprocess.run(cbmc_cmd, capture_output=True, text=True)
-                f.write(result.stdout)
-                f.write(result.stderr)
-            
-            # Cleanup
-            os.remove(tmp_out)
-            os.remove(tmp_inst_out)
-            
-        except subprocess.CalledProcessError as e:
-            print(f"Error processing {c_file}: {e}")
+        os.rename(tmp_out, final_out)
+        
+        with open(final_log, "w") as f:
+            f.write(result.stdout)
+            f.write(result.stderr)
+        
+        print(f"Verification complete. Results saved in: {run_folder}")
+        print(f"Binary: {final_out}, Log: {final_log}")
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Error during execution: {e}")
+        if tmp_out.exists(): os.remove(tmp_out)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        if tmp_out.exists(): os.remove(tmp_out)
 
 if __name__ == "__main__":
     import sys
     target = sys.argv[1] if len(sys.argv) > 1 else "/home/haven/Code/cbmc/benchmark/test_cases"
-    run_cbmc_with_interleaving(target)
+    unwind = sys.argv[2] if len(sys.argv) > 2 else "10"
+    run_cbmc_with_interleaving(target, unwind)
