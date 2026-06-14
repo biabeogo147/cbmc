@@ -1,0 +1,442 @@
+CBMC version 6.8.0 (cbmc-6.8.0-130-g6f4b4acd52-dirty) 64-bit x86_64 linux
+Reading GOTO program from file /home/haven/Code/cbmc/benchmark/project_small/harness.out
+Generating GOTO Program
+Adding CPROVER library (x86_64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Starting Bounded Model Checking
+Passing problem to propositional reduction
+converting SSA
+Running propositional reduction
+SAT checker: instance is SATISFIABLE
+
+** Results:
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_math.c function calc_average
+[calc_average.overflow.2] line 27 arithmetic overflow on signed + in i + 1: SUCCESS
+[calc_average.overflow.1] line 28 arithmetic overflow on signed + in sum + (signed long int)values[(signed long int)i]: SUCCESS
+[calc_average.pointer_dereference.1] line 28 dereference failure: pointer NULL in values[(signed long int)i]: SUCCESS
+[calc_average.pointer_dereference.2] line 28 dereference failure: pointer invalid in values[(signed long int)i]: SUCCESS
+[calc_average.pointer_dereference.3] line 28 dereference failure: deallocated dynamic object in values[(signed long int)i]: SUCCESS
+[calc_average.pointer_dereference.4] line 28 dereference failure: dead object in values[(signed long int)i]: SUCCESS
+[calc_average.pointer_dereference.5] line 28 dereference failure: pointer outside object bounds in values[(signed long int)i]: SUCCESS
+[calc_average.pointer_dereference.6] line 28 dereference failure: invalid integer address in values[(signed long int)i]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_math.c function calc_factorial
+[calc_factorial.overflow.2] line 18 arithmetic overflow on signed + in i + 1: SUCCESS
+[calc_factorial.overflow.1] line 19 arithmetic overflow on signed * in result * i: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_math.c function calc_fibonacci
+[calc_fibonacci.overflow.2] line 7 arithmetic overflow on signed + in i + 1: SUCCESS
+[calc_fibonacci.overflow.1] line 8 arithmetic overflow on signed + in a + b: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_mem.c function create_list
+[create_list.pointer_dereference.1] line 8 dereference failure: pointer NULL in head->data: SUCCESS
+[create_list.pointer_dereference.2] line 8 dereference failure: pointer invalid in head->data: SUCCESS
+[create_list.pointer_dereference.3] line 8 dereference failure: deallocated dynamic object in head->data: SUCCESS
+[create_list.pointer_dereference.4] line 8 dereference failure: dead object in head->data: SUCCESS
+[create_list.pointer_dereference.5] line 8 dereference failure: pointer outside object bounds in head->data: SUCCESS
+[create_list.pointer_dereference.6] line 8 dereference failure: invalid integer address in head->data: SUCCESS
+[create_list.pointer_dereference.7] line 9 dereference failure: pointer NULL in head->next: SUCCESS
+[create_list.pointer_dereference.8] line 9 dereference failure: pointer invalid in head->next: SUCCESS
+[create_list.pointer_dereference.9] line 9 dereference failure: deallocated dynamic object in head->next: SUCCESS
+[create_list.pointer_dereference.10] line 9 dereference failure: dead object in head->next: SUCCESS
+[create_list.pointer_dereference.11] line 9 dereference failure: pointer outside object bounds in head->next: SUCCESS
+[create_list.pointer_dereference.12] line 9 dereference failure: invalid integer address in head->next: SUCCESS
+[create_list.overflow.1] line 11 arithmetic overflow on signed + in i + 1: SUCCESS
+[create_list.pointer_dereference.13] line 13 dereference failure: pointer NULL in node->data: SUCCESS
+[create_list.pointer_dereference.14] line 13 dereference failure: pointer invalid in node->data: SUCCESS
+[create_list.pointer_dereference.15] line 13 dereference failure: deallocated dynamic object in node->data: SUCCESS
+[create_list.pointer_dereference.16] line 13 dereference failure: dead object in node->data: SUCCESS
+[create_list.pointer_dereference.17] line 13 dereference failure: pointer outside object bounds in node->data: SUCCESS
+[create_list.pointer_dereference.18] line 13 dereference failure: invalid integer address in node->data: SUCCESS
+[create_list.pointer_dereference.19] line 14 dereference failure: pointer NULL in node->next: SUCCESS
+[create_list.pointer_dereference.20] line 14 dereference failure: pointer invalid in node->next: SUCCESS
+[create_list.pointer_dereference.21] line 14 dereference failure: deallocated dynamic object in node->next: SUCCESS
+[create_list.pointer_dereference.22] line 14 dereference failure: dead object in node->next: SUCCESS
+[create_list.pointer_dereference.23] line 14 dereference failure: pointer outside object bounds in node->next: SUCCESS
+[create_list.pointer_dereference.24] line 14 dereference failure: invalid integer address in node->next: SUCCESS
+[create_list.pointer_dereference.25] line 15 dereference failure: pointer NULL in current->next: SUCCESS
+[create_list.pointer_dereference.26] line 15 dereference failure: pointer invalid in current->next: SUCCESS
+[create_list.pointer_dereference.27] line 15 dereference failure: deallocated dynamic object in current->next: SUCCESS
+[create_list.pointer_dereference.28] line 15 dereference failure: dead object in current->next: SUCCESS
+[create_list.pointer_dereference.29] line 15 dereference failure: pointer outside object bounds in current->next: SUCCESS
+[create_list.pointer_dereference.30] line 15 dereference failure: invalid integer address in current->next: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_mem.c function destroy_list
+[destroy_list.pointer_dereference.1] line 29 dereference failure: pointer NULL in head->next: SUCCESS
+[destroy_list.pointer_dereference.2] line 29 dereference failure: pointer invalid in head->next: SUCCESS
+[destroy_list.pointer_dereference.3] line 29 dereference failure: deallocated dynamic object in head->next: SUCCESS
+[destroy_list.pointer_dereference.4] line 29 dereference failure: dead object in head->next: SUCCESS
+[destroy_list.pointer_dereference.5] line 29 dereference failure: pointer outside object bounds in head->next: SUCCESS
+[destroy_list.pointer_dereference.6] line 29 dereference failure: invalid integer address in head->next: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_mem.c function find_max_in_array
+[find_max_in_array.pointer_dereference.1] line 36 dereference failure: pointer NULL in arr[(signed long int)0]: SUCCESS
+[find_max_in_array.pointer_dereference.2] line 36 dereference failure: pointer invalid in arr[(signed long int)0]: SUCCESS
+[find_max_in_array.pointer_dereference.3] line 36 dereference failure: deallocated dynamic object in arr[(signed long int)0]: SUCCESS
+[find_max_in_array.pointer_dereference.4] line 36 dereference failure: dead object in arr[(signed long int)0]: SUCCESS
+[find_max_in_array.pointer_dereference.5] line 36 dereference failure: pointer outside object bounds in arr[(signed long int)0]: SUCCESS
+[find_max_in_array.pointer_dereference.6] line 36 dereference failure: invalid integer address in arr[(signed long int)0]: SUCCESS
+[find_max_in_array.overflow.1] line 37 arithmetic overflow on signed + in i + 1: SUCCESS
+[find_max_in_array.pointer_dereference.7] line 38 dereference failure: pointer NULL in arr[(signed long int)i]: SUCCESS
+[find_max_in_array.pointer_dereference.8] line 38 dereference failure: pointer invalid in arr[(signed long int)i]: SUCCESS
+[find_max_in_array.pointer_dereference.9] line 38 dereference failure: deallocated dynamic object in arr[(signed long int)i]: SUCCESS
+[find_max_in_array.pointer_dereference.10] line 38 dereference failure: dead object in arr[(signed long int)i]: SUCCESS
+[find_max_in_array.pointer_dereference.11] line 38 dereference failure: pointer outside object bounds in arr[(signed long int)i]: SUCCESS
+[find_max_in_array.pointer_dereference.12] line 38 dereference failure: invalid integer address in arr[(signed long int)i]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_mem.c function find_sum_recursive
+[find_sum_recursive.overflow.1] line 23 arithmetic overflow on signed - in n - 1: SUCCESS
+[find_sum_recursive.overflow.2] line 23 arithmetic overflow on signed + in head->data + return_value_find_sum_recursive: SUCCESS
+[find_sum_recursive.pointer_dereference.1] line 23 dereference failure: pointer NULL in head->next: SUCCESS
+[find_sum_recursive.pointer_dereference.2] line 23 dereference failure: pointer invalid in head->next: SUCCESS
+[find_sum_recursive.pointer_dereference.3] line 23 dereference failure: deallocated dynamic object in head->next: SUCCESS
+[find_sum_recursive.pointer_dereference.4] line 23 dereference failure: dead object in head->next: SUCCESS
+[find_sum_recursive.pointer_dereference.5] line 23 dereference failure: pointer outside object bounds in head->next: SUCCESS
+[find_sum_recursive.pointer_dereference.6] line 23 dereference failure: invalid integer address in head->next: SUCCESS
+[find_sum_recursive.pointer_dereference.7] line 23 dereference failure: pointer NULL in head->data: SUCCESS
+[find_sum_recursive.pointer_dereference.8] line 23 dereference failure: pointer invalid in head->data: SUCCESS
+[find_sum_recursive.pointer_dereference.9] line 23 dereference failure: deallocated dynamic object in head->data: SUCCESS
+[find_sum_recursive.pointer_dereference.10] line 23 dereference failure: dead object in head->data: SUCCESS
+[find_sum_recursive.pointer_dereference.11] line 23 dereference failure: pointer outside object bounds in head->data: SUCCESS
+[find_sum_recursive.pointer_dereference.12] line 23 dereference failure: invalid integer address in head->data: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_mem.c function reverse_array
+[reverse_array.overflow.1] line 45 arithmetic overflow on signed - in size - 1: SUCCESS
+[reverse_array.pointer_dereference.1] line 47 dereference failure: pointer NULL in arr[(signed long int)left]: SUCCESS
+[reverse_array.pointer_dereference.2] line 47 dereference failure: pointer invalid in arr[(signed long int)left]: SUCCESS
+[reverse_array.pointer_dereference.3] line 47 dereference failure: deallocated dynamic object in arr[(signed long int)left]: SUCCESS
+[reverse_array.pointer_dereference.4] line 47 dereference failure: dead object in arr[(signed long int)left]: SUCCESS
+[reverse_array.pointer_dereference.5] line 47 dereference failure: pointer outside object bounds in arr[(signed long int)left]: SUCCESS
+[reverse_array.pointer_dereference.6] line 47 dereference failure: invalid integer address in arr[(signed long int)left]: SUCCESS
+[reverse_array.pointer_dereference.7] line 48 dereference failure: pointer NULL in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.8] line 48 dereference failure: pointer invalid in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.9] line 48 dereference failure: deallocated dynamic object in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.10] line 48 dereference failure: dead object in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.11] line 48 dereference failure: pointer outside object bounds in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.12] line 48 dereference failure: invalid integer address in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.13] line 49 dereference failure: pointer NULL in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.14] line 49 dereference failure: pointer invalid in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.15] line 49 dereference failure: deallocated dynamic object in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.16] line 49 dereference failure: dead object in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.17] line 49 dereference failure: pointer outside object bounds in arr[(signed long int)right]: SUCCESS
+[reverse_array.pointer_dereference.18] line 49 dereference failure: invalid integer address in arr[(signed long int)right]: SUCCESS
+[reverse_array.overflow.2] line 50 arithmetic overflow on signed + in left + 1: SUCCESS
+[reverse_array.overflow.3] line 51 arithmetic overflow on signed - in right - 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_utils.c function compare_strings
+[compare_strings.pointer_dereference.1] line 34 dereference failure: pointer NULL in *s1: SUCCESS
+[compare_strings.pointer_dereference.2] line 34 dereference failure: pointer invalid in *s1: SUCCESS
+[compare_strings.pointer_dereference.3] line 34 dereference failure: deallocated dynamic object in *s1: SUCCESS
+[compare_strings.pointer_dereference.4] line 34 dereference failure: dead object in *s1: SUCCESS
+[compare_strings.pointer_dereference.5] line 34 dereference failure: pointer outside object bounds in *s1: SUCCESS
+[compare_strings.pointer_dereference.6] line 34 dereference failure: invalid integer address in *s1: SUCCESS
+[compare_strings.pointer_dereference.7] line 34 dereference failure: pointer NULL in *s2: SUCCESS
+[compare_strings.pointer_dereference.8] line 34 dereference failure: pointer invalid in *s2: SUCCESS
+[compare_strings.pointer_dereference.9] line 34 dereference failure: deallocated dynamic object in *s2: SUCCESS
+[compare_strings.pointer_dereference.10] line 34 dereference failure: dead object in *s2: SUCCESS
+[compare_strings.pointer_dereference.11] line 34 dereference failure: pointer outside object bounds in *s2: SUCCESS
+[compare_strings.pointer_dereference.12] line 34 dereference failure: invalid integer address in *s2: SUCCESS
+[compare_strings.pointer_dereference.13] line 34 dereference failure: pointer NULL in *s1: SUCCESS
+[compare_strings.pointer_dereference.14] line 34 dereference failure: pointer invalid in *s1: SUCCESS
+[compare_strings.pointer_dereference.15] line 34 dereference failure: deallocated dynamic object in *s1: SUCCESS
+[compare_strings.pointer_dereference.16] line 34 dereference failure: dead object in *s1: SUCCESS
+[compare_strings.pointer_dereference.17] line 34 dereference failure: pointer outside object bounds in *s1: SUCCESS
+[compare_strings.pointer_dereference.18] line 34 dereference failure: invalid integer address in *s1: SUCCESS
+[compare_strings.pointer_dereference.19] line 34 dereference failure: pointer NULL in *s2: SUCCESS
+[compare_strings.pointer_dereference.20] line 34 dereference failure: pointer invalid in *s2: SUCCESS
+[compare_strings.pointer_dereference.21] line 34 dereference failure: deallocated dynamic object in *s2: SUCCESS
+[compare_strings.pointer_dereference.22] line 34 dereference failure: dead object in *s2: SUCCESS
+[compare_strings.pointer_dereference.23] line 34 dereference failure: pointer outside object bounds in *s2: SUCCESS
+[compare_strings.pointer_dereference.24] line 34 dereference failure: invalid integer address in *s2: SUCCESS
+[compare_strings.overflow.1] line 38 arithmetic overflow on signed - in (signed int)*s1 - (signed int)*s2: SUCCESS
+[compare_strings.pointer_dereference.25] line 38 dereference failure: pointer NULL in *s1: SUCCESS
+[compare_strings.pointer_dereference.26] line 38 dereference failure: pointer invalid in *s1: SUCCESS
+[compare_strings.pointer_dereference.27] line 38 dereference failure: deallocated dynamic object in *s1: SUCCESS
+[compare_strings.pointer_dereference.28] line 38 dereference failure: dead object in *s1: SUCCESS
+[compare_strings.pointer_dereference.29] line 38 dereference failure: pointer outside object bounds in *s1: SUCCESS
+[compare_strings.pointer_dereference.30] line 38 dereference failure: invalid integer address in *s1: SUCCESS
+[compare_strings.pointer_dereference.31] line 38 dereference failure: pointer NULL in *s2: SUCCESS
+[compare_strings.pointer_dereference.32] line 38 dereference failure: pointer invalid in *s2: SUCCESS
+[compare_strings.pointer_dereference.33] line 38 dereference failure: deallocated dynamic object in *s2: SUCCESS
+[compare_strings.pointer_dereference.34] line 38 dereference failure: dead object in *s2: SUCCESS
+[compare_strings.pointer_dereference.35] line 38 dereference failure: pointer outside object bounds in *s2: SUCCESS
+[compare_strings.pointer_dereference.36] line 38 dereference failure: invalid integer address in *s2: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_utils.c function copy_string
+[copy_string.overflow.1] line 22 arithmetic overflow on signed - in max_len - 1: SUCCESS
+[copy_string.pointer_dereference.1] line 22 dereference failure: pointer NULL in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.2] line 22 dereference failure: pointer invalid in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.3] line 22 dereference failure: deallocated dynamic object in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.4] line 22 dereference failure: dead object in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.5] line 22 dereference failure: pointer outside object bounds in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.6] line 22 dereference failure: invalid integer address in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.7] line 23 dereference failure: pointer NULL in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.8] line 23 dereference failure: pointer invalid in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.9] line 23 dereference failure: deallocated dynamic object in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.10] line 23 dereference failure: dead object in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.11] line 23 dereference failure: pointer outside object bounds in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.12] line 23 dereference failure: invalid integer address in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.13] line 23 dereference failure: pointer NULL in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.14] line 23 dereference failure: pointer invalid in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.15] line 23 dereference failure: deallocated dynamic object in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.16] line 23 dereference failure: dead object in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.17] line 23 dereference failure: pointer outside object bounds in src[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.18] line 23 dereference failure: invalid integer address in src[(signed long int)i]: SUCCESS
+[copy_string.overflow.2] line 24 arithmetic overflow on signed + in i + 1: SUCCESS
+[copy_string.pointer_dereference.19] line 26 dereference failure: pointer NULL in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.20] line 26 dereference failure: pointer invalid in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.21] line 26 dereference failure: deallocated dynamic object in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.22] line 26 dereference failure: dead object in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.23] line 26 dereference failure: pointer outside object bounds in dest[(signed long int)i]: SUCCESS
+[copy_string.pointer_dereference.24] line 26 dereference failure: invalid integer address in dest[(signed long int)i]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_utils.c function delay_ms
+[delay_ms.overflow.1] line 16 arithmetic overflow on signed + in i + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/common/lib_utils.c function get_system_tick
+[get_system_tick.overflow.1] line 12 arithmetic overflow on signed + in system_tick + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/gpio_driver.c function gpio_init
+[gpio_init.array_bounds.1] line 7 array 'gpio_states' lower bound in gpio_states[(signed long int)pin]: SUCCESS
+[gpio_init.array_bounds.2] line 7 array 'gpio_states' upper bound in gpio_states[(signed long int)pin]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/gpio_driver.c function gpio_read
+[gpio_read.array_bounds.1] line 19 array 'gpio_states' lower bound in gpio_states[(signed long int)pin]: SUCCESS
+[gpio_read.array_bounds.2] line 19 array 'gpio_states' upper bound in gpio_states[(signed long int)pin]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/gpio_driver.c function gpio_toggle
+[gpio_toggle.array_bounds.1] line 26 array 'gpio_states' lower bound in gpio_states[(signed long int)pin]: SUCCESS
+[gpio_toggle.array_bounds.2] line 26 array 'gpio_states' upper bound in gpio_states[(signed long int)pin]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/gpio_driver.c function gpio_write
+[gpio_write.array_bounds.1] line 13 array 'gpio_states' lower bound in gpio_states[(signed long int)pin]: SUCCESS
+[gpio_write.array_bounds.2] line 13 array 'gpio_states' upper bound in gpio_states[(signed long int)pin]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/timer_driver.c function timer_get_value
+[timer_get_value.array_bounds.1] line 29 array 'timer_values' lower bound in timer_values[(signed long int)timer_id]: SUCCESS
+[timer_get_value.array_bounds.2] line 29 array 'timer_values' upper bound in timer_values[(signed long int)timer_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/timer_driver.c function timer_init
+[timer_init.array_bounds.1] line 10 array 'timer_values' lower bound in timer_values[(signed long int)timer_id]: SUCCESS
+[timer_init.array_bounds.2] line 10 array 'timer_values' upper bound in timer_values[(signed long int)timer_id]: SUCCESS
+[timer_init.array_bounds.3] line 11 array 'timer_periods' lower bound in timer_periods[(signed long int)timer_id]: SUCCESS
+[timer_init.array_bounds.4] line 11 array 'timer_periods' upper bound in timer_periods[(signed long int)timer_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/timer_driver.c function timer_set_callback
+[timer_set_callback.array_bounds.1] line 36 array 'timer_callbacks' lower bound in timer_callbacks[(signed long int)timer_id]: SUCCESS
+[timer_set_callback.array_bounds.2] line 36 array 'timer_callbacks' upper bound in timer_callbacks[(signed long int)timer_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/timer_driver.c function timer_start
+[timer_start.array_bounds.1] line 17 array 'timer_values' lower bound in timer_values[(signed long int)timer_id]: SUCCESS
+[timer_start.array_bounds.2] line 17 array 'timer_values' upper bound in timer_values[(signed long int)timer_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/drivers/timer_driver.c function timer_stop
+[timer_stop.array_bounds.1] line 23 array 'timer_values' lower bound in timer_values[(signed long int)timer_id]: SUCCESS
+[timer_stop.array_bounds.2] line 23 array 'timer_values' upper bound in timer_values[(signed long int)timer_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/harness.c function main
+[main.assertion.1] line 77 assertion shared_value >= -100: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/isr_define/isr_adc.c function isr_adc_handler
+[isr_adc_handler.overflow.1] line 12 arithmetic overflow on signed + in adc_value + 1: SUCCESS
+[isr_adc_handler.overflow.2] line 13 arithmetic overflow on signed + in shared_value + 3: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/isr_define/isr_external.c function isr_external_handler
+[isr_external_handler.overflow.1] line 12 arithmetic overflow on signed - in shared_value - 5: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/isr_define/isr_timer.c function isr_timer_handler
+[isr_timer_handler.overflow.1] line 12 arithmetic overflow on signed + in shared_value + 10: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/isr_define/isr_uart.c function isr_uart_handler
+[isr_uart_handler.overflow.1] line 13 arithmetic overflow on signed - in shared_value - 2: SUCCESS
+[isr_uart_handler.array_bounds.1] line 15 array 'uart_buffer' lower bound in uart_buffer[(signed long int)uart_buffer_idx]: SUCCESS
+[isr_uart_handler.array_bounds.2] line 15 array 'uart_buffer' upper bound in uart_buffer[(signed long int)uart_buffer_idx]: SUCCESS
+[isr_uart_handler.overflow.2] line 16 arithmetic overflow on signed + in uart_buffer_idx + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/middleware/data_filter.c function apply_moving_average
+[apply_moving_average.overflow.2] line 17 arithmetic overflow on signed + in i + 1: SUCCESS
+[apply_moving_average.overflow.1] line 18 arithmetic overflow on signed + in sum + values[(signed long int)i]: SUCCESS
+[apply_moving_average.pointer_dereference.1] line 18 dereference failure: pointer NULL in values[(signed long int)i]: SUCCESS
+[apply_moving_average.pointer_dereference.2] line 18 dereference failure: pointer invalid in values[(signed long int)i]: SUCCESS
+[apply_moving_average.pointer_dereference.3] line 18 dereference failure: deallocated dynamic object in values[(signed long int)i]: SUCCESS
+[apply_moving_average.pointer_dereference.4] line 18 dereference failure: dead object in values[(signed long int)i]: SUCCESS
+[apply_moving_average.pointer_dereference.5] line 18 dereference failure: pointer outside object bounds in values[(signed long int)i]: SUCCESS
+[apply_moving_average.pointer_dereference.6] line 18 dereference failure: invalid integer address in values[(signed long int)i]: SUCCESS
+[apply_moving_average.division-by-zero.1] line 20 division by zero in sum / actual_window: SUCCESS
+[apply_moving_average.overflow.3] line 20 arithmetic overflow on signed division in sum / actual_window: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/middleware/data_filter.c function apply_recursive_filter
+[apply_recursive_filter.overflow.2] line 7 arithmetic overflow on signed + in i + 1: SUCCESS
+[apply_recursive_filter.overflow.1] line 8 arithmetic overflow on signed * in result * 3: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/middleware/protocol_stack.c function protocol_process
+[protocol_process.overflow.1] line 16 arithmetic overflow on signed + in protocol_counter + 1: SUCCESS
+[protocol_process.overflow.2] line 24 arithmetic overflow on signed + in protocol_counter + 1: SUCCESS
+[protocol_process.overflow.3] line 31 arithmetic overflow on signed + in protocol_counter + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function ActivateTask
+[ActivateTask.array_bounds.1] line 33 array 'task_table' lower bound in task_table[(signed long int)task_id]: SUCCESS
+[ActivateTask.array_bounds.2] line 33 array 'task_table' upper bound in task_table[(signed long int)task_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function ClearEvent
+[ClearEvent.array_bounds.1] line 54 array 'task_table' lower bound in task_table[(signed long int)current_task_id]: SUCCESS
+[ClearEvent.array_bounds.2] line 54 array 'task_table' upper bound in task_table[(signed long int)current_task_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function GetEvent
+[GetEvent.array_bounds.1] line 60 array 'task_table' lower bound in task_table[(signed long int)task_id]: SUCCESS
+[GetEvent.array_bounds.2] line 60 array 'task_table' upper bound in task_table[(signed long int)task_id]: SUCCESS
+[GetEvent.pointer_dereference.1] line 60 dereference failure: pointer NULL in *event: SUCCESS
+[GetEvent.pointer_dereference.2] line 60 dereference failure: pointer invalid in *event: SUCCESS
+[GetEvent.pointer_dereference.3] line 60 dereference failure: deallocated dynamic object in *event: SUCCESS
+[GetEvent.pointer_dereference.4] line 60 dereference failure: dead object in *event: SUCCESS
+[GetEvent.pointer_dereference.5] line 60 dereference failure: pointer outside object bounds in *event: SUCCESS
+[GetEvent.pointer_dereference.6] line 60 dereference failure: invalid integer address in *event: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function SetEvent
+[SetEvent.array_bounds.1] line 45 array 'task_table' lower bound in task_table[(signed long int)task_id]: SUCCESS
+[SetEvent.array_bounds.2] line 45 array 'task_table' upper bound in task_table[(signed long int)task_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function TerminateTask
+[TerminateTask.array_bounds.1] line 39 array 'task_table' lower bound in task_table[(signed long int)current_task_id]: SUCCESS
+[TerminateTask.array_bounds.2] line 39 array 'task_table' upper bound in task_table[(signed long int)current_task_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function WaitEvent
+[WaitEvent.array_bounds.1] line 67 array 'task_table' lower bound in task_table[(signed long int)current_task_id]: SUCCESS
+[WaitEvent.array_bounds.2] line 67 array 'task_table' upper bound in task_table[(signed long int)current_task_id]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/osek/osek_runtime_stub.c function init_osek_runtime
+[init_osek_runtime.overflow.1] line 24 arithmetic overflow on signed + in i + 1: SUCCESS
+[init_osek_runtime.array_bounds.1] line 25 array 'task_table' lower bound in task_table[(signed long int)i]: SUCCESS
+[init_osek_runtime.array_bounds.2] line 25 array 'task_table' upper bound in task_table[(signed long int)i]: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_10.c function t10
+[t10.assertion.1] line 12 assertion sum >= 0: SUCCESS
+[t10.assertion.2] line 18 assertion tick >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_11.c function t11
+[t11.assertion.1] line 10 assertion filtered >= 0: SUCCESS
+[t11.assertion.2] line 16 assertion val >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_12.c function t12
+[t12.assertion.1] line 11 assertion counter == 0: SUCCESS
+[t12.overflow.1] line 13 arithmetic overflow on signed + in i + 1: SUCCESS
+[t12.assertion.2] line 18 assertion fib == 13: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_13.c function t13
+[t13.assertion.1] line 12 assertion cmp == 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_14.c function t14
+[t14.assertion.1] line 11 assertion avg > 0: SUCCESS
+[t14.assertion.2] line 14 assertion filtered == 75: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_15.c function t15
+[t15.assertion.1] line 11 assertion max == 9: SUCCESS
+[t15.assertion.2] line 14 assertion arr[0] == 6: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_16.c function t16
+[t16.overflow.1] line 11 arithmetic overflow on signed + in i + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_17.c function t17
+[t17.assertion.1] line 11 assertion avg >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_18.c function t18
+[t18.assertion.1] line 10 assertion max == 200: SUCCESS
+[t18.assertion.2] line 13 assertion min == 100: SUCCESS
+[t18.assertion.3] line 16 assertion fact == 120: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_19.c function t19
+[t19.overflow.1] line 10 arithmetic overflow on signed + in i + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_20.c function t20
+[t20.assertion.1] line 15 assertion sum >= 0: SUCCESS
+[t20.assertion.2] line 18 assertion filtered >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_21.c function t21
+[t21.overflow.1] line 12 arithmetic overflow on signed + in i + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_22.c function t22
+[t22.assertion.1] line 12 assertion tick2 > tick1: SUCCESS
+[t22.assertion.2] line 15 assertion fib == 144: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_23.c function t23
+[t23.assertion.1] line 10 assertion val == 52: SUCCESS
+[t23.assertion.2] line 14 assertion avg >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_24.c function t24
+[t24.assertion.1] line 11 assertion max == 30: SUCCESS
+[t24.assertion.2] line 14 assertion arr[4] == 25: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_25.c function t25
+[t25.assertion.1] line 10 assertion protocol_get_state() == S_IDLE: SUCCESS
+[t25.assertion.2] line 13 assertion protocol_get_state() != S_ERROR: SUCCESS
+[t25.assertion.3] line 18 assertion cmp == 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_26.c function t26
+[t26.assertion.1] line 10 assertion filtered >= 0: SUCCESS
+[t26.assertion.2] line 17 assertion val >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_27.c function t27
+[t27.assertion.1] line 10 assertion fib == 21: SUCCESS
+[t27.assertion.2] line 13 assertion fact == 720: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_28.c function t28
+[t28.assertion.1] line 15 assertion sum >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_29.c function t29
+[t29.overflow.1] line 13 arithmetic overflow on signed + in i + 1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_30.c function t30
+[t30.assertion.1] line 12 assertion tick >= 0: SUCCESS
+[t30.assertion.2] line 15 assertion fib == 5: SUCCESS
+[t30.assertion.3] line 18 assertion filtered >= 0: SUCCESS
+[t30.assertion.4] line 23 assertion cmp == 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_9.c function t9
+[t9.assertion.1] line 10 assertion fib == 55: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_comm.c function t3
+[t3.overflow.1] line 9 arithmetic overflow on signed + in i + 1: SUCCESS
+[t3.assertion.1] line 17 assertion s != S_ERROR || input == -1: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_comm2.c function t6
+[t6.overflow.3] line 15 arithmetic overflow on signed + in i + 1: SUCCESS
+[t6.overflow.1] line 16 arithmetic overflow on signed + in i + 2: SUCCESS
+[t6.overflow.2] line 18 arithmetic overflow on signed + in comm_counter + 1: SUCCESS
+[t6.assertion.1] line 22 assertion comm_counter >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_io.c function t8
+[t8.overflow.2] line 15 arithmetic overflow on signed + in i + 1: SUCCESS
+[t8.overflow.1] line 17 arithmetic overflow on signed + in gpio_toggle_count + 1: SUCCESS
+[t8.assertion.1] line 22 assertion max >= 5: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_main.c function t1
+[t1.assertion.1] line 52 assertion shared_value == local_copy: FAILURE
+[t1.assertion.2] line 55 assertion shared_value >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_main.c function t2
+[t2.assertion.1] line 65 assertion controller_done == 0: FAILURE
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_monitor.c function t4
+[t4.overflow.4] line 10 arithmetic overflow on signed + in i + 1: SUCCESS
+[t4.unwind.1] line 10 unwinding assertion loop 1: FAILURE
+[t4.overflow.1] line 17 arithmetic overflow on signed + in sum + i: SUCCESS
+[t4.overflow.3] line 19 arithmetic overflow on signed + in j + 1: SUCCESS
+[t4.overflow.2] line 20 arithmetic overflow on signed + in sum + j: SUCCESS
+[t4.assertion.1] line 26 assertion sum >= 0: SUCCESS
+[t4.assertion.2] line 32 assertion total >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_process.c function t7
+[t7.assertion.1] line 19 assertion sum >= 0: SUCCESS
+[t7.overflow.2] line 23 arithmetic overflow on signed + in i + 1: SUCCESS
+[t7.array_bounds.1] line 24 array 'data_buffer' lower bound in data_buffer[(signed long int)i]: SUCCESS
+[t7.array_bounds.2] line 24 array 'data_buffer' upper bound in data_buffer[(signed long int)i]: SUCCESS
+[t7.overflow.1] line 24 arithmetic overflow on signed + in return_value_get_system_tick + i: SUCCESS
+[t7.assertion.2] line 28 assertion max >= 0: SUCCESS
+[t7.assertion.3] line 31 assertion filtered >= 0: SUCCESS
+
+/home/haven/Code/cbmc/benchmark/project_small/task_define/task_sensor.c function t5
+[t5.assertion.1] line 20 assertion filtered > 0: SUCCESS
+
+** 3 of 295 failed (2 iterations)
+VERIFICATION FAILED

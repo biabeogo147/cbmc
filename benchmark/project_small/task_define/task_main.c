@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stddef.h>
 #include "../osek/osek_api.h"
 #include "../common/lib_mem.h"
 #include "../middleware/data_filter.h"
