@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{tikz}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+
+\addbibresource{references.bib}
+
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!60!black,
+  pdftitle={Improved CBMC Pipeline for OSEK-Aware Verification},
+  pdfauthor={CBMC ISR/OSEK Research Branch}
+}
+
+\lstdefinestyle{reportstyle}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\lstset{style=reportstyle}
+
+\title{An Improved CBMC Pipeline for OSEK-Aware Verification and Targeted ISR Injection}
+\author{CBMC ISR/OSEK Research Branch}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+OSEK applications mix task-level control flow, scheduler-visible API calls, event handling,
+and asynchronous interrupt service routines (ISRs). A stock bounded model checking
+workflow for C can reason about ordinary control flow, but it does not automatically know
+that calls such as \texttt{ActivateTask}, \texttt{WaitEvent}, or \texttt{SetEvent} should
+change scheduler state rather than behave like ordinary function bodies. Likewise, a broad
+interrupt model can over-approximate the program by allowing ISR injection at many
+irrelevant locations. This report documents an improved CBMC pipeline that addresses both
+problems in a modular way. The first part adds an OSEK-aware \texttt{os-api} layer that
+classifies recognized operating-system calls during symbolic execution and returns generic
+next-step actions to \texttt{goto-symex}. The second part splits interrupt modeling into an
+analysis-and-rewrite pipeline: \texttt{interleaving-analysis} computes a manifest of relevant
+ISR insertion points from a GOTO model, and \texttt{aib} materializes those points as guarded
+source-level calls in a copied project tree.
+
+The checked-in benchmark artifacts show why this split matters. The large Trampoline
+\texttt{alarms\_s1\_non} walkthrough covers 32 translation units and 7600 lines of source. The
+scripted naive modeling path injects 747 ISR calls, while the checked-in targeted manifest
+for the same case narrows the result to three ISR functions and six guarded call insertions,
+which is a 99.2\% reduction in candidate call sites. At corpus level, the generated benchmark
+report records 17 same-outcome comparable cases and 11 cases where the improved pipeline is
+audited as the more faithful model. The trade-off is additional manifest, injection, and
+recompile cost, but the pipeline documents a cleaner engineering boundary between scheduler
+semantics, interference analysis, and source-to-source rewriting.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-method}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\appendix
+\input{sections/appendix}
+
+\printbibliography
+
+\end{document}

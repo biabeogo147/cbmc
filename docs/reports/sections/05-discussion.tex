@@ -1,0 +1,65 @@
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+The improved pipeline is deliberately conservative in some places and intentionally incomplete
+in others. Those limitations are not incidental; they define where future work should focus.
+
+\subsection{What the Current Design Gets Right}
+
+The strongest engineering choice in the branch is the separation between scheduler semantics
+and ISR placement. OSEK task/event behavior lives inside symbolic execution, where stack
+transitions and writeback are already modeled precisely. ISR placement, by contrast, is
+derived from a static analysis pass and externalized as a manifest. This keeps the branch
+maintainable. A change to OSEK policy does not automatically require a source-rewriting
+change, and a change to candidate-line heuristics does not automatically require reworking the
+symex call stack.
+
+The evidence in \Cref{sec:evaluation} also suggests that the extra structure is not just
+architecturally neat; it matters to outcomes. The benchmark report contains multiple cases in
+which the improved pipeline is audited as the more faithful model even though it is slower.
+
+\subsection{Current Analysis Limits}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Source-file-driven target discovery.} Interleaving functions are selected from
+  an explicit source-file list. If the relevant ISR file is not part of the build, the
+  analysis cannot discover it.
+  \item \textbf{Global-write-centric conflict rule.} Candidate lines are derived from globals
+  written by the ISR/interleaving function and read or written by foreground code. This keeps
+  the rule simple, but it ignores purely read-side interactions by the interleaving function.
+  \item \textbf{\texttt{.c}-only candidate filtering under project scope.} When project-root
+  filtering is enabled, candidate recording is restricted to \texttt{.c} files under the root.
+  Generated or indirect artifacts outside that slice are ignored.
+  \item \textbf{Hand-written manifest IO.} Both the manifest writer and the \texttt{aib}
+  reader are hand-coded. There is no schema version field, which makes coordinated changes
+  brittle.
+\end{itemize}
+
+\subsection{Current OSEK Model Limits}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Partial OIL subset.} The parser currently handles the fields needed by the
+  implemented scheduling rules: \texttt{TASK}, \texttt{PRIORITY}, \texttt{SCHEDULE},
+  \texttt{AUTOSTART}, \texttt{TYPE}, and \texttt{EVENT\_MASK}.
+  \item \textbf{AUTOSTART is metadata, not boot behavior.} The configuration records
+  \texttt{AUTOSTART}, but the current flow still expects explicit task activation from the
+  harness or runtime stubs.
+  \item \textbf{\texttt{WaitEvent} is an approximation.} The implementation models the block /
+  no-block decision and wake-up dispatch, but not every possible continuation detail of a full
+  RTOS runtime.
+  \item \textbf{API coverage is intentionally narrow.} The current branch focuses on task and
+  event services relevant to the benchmark and regression fixtures. Resource, alarm, and
+  interrupt APIs beyond this subset are not yet modeled through the same dispatcher boundary.
+\end{itemize}
+
+\subsection{Performance Trade-offs}
+
+The benchmark report consistently shows that the improved pipeline pays an overhead tax. Even
+small cases add a manifest phase, an injection phase, and a rebuild. Larger cases can still be
+worth that cost when the stock baseline either misses a real bug or invents one through an
+over-broad async model, but the branch is not yet an optimization pass.
+
+This suggests a practical reading of the current status: the branch is already useful as a
+precision-oriented verification workflow, but not yet as a drop-in faster replacement for stock
+CBMC. Improving analysis precision without paying so much orchestration cost is a natural next
+step.

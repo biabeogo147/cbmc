@@ -1,0 +1,127 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+The goal of this section is not to claim that the improved pipeline is always faster than a
+stock baseline. The checked-in evidence says the opposite in many cases: the manifest, inject,
+and rebuild stages add cost. The evaluation instead answers two narrower questions:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item Does the targeted pipeline materially shrink the ISR injection space?
+  \item Do the checked-in benchmark artifacts contain cases where the improved model is judged
+  more faithful than the stock asynchronous baseline?
+\end{enumerate}
+
+\subsection{Didactic Trampoline Walkthrough}
+
+The script \texttt{check-src/simple-benchmarks/isr\_large\_simple\_benchmark.sh} is the most
+compact end-to-end walkthrough for the larger Trampoline case. It uses the
+\texttt{alarms\_s1\_non} benchmark under the improved Trampoline source tree, enumerates 32
+translation units, and covers 7600 lines of source. The script contrasts two modeling styles:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item a naive source-level path that injects ISR calls after a wide range of statements, and
+  \item the improved path that emits a manifest first and rewrites only the lines named by that
+  manifest.
+\end{itemize}
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{@{}p{0.37\linewidth} c >{\raggedright\arraybackslash}p{0.43\linewidth}@{}}
+    \toprule
+    Signal & Value & Evidence \\
+    \midrule
+    Translation units in the walkthrough & 32 & Listed in the script's
+    \texttt{REL\_SOURCES} array. \\
+    Source lines counted by the walkthrough & 7600 & Produced by the script's
+    \texttt{count\_loc()} helper over the same translation-unit list. \\
+    Naive ISR call insertions & 747 & Produced by the script's naive injection heuristic
+    before any CBMC binary is invoked. \\
+    Targeted guarded insertions & 6 & Derived from the checked-in
+    \texttt{interleaving\_pipeline.json}: three ISR functions, each mapped to two lines in
+    \texttt{alarms\_s1.c}. \\
+    Reduction in candidate call sites & 99.2\% & Computed as
+    \((747 - 6) / 747\). \\
+    \bottomrule
+  \end{tabular}
+  \caption{Didactic comparison for the large Trampoline \texttt{alarms\_s1\_non} case.}
+  \label{tab:large-walkthrough}
+\end{table}
+
+The targeted half of the comparison is visible directly in the checked-in Trampoline manifest
+for the \texttt{alarms\_s1\_non} case. That file keeps three ISR functions
+(\texttt{isr1}, \texttt{isr2}, and \texttt{isr3}) and places them only before lines 46--52 of
+\texttt{alarms\_s1.c}. In other words, the improved path does not need to treat most of the
+Trampoline source tree as an equally plausible insertion surface. It reduces the final guarded
+call set to a handful of scheduler-relevant locations around the main alarm checks.
+
+\subsection{Corpus-Level Summary}
+
+The checked-in benchmark report \texttt{check-src/benchmark.md} summarizes the current suite
+status across Trampoline, i-CBMC-derived cases, IntAbs-derived cases, and local smoke tests.
+The report's correctness summary is reproduced in \Cref{tab:benchmark-summary}.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}l c X@{}}
+    \toprule
+    Benchmark verdict & Cases & Interpretation \\
+    \midrule
+    \texttt{same\_outcome\_comparable} & 17 & Stock and improved reached the same
+    verification class. \\
+    \texttt{improved\_correct} & 11 & The improved pipeline is audited as the more faithful
+    model for the case. \\
+    \texttt{no\_injection\_false} & 6 & The improved path reported no injection candidates
+    even though ISR-written state can still affect the main-reachable state. \\
+    \texttt{needs\_manual\_review} & 7 & Output mismatch exists, but the current audit is not
+    strong enough to choose a correct variant. \\
+    \texttt{pending\_manual\_review} & 7 & Mismatch exists and no verdict rule has yet
+    classified the case. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{High-level correctness summary from the checked-in benchmark report.}
+  \label{tab:benchmark-summary}
+\end{table}
+
+Two points stand out. First, the improved pipeline is not merely different from the stock
+baseline; it is often audited as more faithful. Second, the benchmark report explicitly keeps
+manual-review categories instead of silently forcing every mismatch into a win/loss label. That
+is important engineering hygiene for an evolving verification branch.
+
+\subsection{Representative Case Studies}
+
+Three checked-in cases illustrate the different ways in which the improved pipeline changes the
+verification result.
+
+\paragraph{\texttt{local-smoke / t-isr-multifile}.}
+The stock baseline reports \emph{VERIFICATION SUCCESSFUL} in 355 ms with 8.0 MB peak RSS.
+The improved pipeline reports \emph{VERIFICATION FAILED} in 1484 ms with 15.8 MB peak RSS.
+This is the smallest didactic example of a weak stock model: the rewritten program reaches the
+guarded ISR perturbation and exposes the expected failure, while the stock asynchronous setup
+does not model that interference strongly enough.
+
+\paragraph{\texttt{intabs-large / i8xx-tco-1}.}
+The stock baseline reports \emph{VERIFICATION FAILED} in 1202 ms with 13.1 MB peak RSS, while
+the improved pipeline reports \emph{VERIFICATION SUCCESSFUL} in 3395 ms with 15.3 MB peak RSS.
+The benchmark audit explains the difference: the stock run allows a non-atomic asynchronous
+interleaving, whereas the improved path keeps ISR entry atomic and narrows the candidate set to
+three guarded interleavings.
+
+\paragraph{\texttt{intabs-large / sc520wdt-2}.}
+The stock baseline reports \emph{VERIFICATION SUCCESSFUL} in 1172 ms with 41.0 MB peak RSS.
+The improved pipeline reports \emph{VERIFICATION FAILED} in 3559 ms with 16.7 MB peak RSS.
+Here the improved path injects closer/writer interference and finds a bug that the stock model
+misses. The end-to-end runtime is higher, but the peak memory footprint is substantially lower.
+
+These cases also show the main cost of the improved flow. Even when the verification phase is
+not dramatically slower, the extra \texttt{manifest}, \texttt{inject}, and rebuild stages push
+the full measured time upward. For example, the \texttt{i8xx-tco-1} case spends a median of
+1206 ms in manifest generation, 410 ms in injection, 1344 ms in the improved compile phase,
+and 435 ms in verification, compared with 847 ms compile plus 355 ms verify for the stock
+baseline. The current branch therefore trades runtime for modeling precision rather than for
+raw speed.
+
+That trade is acceptable for the motivating use case of this report. The objective is not to
+outperform the stock baseline on total wall-clock time, but to represent OSEK task semantics
+and ISR interference more faithfully while keeping the implementation modular enough to extend.

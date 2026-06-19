@@ -1,0 +1,229 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Baseline CBMC Flow}
+
+The baseline flow remains the one shown in \Cref{fig:baseline-cbmc}: source files are parsed,
+linked into a GOTO model, symbolically executed, and solved. The improved branch does not
+replace this structure. Instead, it adds two extension seams:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item an OSEK-aware hook inside symbolic execution, and
+  \item a separate interleaving-analysis-plus-rewrite path that runs around the ordinary
+  compile-and-check loop.
+\end{enumerate}
+
+This separation is the core architectural decision. The symbolic executor remains the authority
+for task scheduling semantics, while source rewriting remains the authority for materializing
+guarded ISR calls.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Component & Responsibility \\
+    \midrule
+    \texttt{goto-cc} & Build the GOTO model from the selected translation units and, when
+    interleaving flags are present, invoke \texttt{interleaving-analysis} on the completed
+    model. \\
+    \texttt{goto-symex} & Execute the GOTO model symbolically, call the OS API hook for
+    recognized services, and translate generic next-step results into stack and state
+    transitions. \\
+    \texttt{os-api} & Parse OSEK metadata, classify recognized API calls, maintain scheduler
+    state, and return API-independent actions such as ``start task now'' or ``pop task and
+    resume caller''. \\
+    \texttt{interleaving-analysis} & Inspect the GOTO model, identify interleaving functions,
+    compute written globals, and emit a JSON manifest of candidate insertion points. \\
+    \texttt{aib} & Copy the project tree, insert guarded ISR calls and forward declarations,
+    apply \texttt{.aibignore}, and write an effective manifest for the rewritten tree. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{High-level responsibilities of the improved pipeline.}
+  \label{tab:responsibilities}
+\end{table}
+
+\subsection{OSEK-Aware Symbolic Execution}
+
+The OSEK-aware path begins at the command line. The \texttt{cbmc} front-end now accepts
+\texttt{--os-api osek} and \texttt{--osek-oil <file>}. The option parser validates this pair
+early and loads the OIL file once as a configuration sanity check. The runtime dispatcher then
+reloads that configuration when \texttt{goto-symex} is constructed so that symbolic execution
+has access to task metadata during function-call handling.
+
+The actual hook sits in the symbolic function-call path. Before the usual ``inline this callee
+as ordinary C'' behavior is taken, \texttt{goto-symex} calls an internal helper for recognized
+OS API functions. If the active dispatcher is
+enabled and the callee name matches a recognized OSEK API, the handler does not inline the
+original function body. Instead, it classifies the call, updates scheduler state, and returns a
+compact result object.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/osek-dispatch-sequence}
+  \caption{Runtime interaction between \texttt{goto-symex}, the dispatcher, the OSEK backend,
+  and symbolic scheduler state.}
+  \label{fig:osek-sequence}
+\end{figure}
+
+The key runtime data structures are:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{scheduler\_statet}, which stores the current task, suspended-task stack
+  information, ready queue, and task event state;
+  \item \texttt{task\_infot}, which captures task identity, symbolic function identifier,
+  priority, preemption policy, extended-task flag, and event mask; and
+  \item \texttt{api\_call\_resultt}, whose \texttt{next\_step\_kindt} field tells
+  \texttt{goto-symex} whether to continue the current frame, start a ready task, terminate the
+  active task, or terminate and immediately start another one.
+\end{itemize}
+
+The current OSEK backend recognizes the following services:
+\texttt{ActivateTask}, \texttt{TerminateTask}, \texttt{ChainTask}, \texttt{Schedule},
+\texttt{SetEvent}, \texttt{ClearEvent}, \texttt{GetEvent}, and \texttt{WaitEvent}. OIL
+parsing covers the task properties needed by those services: \texttt{TASK},
+\texttt{PRIORITY}, \texttt{SCHEDULE}, \texttt{AUTOSTART}, \texttt{TYPE}, and
+\texttt{EVENT\_MASK}. The \texttt{AUTOSTART} value is parsed and stored, but the current
+runtime still expects explicit activation from the harness or startup logic rather than
+auto-spawning tasks directly from OIL.
+
+Two details are worth calling out because they shape the interface between the scheduler model
+and symbolic execution:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Generic next-step actions.} The OSEK layer does not directly mutate the
+  symbolic call stack. It returns generic actions such as
+  \texttt{START\_TASK\_NOW} or \texttt{POP\_TASK\_AND\_START\_TASK}, and
+  \texttt{goto-symex} realizes those actions by reusing its existing frame and transition
+  machinery.
+  \item \textbf{Memory writeback for \texttt{GetEvent}.} The OSEK layer may need to write a
+  scheduler-derived value back into program memory. Instead of embedding OSEK-specific pointer
+  stores in the executor, the dispatcher returns an optional \texttt{memory\_writebackt}
+  containing the symbolic left-hand side and right-hand side for the assignment.
+\end{enumerate}
+
+This design keeps the symbolic executor in charge of frames and SSA while allowing the OS API
+module to own scheduler policy.
+
+\subsection{Interleaving Analysis}
+
+The second extension seam is the analysis-side half of the interrupt pipeline. Rather than
+rewriting source code immediately, \texttt{interleaving-analysis} runs on an already-built
+GOTO model and emits metadata for a later rewriter. The main options are
+\texttt{--interleaving-project-root}, \texttt{--interleaving-source-files}, and
+\texttt{--interleaving-output}. In \texttt{goto-cc}, these are attached after the effective
+translation units have already been determined, which means the analysis does not enlarge the
+build. It only inspects what is already present in the GOTO model.
+
+The analysis proceeds in four stages.
+
+\paragraph{1. Resolve project scope.}
+The configuration normalizes project paths, preserves the effective translation units used by
+\texttt{goto-cc}, and converts report paths back to project-relative form when possible.
+
+\paragraph{2. Discover target interleaving functions.}
+Only functions whose defining source file appears in
+\texttt{interleaving\_source\_files} are treated as ISR/interleaving functions. If a listed
+source file was not compiled into the current GOTO model, no function from it can be analyzed.
+
+\paragraph{3. Compute written globals.}
+For each target function, the implementation builds an instruction-level read/write footprint
+using \texttt{rw\_set\_loct}. The current filter keeps only writes to static-lifetime global
+symbols and excludes locals, type symbols, auxiliary symbols, and code symbols.
+
+\paragraph{4. Record candidate source lines.}
+The rest of the program is scanned instruction by instruction. For each instruction,
+\texttt{interleaving-analysis} checks whether it reads or writes a global that a target
+interleaving function may write. If so, and if the source location is within the configured
+project root and on a \texttt{.c} file when project scoping is enabled, the corresponding file
+and line number are recorded for that interleaving function.
+
+The result is a JSON manifest rather than a rewritten source tree. The manifest is the contract
+between analysis and rewriting.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Manifest field & Meaning \\
+    \midrule
+    \texttt{project.project\_root} & Root directory used for path scoping and
+    report-path relativization. \\
+    \texttt{project.interleaving\_source\_files} & Source files whose functions are treated
+    as interleaving functions. \\
+    \texttt{project.translation\_units} & Effective build inputs associated with the GOTO
+    model that produced the manifest. \\
+    \texttt{interleaving[*].name} & Interleaving function identifier taken from the GOTO
+    model. \\
+    \texttt{interleaving[*].write\_global\_var} & Global symbols that the interleaving
+    function may write. \\
+    \texttt{interleaving[*].line\_added\_block\_with\_file} & Project-relative file and line
+    pairs where guarded calls may be inserted. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Schema of the JSON contract shared by \texttt{interleaving-analysis} and
+  \texttt{aib}.}
+  \label{tab:manifest-schema}
+\end{table}
+
+This split is important because it keeps static reasoning and source rewriting independent.
+Changes to the schema, however, must still be coordinated carefully because the manifest writer
+and reader are both hand-written.
+
+\subsection{AIB Materialization}
+
+\texttt{aib} is the source-to-source rewriting half of the pipeline. It accepts four path
+arguments: \texttt{<project\_root> <input\_config.json> <output\_root> <output\_config.json>}.
+The tool validates that the command-line project root matches the one stored in the manifest,
+copies the project tree into a new output root, and applies only the rewrites described by the
+manifest.
+
+The rewriter itself is intentionally simple:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item It parses the manifest's project metadata and the
+  \texttt{line\_added\_block\_with\_file} arrays for each interleaving function.
+  \item It optionally loads \texttt{.aibignore} to remove ignored files from the copied tree
+  and to reject manifests that point into ignored paths.
+  \item It scans source and header files to determine whether a target ISR should be called as
+  \texttt{isr()} or \texttt{isr(0)}.
+  \item It inserts forward declarations near the top of rewritten C files, including
+  \texttt{extern \_Bool nondet\_bool(void);}.
+  \item It emits guarded calls immediately before the listed source lines, by guarding an ISR
+  call with \texttt{nondet\_bool()} and passing a zero argument when the target signature
+  requires one.
+  \item It writes an effective output manifest whose \texttt{project\_root} now points to the
+  copied output tree and whose translation units reflect any \texttt{.aibignore} filtering.
+\end{itemize}
+
+The key design point is that \texttt{aib} does not recalculate the candidate set. It trusts the
+manifest and limits itself to text rewriting and project-copy bookkeeping.
+
+\subsection{End-to-End Improved Flow}
+
+Putting the pieces together yields the full flow in \Cref{fig:improved-pipeline}.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/improved-pipeline-flow}
+  \caption{Improved end-to-end pipeline with a static manifest boundary between analysis and
+  rewriting.}
+  \label{fig:improved-pipeline}
+\end{figure}
+
+For a configured project, the improved path is:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item build a GOTO model with \texttt{goto-cc};
+  \item during that build, run \texttt{interleaving-analysis} on the completed model;
+  \item emit a project-scoped JSON manifest;
+  \item invoke \texttt{aib} to copy and rewrite the source tree;
+  \item rebuild the rewritten translation units; and
+  \item verify the rebuilt program with \texttt{cbmc}, optionally alongside
+  \texttt{--os-api osek} and \texttt{--osek-oil <file>}.
+\end{enumerate}
+
+This is deliberately different from a monolithic interrupt transform. Scheduler semantics stay
+inside \texttt{goto-symex}, while interference placement is computed statically and only then
+materialized as guarded source edits.

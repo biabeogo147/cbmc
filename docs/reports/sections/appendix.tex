@@ -1,0 +1,63 @@
+\section{Appendix: Interface Examples}
+\label{sec:appendix}
+
+\subsection{Example \texttt{goto-cc} Invocation}
+
+The following command matches the project-mode flow documented by the branch. It compiles a
+small ISR benchmark, records the project root, names the ISR source file explicitly, and emits
+an interleaving manifest.
+
+\begin{lstlisting}[caption={Example project-mode interleaving analysis command.}]
+goto-cc \
+  check-src/t_isr_multifile/harness.c \
+  check-src/t_isr_multifile/harness_unity.c \
+  check-src/t_isr_multifile/isr_define/isr.c \
+  check-src/t_isr_multifile/task_define/task.c \
+  --interleaving-project-root check-src/t_isr_multifile \
+  --interleaving-source-files check-src/t_isr_multifile/isr_define/isr.c \
+  --interleaving-output check-src/t_isr_multifile/interleaving_harness.json \
+  -o check-src/t_isr_multifile/t_isr_multifile.out
+\end{lstlisting}
+
+\subsection{Example \texttt{aib} Invocation}
+
+\begin{lstlisting}[caption={Example AIB rewrite command.}]
+aib \
+  check-src/t_isr_multifile \
+  check-src/t_isr_multifile/interleaving_harness.json \
+  out/t_isr_multifile_injected \
+  out/t_isr_multifile_injected/interleaving_harness_injected.json
+\end{lstlisting}
+
+\subsection{Manifest Excerpt}
+
+The manifest below is a checked-in example from the simple multi-file ISR benchmark. It shows
+how the project metadata and the interleaving candidates are separated.
+
+\begin{lstlisting}[caption={Excerpt from the simple ISR manifest.}]
+{
+  "project": {
+    "project_root": "/tmp/cbmc/check-src/simple-benchmarks/t_isr_multifile",
+    "interleaving_source_files": ["isr_define/isr.c"],
+    "translation_units": [
+      "harness.c",
+      "harness_unity.c",
+      "isr_define/isr.c",
+      "task_define/task.c"
+    ]
+  },
+  "interleaving": [
+    {
+      "name": "isr1",
+      "write_global_var": ["enable_irq_1", "x"],
+      "line_added_block_with_file": [
+        { "file": "harness.c", "line": [10] },
+        { "file": "task_define/task.c", "line": [5, 9] }
+      ]
+    }
+  ]
+}
+\end{lstlisting}
+
+This schema is the compatibility boundary between \texttt{interleaving-analysis} and
+\texttt{aib}; any field change must be implemented on both sides.

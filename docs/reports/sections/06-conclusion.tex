@@ -1,0 +1,21 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This report documented an improved CBMC pipeline for OSEK-aware symbolic execution and
+targeted ISR injection. The implementation keeps CBMC's normal front-end, GOTO, and solver
+architecture intact, but adds two carefully chosen extension seams: a modular OSEK dispatcher
+inside \texttt{goto-symex} and a manifest-driven split between interference analysis and source
+rewriting.
+
+The result is not a claim that all interrupt-aware verification should look exactly like this.
+It is a concrete engineering argument for separating scheduler semantics from interference
+placement, and for expressing the boundary between them as a checked-in artifact rather than as
+implicit harness logic. The available evidence supports that choice. The improved pipeline is
+often slower, but it can shrink the modeled interrupt surface dramatically and is already
+audited as the more faithful model on a meaningful subset of the checked-in benchmark cases.
+
+The remaining work is clear. The OSEK subset can be widened, the manifest contract can be made
+more robust, and the analysis can be made less dependent on simple global-write heuristics. But
+even in its current form, the branch demonstrates a practical path toward CBMC-based
+verification that respects both OSEK scheduler semantics and the need to keep interrupt
+interference focused.

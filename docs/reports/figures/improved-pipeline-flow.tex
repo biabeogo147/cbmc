@@ -1,0 +1,27 @@
+\begin{tikzpicture}[
+  node distance=7mm,
+  box/.style={
+    draw,
+    rounded corners=2pt,
+    align=center,
+    minimum width=44mm,
+    minimum height=10mm,
+    fill=blue!4
+  },
+  arrow/.style={-{Latex[length=2mm]},thick}
+]
+  \node[box] (src) {Project sources\\harness, OIL, ISR files};
+  \node[box,below=of src] (gotocc) {\texttt{goto-cc}\\with interleaving flags};
+  \node[box,below=of gotocc] (analysis) {\texttt{interleaving-analysis}};
+  \node[box,below=of analysis] (manifest) {Manifest JSON};
+  \node[box,below=of manifest] (aib) {\texttt{aib}\\copy and rewrite};
+  \node[box,below=of aib] (rebuild) {Rebuild injected\\translation units};
+  \node[box,below=of rebuild] (cbmc) {\texttt{cbmc}\\verification};
+
+  \draw[arrow] (src) -- (gotocc);
+  \draw[arrow] (gotocc) -- (analysis);
+  \draw[arrow] (analysis) -- (manifest);
+  \draw[arrow] (manifest) -- (aib);
+  \draw[arrow] (aib) -- (rebuild);
+  \draw[arrow] (rebuild) -- (cbmc);
+\end{tikzpicture}

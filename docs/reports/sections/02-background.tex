@@ -1,0 +1,75 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{OSEK/VDX Task, Scheduler, and Event Semantics}
+
+The seed introduction material is centered on an observation that still holds for the current
+branch: OSEK applications are difficult to verify because task scheduling is explicit and API
+driven rather than an afterthought. In OSEK/VDX, tasks have well-defined states, priorities,
+and scheduling policies, and the operating system mediates transitions between those states
+through standardized services~\cite{osek_spec}. Basic tasks move among suspended, ready, and
+running states. Extended tasks add waiting behavior and event masks, which means APIs such as
+\texttt{SetEvent}, \texttt{GetEvent}, \texttt{ClearEvent}, and \texttt{WaitEvent} modify both
+control flow and visible state.
+
+This matters because the scheduler is not nondeterministic in the same way as a generic
+threading runtime. OSEK code frequently relies on explicit priorities, ready queues, and
+preemption rules. The benchmark cases in this repository also use OIL metadata to define task
+identities and priorities, so a verification flow that ignores the OIL configuration loses a
+large fraction of the execution model before symbolic execution even begins.
+
+\subsection{Baseline CBMC Architecture}
+
+CBMC follows a standard three-stage structure~\cite{cbmc_architecture}. First, a front-end
+and \texttt{goto-cc} convert source files into a GOTO program. Second,
+\texttt{goto-symex} symbolically executes that model and emits an SSA-style equation. Third,
+the solver backend discharges the equation and optionally reconstructs a counterexample trace.
+This is a strong baseline for ordinary C verification because it already understands low-level
+control flow, bit-precise data, and solver-backed safety checks.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/baseline-cbmc-flow}
+  \caption{Baseline CBMC flow before the OSEK-aware and manifest-driven extensions described
+  in this report.}
+  \label{fig:baseline-cbmc}
+\end{figure}
+
+The limitation is not that CBMC lacks symbolic execution, but that a stock flow does not
+automatically know which API calls are scheduler actions and which source statements are worth
+instrumenting for ISR interference. Those are domain-specific choices. In this branch, they
+are made explicitly instead of being hidden in monolithic harness code.
+
+\subsection{Three Families of Interrupt-Aware Verification}
+
+The background PDF reviews several styles of model checking for concurrent software. That
+survey still gives a useful way to position the current implementation, provided the
+terminology is updated to match the code in this repository.
+
+\paragraph{Explicit-state exploration.}
+Classical explicit-state tools such as SPIN build and traverse an explicit transition system,
+which makes them a natural reference point for state-based concurrency reasoning~\cite{spin_site}.
+Their strength is transparent control-state exploration; their weakness for this project is
+that the OSEK scheduler and ISR placement policy still have to be modeled carefully to avoid
+spurious interleavings.
+
+\paragraph{SMT- and source-transformation-oriented flows.}
+The benchmark corpora in this repository include artifacts from the CPROVER interrupt work and
+from IntAbs~\cite{icbmc_site,intabs_repo}. Those families combine symbolic reasoning with
+specialized source transformation or interrupt abstraction so that interleavings can be
+restricted to relevant program points. The improved pipeline in this branch is closest to this
+family, but it differs in two important ways: the OSEK scheduler semantics are integrated
+inside CBMC rather than being left entirely to source transformation, and the static analysis
+phase is cleanly separated from rewriting by a manifest boundary.
+
+\paragraph{Sequentialization.}
+Another well-known family translates concurrent behavior into a sequential model that can be
+fed to an existing verifier. The background material emphasizes this as a scalability tactic
+for branch-heavy applications. The current branch does not sequentialize the whole OSEK
+system. Instead, it preserves CBMC's standard symbolic-execution core and inserts only the
+scheduler and ISR modeling that are needed for the chosen project configuration.
+
+These families motivate the design choices in \Cref{sec:method}. The branch documented here is
+best understood as a hybrid engineering solution: keep CBMC's native GOTO and symex pipeline,
+add OSEK semantics exactly where scheduler actions matter, and limit ISR modeling with a
+static manifest rather than with blanket asynchronous injection.
