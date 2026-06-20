@@ -1,27 +1,54 @@
 \section{Introduction}
 \label{sec:introduction}
 
-OSEK/VDX is an operating-system standard for vehicle-mounted software~\cite{osek_spec}. An
-application developed on OSEK/VDX OS consists of multiple tasks. To concurrently execute
-multiple tasks on one CPU, OSEK/VDX scheduler uses task states, priorities, and a ready
-queue to determine the running task. In contrast with many forms of concurrent software in
-which the running thread is not explicitly controlled by the application, OSEK/VDX applications are dispatched by a deterministic scheduler. OSEK/VDX OS also provides standardized application interfaces (APIs), such as \texttt{ActivateTask}, \texttt{TerminateTask}, \texttt{SetEvent}, and \texttt{WaitEvent}, through which tasks can dynamically change task states, events, and the task execution order.
+OSEK/VDX [ref][34][43] is an automotive operating-system standard introduced in 1994 by European automobile manufacturers, suppliers, and the University of Karlsruhe ~\cite{osek_spec}. It was created to manage the increasing amount of software in vehicles while improving product quality and reliability. The standard has been adopted by major car manufacturers such as BMW, Opel, and Toyota, and is used to support vehicle applications such as cruise control and temperature control. Because these applications directly affect vehicle operation and driver safety, ensuring their reliability is essential. However, as automotive software becomes more complex, verifying the correctness and reliability of OSEK/VDX applications remains a significant challenge.
 
-To ensure the reliability of OSEK/VDX applications, the behaviours of the OSEK/VDX scheduler should be taken into account in the verification process. Testing is an important checking technique used in industry, but it is difficult to exhaustively check OSEK/VDX applications using testing technique, especially because of incomplete test-cases. In addition, it is hard to reproduce an error trace when an error is detected by testing, due to the concurrency of OSEK/VDX applications.
+\subsection{OSEK/VDX Applications and Model Checking}
 
-The main difficulty is accuracy. Existing model checking methods for concurrent software
-usually check all of the interleavings of threads. If such methods are applied directly to
-OSEK/VDX applications, the verification process becomes too imprecise because the behaviours
-of OSEK/VDX scheduler are not taken into account. As a result, a large number of unnecessary interleavings of tasks may be checked in the verification stage, which can lead to spurious bugs and increases the checking costs in terms of time and memory. Therefore, a more accurate bounded model checking approach for OSEK/VDX applications should take into account the deterministic scheduler, the ready queue, and the standardized application interfaces (APIs).
+An application developed on OSEK/VDX OS consists of multiple tasks. To concurrently execute multiple tasks on one CPU, OSEK/VDX scheduler uses \textit{static priority scheduling policy} with non-preemptive strategy and full-preemptive strategy to determine the running task. In particular, Figure~\ref{fig:osek-scheduler} shows that a ready queue in scheduler is used to lay out the execution order of tasks. OSEK/VDX OS can process two types of tasks, basic task and extended task. The states of a basic task consist of \textit{running state}, \textit{ready state} and \textit{suspended state}. Compared with the basic task, the extended task can hold synchronization events and has a unique state called \textit{waiting state}.
 
-This report describes a CBMC-based checking approach that addresses this problem in two parts. First, the APIs invoked from tasks are taken into account during the verification process, so that the states of tasks, synchronization events, shared resources, and task execution order can be handled according to the behaviours of the OSEK/VDX scheduler. Second, the checking model is constructed to avoid exploring unnecessary behaviours in the verification stage.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/OSEK-VDK scheduler.png}
+  \caption{OSEK/VDX scheduler}
+  \label{fig:osek-scheduler}
+\end{figure}
+
+OSEK/VDX OS also provides standardized application interfaces (APIs), such as \texttt{ActivateTask}, \texttt{TerminateTask}, \texttt{SetEvent}, and \texttt{WaitEvent}, through which tasks can dynamically change task states, synchronization events, and shared resources.
+
+To ensure the reliability of OSEK/VDX applications, testing is an important checking technique used in industry, but it is difficult to exhaustively check OSEK/VDX applications using testing technique, especially because of incomplete test-cases. In addition, it is hard to reproduce an error trace when an error is detected by testing, due to the concurrency of OSEK/VDX applications.
+
+Model checking [ref][2][3], an efficient and exhaustive verification technique for concurrent software, can be applied to verify OSEK/VDX applications instead of testing technique. Particularly, it will return a counterexample when detecting an error. Based on the returned counterexample, developers can easily find the error trace and reproduce the erroneous behaviours.
+
+\subsection{Shortcomings of Existing Model Checking for OSEK/VDX Applications}
+
+Existing model checking methods [ref][26][50][51], such as the ANSI-C multi-threaded software and SystemC multi-threaded software, have been applied to verify
+concurrent software. In these methods, the behaviours of scheduler are taken into account in the verification process.
+However, these prominent model checking methods are still unsuitable to accurately verify OSEK/VDX applications because of different scheduling policy. As shown in Figure~\ref{fig:diff-schedulers}, in the existing methods, the running thread within the concurrent software is arbitrarily determined by scheduler (non-deterministic scheduler is used to dispatch threads), but in OSEK/VDX applications which task is to be run is explicitly determined by OSEK/VDX scheduler, a deterministic scheduler used to dispatch tasks.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/diff-schedulers.png}
+  \caption{The difference of schedulers}
+  \label{fig:diff-schedulers}
+\end{figure}
+
+If such methods are applied directly to OSEK/VDX applications, the verification process becomes too imprecise because the behaviours of OSEK/VDX scheduler are not taken into account. As a result, a large number of unnecessary interleavings of tasks may be checked in the verification stage, which can lead to spurious bugs and increases the checking costs in terms of judging time and memory of checking devices. 
+
+\subsection{Thesis Purpose \& Contribution}
+
+The purpose of this report is to make model checking more accurate for OSEK/VDX applications. In order to achieve this purpose, we describe and develop an approach to construct a checking model that reflects their execution semantics and avoid checking ISR occurrences at program locations that do not affect the checking results.
+
+In our approach, ...
 
 The report makes three contributions:
 
 \begin{itemize}[leftmargin=1.5em]
-  \item It describes how bounded model checking can be specialized for OSEK/VDX applications whose tasks are dispatched by a deterministic scheduler.
-  \item It introduces a manifest for building a new checking model with interrupt-service-routine calls only at manifest-listed program locations.
-  \item It presents benchmark results showing that the proposed approach reduces unnecessary task interleavings and removes spurious bugs reported by the baseline.
+\item It describes a checking approach for OSEK/VDX applications whose task execution order is determined by a deterministic scheduler, task states, synchronization events, and a ready queue.
+
+\item It introduces a manifest-guided method for selecting ISR insertion locations and building a checking model with guarded ISR calls only at the program locations recorded in the manifest.
+
+\item It presents benchmark results showing that the proposed approach reduces unnecessary interleavings and removes spurious bugs reported by the baseline checking process, while discussing the additional checking costs introduced by the improved model construction.
 \end{itemize}
 
-The rest of this report is structured as follows. \Cref{sec:background} presents the OSEK/VDX execution model and the role of bounded model checking. \Cref{sec:method} describes the proposed checking approach. \Cref{sec:evaluation} reports the benchmark results and discusses the accuracy and checking costs of the approach. \Cref{sec:discussion} summarizes the main limitations of the current implementation.
+The rest of this report is structured as follows. \Cref{sec:background} presents the OSEK/VDX execution model and the role of bounded model checking. \Cref{sec:method} describes the proposed checking approach. \Cref{sec:experiment} reports the benchmark results and discusses the accuracy and checking costs of the approach. \Cref{sec:discussion} summarizes the main limitations of the current implementation.
