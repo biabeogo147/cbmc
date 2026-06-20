@@ -1,27 +1,25 @@
 \begin{tikzpicture}[
-  node distance=7mm,
+  node distance=7mm and 6mm,
   box/.style={
     draw,
     rounded corners=2pt,
     align=center,
-    minimum width=44mm,
-    minimum height=10mm,
+    text width=30mm,
+    minimum height=9mm,
     fill=blue!4
   },
   arrow/.style={-{Latex[length=2mm]},thick}
 ]
-  \node[box] (src) {Project sources\\harness, OIL, ISR files};
-  \node[box,below=of src] (gotocc) {\texttt{goto-cc}\\with interleaving flags};
-  \node[box,below=of gotocc] (analysis) {\texttt{interleaving-analysis}};
-  \node[box,below=of analysis] (manifest) {Manifest JSON};
-  \node[box,below=of manifest] (aib) {\texttt{aib}\\copy and rewrite};
-  \node[box,below=of aib] (rebuild) {Rebuild injected\\translation units};
-  \node[box,below=of rebuild] (cbmc) {\texttt{cbmc}\\verification};
+  \node[box] (src) {Source program\\and configuration\\data};
+  \node[box,right=of src] (gotocc) {Initial checking\\model};
+  \node[box,right=of gotocc] (analysis) {Interleaving\\relevance\\analysis};
+  \node[box,below=of analysis] (manifest) {Selected\\program points};
+  \node[box,left=of manifest] (aib) {Restricted-model\\construction};
+  \node[box,left=of aib] (cbmc) {Final checking\\model for bounded\\model checking};
 
   \draw[arrow] (src) -- (gotocc);
   \draw[arrow] (gotocc) -- (analysis);
   \draw[arrow] (analysis) -- (manifest);
   \draw[arrow] (manifest) -- (aib);
-  \draw[arrow] (aib) -- (rebuild);
-  \draw[arrow] (rebuild) -- (cbmc);
+  \draw[arrow] (aib) -- (cbmc);
 \end{tikzpicture}

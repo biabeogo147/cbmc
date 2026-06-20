@@ -6,6 +6,7 @@
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -41,7 +42,7 @@
 
 \lstset{style=reportstyle}
 
-\title{An Improved CBMC Pipeline for OSEK-Aware Verification and Targeted ISR Injection}
+\title{Accurate Bounded Model Checking for OSEK/VDX Applications in CBMC}
 \author{CBMC ISR/OSEK Research Branch}
 \date{\today}
 
@@ -50,29 +51,27 @@
 \maketitle
 
 \begin{abstract}
-OSEK applications mix task-level control flow, scheduler-visible API calls, event handling,
-and asynchronous interrupt service routines (ISRs). A stock bounded model checking
-workflow for C can reason about ordinary control flow, but it does not automatically know
-that calls such as \texttt{ActivateTask}, \texttt{WaitEvent}, or \texttt{SetEvent} should
-change scheduler state rather than behave like ordinary function bodies. Likewise, a broad
-interrupt model can over-approximate the program by allowing ISR injection at many
-irrelevant locations. This report documents an improved CBMC pipeline that addresses both
-problems in a modular way. The first part adds an OSEK-aware \texttt{os-api} layer that
-classifies recognized operating-system calls during symbolic execution and returns generic
-next-step actions to \texttt{goto-symex}. The second part splits interrupt modeling into an
-analysis-and-rewrite pipeline: \texttt{interleaving-analysis} computes a manifest of relevant
-ISR insertion points from a GOTO model, and \texttt{aib} materializes those points as guarded
-source-level calls in a copied project tree.
+OSEK/VDX applications consist of multiple tasks, a deterministic scheduler, a ready queue,
+and standardized application interfaces (APIs). If existing model checking methods for
+concurrent software are applied directly to such applications, a large number of
+interleavings of tasks may be checked although the running task is explicitly determined by
+the scheduler. The result is an approximate verification in which unnecessary interleavings
+of tasks may lead to a spurious bug. This report describes a CBMC-based bounded model
+checking flow that takes the behaviours of OSEK/VDX scheduler into account and reduces
+unnecessary interleavings before source-to-source instrumentation.
 
-The checked-in benchmark artifacts show why this split matters. The large Trampoline
-\texttt{alarms\_s1\_non} walkthrough covers 32 translation units and 7600 lines of source. The
-scripted naive modeling path injects 747 ISR calls, while the checked-in targeted manifest
-for the same case narrows the result to three ISR functions and six guarded call insertions,
-which is a 99.2\% reduction in candidate call sites. At corpus level, the generated benchmark
-report records 17 same-outcome comparable cases and 11 cases where the improved pipeline is
-audited as the more faithful model. The trade-off is additional manifest, injection, and
-recompile cost, but the pipeline documents a cleaner engineering boundary between scheduler
-semantics, interference analysis, and source-to-source rewriting.
+The first part uses OIL configuration and scheduler-related APIs so that task states, the
+ready queue, and task execution order follow the OSEK/VDX model during verification. The
+second part computes a manifest of candidate program points whose accesses may conflict with
+globals written by the interruption code, and then inserts guarded nondeterministic calls
+only at those points. On the public benchmark subset in this repository, the checked-in
+evidence contains 43 measured cases: 17 same-outcome comparable cases, 10 cases audited as
+\texttt{improved\_correct}, 6 \texttt{no\_injection\_false} cases, 3
+\texttt{needs\_manual\_review} cases, and 7 \texttt{pending\_manual\_review} cases.
+Representative public cases show that the method can remove unnecessary interleavings that
+produce spurious bugs and can also expose error traces that are not reached by the stock
+baseline. The added accuracy costs extra analysis and rebuild time, but it yields a more
+accurate bounded model checking workflow for OSEK/VDX applications.
 \end{abstract}
 
 \input{sections/01-introduction}

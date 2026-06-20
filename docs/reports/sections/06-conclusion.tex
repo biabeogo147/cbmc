@@ -1,21 +1,19 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-This report documented an improved CBMC pipeline for OSEK-aware symbolic execution and
-targeted ISR injection. The implementation keeps CBMC's normal front-end, GOTO, and solver
-architecture intact, but adds two carefully chosen extension seams: a modular OSEK dispatcher
-inside \texttt{goto-symex} and a manifest-driven split between interference analysis and source
-rewriting.
+This report documented a CBMC-based bounded model checking flow for OSEK/VDX applications.
+The central problem is accuracy: if the deterministic scheduler is ignored, many unnecessary
+interleavings of tasks may be superfluously checked and may result in a spurious bug. The
+revised flow addresses that problem by taking the behaviours of OSEK/VDX scheduler into
+account and by restricting interruption-related instrumentation through an explicit manifest.
 
-The result is not a claim that all interrupt-aware verification should look exactly like this.
-It is a concrete engineering argument for separating scheduler semantics from interference
-placement, and for expressing the boundary between them as a checked-in artifact rather than as
-implicit harness logic. The available evidence supports that choice. The improved pipeline is
-often slower, but it can shrink the modeled interrupt surface dramatically and is already
-audited as the more faithful model on a meaningful subset of the checked-in benchmark cases.
+The checked-in public benchmark evidence supports that choice. The revised flow is often
+slower because it adds analysis, instrumentation, and rebuild phases, but it is audited as the
+more faithful model in meaningful public cases. In particular, it removes unnecessary
+interleavings that produce spurious bugs and reaches some error traces that are not reached by
+the stock baseline.
 
-The remaining work is clear. The OSEK subset can be widened, the manifest contract can be made
-more robust, and the analysis can be made less dependent on simple global-write heuristics. But
-even in its current form, the branch demonstrates a practical path toward CBMC-based
-verification that respects both OSEK scheduler semantics and the need to keep interrupt
-interference focused.
+The remaining work is also clear. The supported OSEK/VDX subset can be widened, the manifest
+contract can be made more robust, and the candidate-line rule can be made less dependent on a
+simple global-write heuristic. Even in its current form, however, the branch demonstrates a
+practical path toward more accurate bounded model checking for OSEK/VDX applications.

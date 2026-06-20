@@ -1,24 +1,26 @@
 \begin{tikzpicture}[
-  node distance=7mm,
+  node distance=8mm and 10mm,
   box/.style={
     draw,
     rounded corners=2pt,
     align=center,
-    text width=42mm,
+    text width=35mm,
     minimum height=10mm,
     fill=orange!6
   },
   arrow/.style={-{Latex[length=2mm]},thick}
 ]
-  \node[box] (cli) {\texttt{cbmc}\\option parsing};
-  \node[box,below=of cli] (symex) {\texttt{goto-symex}\\call hook};
-  \node[box,below=of symex] (dispatch) {\texttt{os\_api\_dispatcher}};
-  \node[box,below=of dispatch] (backend) {OSEK backend\\classification and policy};
-  \node[box,below=of backend] (state) {\texttt{scheduler\_state}};
+  \node[box] (api) {Standardized\\application\\interfaces (APIs)};
+  \node[box,right=of api] (state) {Task states\\and events};
+  \node[box,right=of state] (queue) {Ready queue};
+  \node[box,below=of queue] (sched) {Deterministic\\scheduler};
+  \node[box,left=of sched] (order) {Task execution\\order};
+  \node[box,left=of order] (step) {Next verification\\step};
 
-  \draw[arrow] (cli) -- node[right,align=center]{\texttt{--os-api osek}\\\texttt{--osek-oil}} (symex);
-  \draw[arrow] (symex) -- node[right]{recognized call} (dispatch);
-  \draw[arrow] (dispatch) -- node[right]{API kind + args} (backend);
-  \draw[arrow] (backend) -- node[right,align=center]{queue, event,\\task updates} (state);
-  \draw[arrow] (state.east) -| ++(18mm,0) |- node[right,align=center]{\texttt{next\_step\_kindt}\\optional writeback} (symex.east);
+  \draw[arrow] (api) -- (state);
+  \draw[arrow] (state) -- (queue);
+  \draw[arrow] (queue) -- (sched);
+  \draw[arrow] (sched) -- (order);
+  \draw[arrow] (order) -- (step);
+  \draw[arrow] (step.north) |- ++(0,8mm) -| (api.south);
 \end{tikzpicture}

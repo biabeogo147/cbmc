@@ -1,33 +1,44 @@
 \section{Background}
 \label{sec:background}
 
-\subsection{OSEK/VDX Task, Scheduler, and Event Semantics}
+\subsection{OSEK/VDX Task, Scheduler, and Event}
 
-The seed introduction material is centered on an observation that still holds for the current
-branch: OSEK applications are difficult to verify because task scheduling is explicit and API
-driven rather than an afterthought. In OSEK/VDX, tasks have well-defined states, priorities,
-and scheduling policies, and the operating system mediates transitions between those states
-through standardized services~\cite{osek_spec}. Basic tasks move among suspended, ready, and
-running states. Extended tasks add waiting behavior and event masks, which means APIs such as
-\texttt{SetEvent}, \texttt{GetEvent}, \texttt{ClearEvent}, and \texttt{WaitEvent} modify both
-control flow and visible state.
+An application developed on OSEK/VDX OS consists of multiple tasks~\cite{osek_spec}. OSEK/VDX OS can process two types of tasks: basic tasks and extended tasks. The states of a basic task are running, ready, and suspended. Compared with a basic task, an extended task can hold synchronization events and has an additional waiting state. OSEK/VDX OS also provides standardized application interfaces (APIs), and tasks within the application can invoke these APIs to dynamically change the states of tasks, synchronization events, and shared resources.
 
-This matters because the scheduler is not nondeterministic in the same way as a generic
-threading runtime. OSEK code frequently relies on explicit priorities, ready queues, and
-preemption rules. The benchmark cases in this repository also use OIL metadata to define task
-identities and priorities, so a verification flow that ignores the OIL configuration loses a
-large fraction of the execution model before symbolic execution even begins.
+OSEK/VDX executes multiple tasks on one CPU using a deterministic scheduler based on static priorities and a ready queue.
+
+Synchronization events are used to implement synchronous behaviours between tasks. Only extended tasks can hold events, and these events are used as criteria for switching task states from running state to waiting state or from waiting state to ready state. The event process module responds to three APIs: \texttt{SetEvent}, \texttt{WaitEvent}, and \texttt{ClearEvent}. For example, when a running task invokes \texttt{WaitEvent} to wait for an event, it cannot continue until that event is set by another basic or extended task through \texttt{SetEvent}.
+
+\subsection{Model Checking and Bounded Model Checking}
+
+Model checking is an efficient and exhaustive verification technique for checking whether a target system satisfies a given property. The key idea is to construct a model that describes the executions of the target system and then search the constructed model with the given property. If the property is violated, model checking reports a trace that shows how the error can occur. This trace is usually named a counterexample, and it helps developers reproduce the faulty behaviour.
+
+Bounded model checking follows the same verification goal, but it restricts the checking process with a specified bound. Instead of generating the full state space at once, bounded model checking constructs a transition system within the bounded verification space and uses a solver to check whether the property is violated. If a violation is found, the solver can report a counterexample. This makes bounded model checking useful for systems with large state spaces while still preserving the practical value of an error trace.
+
+\subsection{Checking Approaches for OSEK/VDX Applications}
+
+The execution characteristics of OSEK/VDX applications make their verification different from general concurrent software verification. In OSEK/VDX applications, the running task is explicitly determined by the OSEK/VDX scheduler according to the ready queue and configuration data. At the same time, APIs invoked from tasks may change the scheduling of tasks, for example by causing a context switch or by leading to different task execution orders at different branches. Therefore, the key problem is how to construct an accurate checking model that represents the executions of the application and handles the behaviours of OSEK/VDX OS.
+
+Existing checking approaches for OSEK/VDX applications can be summarized as follows:
+
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Spin-based checking approach.}
+This approach constructs a combination model of the application model and the OSEK/VDX OS model. In this model, tasks within the application are represented as processes, while the OSEK/VDX OS model dispatches tasks and responds to the APIs invoked from tasks. This approach can accurately simulate the executions of OSEK/VDX applications in the real OSEK/VDX OS. However, its scalability is limited because the behaviours of the OSEK/VDX OS model are also explored in the verification stage, which may lead to state space explosion when the application invokes many APIs.
+
+\item \textbf{SMT-based bounded model checking approach.}
+This approach uses an execution path generator (EPG) to construct a transition system for the OSEK/VDX application. The OSEK/VDX OS model is embedded in the generation process to dispatch tasks and respond to the APIs invoked from tasks. Therefore, the OS model does not need to be explored directly in the verification stage. This approach is more efficient and scalable than the Spin-based checking approach for applications with many tasks and APIs. However, it may become inefficient when the application contains many branches, because many execution paths have to be explored to construct the transition system.
+
+\item \textbf{Sequentialization-based checking approach.}
+This approach translates an OSEK/VDX application into a sequential model and then applies existing model checkers such as Spin or CBMC to verify the generated model. During the sequentialization process, the scheduling behaviours of OSEK/VDX OS are explicitly performed, and the APIs invoked from tasks are handled during translation. This approach enables existing model checkers to verify OSEK/VDX applications by checking a sequential model instead of a concurrent model.
+\end{itemize}
+
+Among the checking approaches summarized above, this report follows the SMT-based bounded model checking direction. In this direction, the key work is to construct a transition system that correctly reflects the executions of the target application. For OSEK/VDX applications, this transition system must take into account the deterministic scheduler, the ready queue, and the APIs invoked from tasks. This report uses CBMC as the bounded model checker and refines the checking process so that OSEK/VDX-specific scheduling behaviours are represented before verification.
 
 \subsection{Baseline CBMC Architecture}
 
-CBMC follows a standard three-stage structure~\cite{cbmc_architecture}. First, a front-end
-and \texttt{goto-cc} convert source files into a GOTO program. Second,
-\texttt{goto-symex} symbolically executes that model and emits an SSA-style equation. Third,
-the solver backend discharges the equation and optionally reconstructs a counterexample trace.
-This is a strong baseline for ordinary C verification because it already understands low-level
-control flow, bit-precise data, and solver-backed safety checks.
+CBMC is a bounded model checker for C programs~\cite{cbmc_architecture}. Its checking process can be viewed in three main stages. First, the front-end and \texttt{goto-cc} translate C source files into a GOTO program. Second, \texttt{goto-symex} symbolically executes the GOTO program and constructs an SSA-style equation. Third, the solver backend checks the generated equation and, when a property is violated, CBMC can reconstruct a counterexample trace.
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \input{figures/baseline-cbmc-flow}
   \caption{Baseline CBMC flow before the OSEK-aware and manifest-driven extensions described
@@ -35,41 +46,4 @@ control flow, bit-precise data, and solver-backed safety checks.
   \label{fig:baseline-cbmc}
 \end{figure}
 
-The limitation is not that CBMC lacks symbolic execution, but that a stock flow does not
-automatically know which API calls are scheduler actions and which source statements are worth
-instrumenting for ISR interference. Those are domain-specific choices. In this branch, they
-are made explicitly instead of being hidden in monolithic harness code.
-
-\subsection{Three Families of Interrupt-Aware Verification}
-
-The background PDF reviews several styles of model checking for concurrent software. That
-survey still gives a useful way to position the current implementation, provided the
-terminology is updated to match the code in this repository.
-
-\paragraph{Explicit-state exploration.}
-Classical explicit-state tools such as SPIN build and traverse an explicit transition system,
-which makes them a natural reference point for state-based concurrency reasoning~\cite{spin_site}.
-Their strength is transparent control-state exploration; their weakness for this project is
-that the OSEK scheduler and ISR placement policy still have to be modeled carefully to avoid
-spurious interleavings.
-
-\paragraph{SMT- and source-transformation-oriented flows.}
-The benchmark corpora in this repository include artifacts from the CPROVER interrupt work and
-from IntAbs~\cite{icbmc_site,intabs_repo}. Those families combine symbolic reasoning with
-specialized source transformation or interrupt abstraction so that interleavings can be
-restricted to relevant program points. The improved pipeline in this branch is closest to this
-family, but it differs in two important ways: the OSEK scheduler semantics are integrated
-inside CBMC rather than being left entirely to source transformation, and the static analysis
-phase is cleanly separated from rewriting by a manifest boundary.
-
-\paragraph{Sequentialization.}
-Another well-known family translates concurrent behavior into a sequential model that can be
-fed to an existing verifier. The background material emphasizes this as a scalability tactic
-for branch-heavy applications. The current branch does not sequentialize the whole OSEK
-system. Instead, it preserves CBMC's standard symbolic-execution core and inserts only the
-scheduler and ISR modeling that are needed for the chosen project configuration.
-
-These families motivate the design choices in \Cref{sec:method}. The branch documented here is
-best understood as a hybrid engineering solution: keep CBMC's native GOTO and symex pipeline,
-add OSEK semantics exactly where scheduler actions matter, and limit ISR modeling with a
-static manifest rather than with blanket asynchronous injection.
+This architecture is a strong baseline for C verification because bounded model checking can construct a transition system under a given bound and use a solver to check safety properties. However, this baseline is not sufficient by itself for OSEK/VDX applications. The limitation is not that CBMC lacks symbolic execution. The limitation is that the baseline CBMC flow does not automatically model the behaviours of the OSEK/VDX scheduler. In particular, APIs invoked from tasks can change task states, synchronization events, shared resources, and the ready queue. If these behaviours are not represented in the checking model, the verification process may not reflect the task execution order determined by the OSEK/VDX scheduler.

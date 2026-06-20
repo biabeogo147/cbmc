@@ -1,21 +1,21 @@
 \begin{tikzpicture}[
-  node distance=7mm,
+  node distance=8mm and 8mm,
   box/.style={
     draw,
     rounded corners=2pt,
     align=center,
-    minimum width=34mm,
+    text width=31mm,
     minimum height=10mm,
     fill=gray!8
   },
   arrow/.style={-{Latex[length=2mm]},thick}
 ]
   \node[box] (src) {C sources\\and harness};
-  \node[box,below=of src] (goto) {Front-end\\and \texttt{goto-cc}};
-  \node[box,below=of goto] (model) {GOTO model};
-  \node[box,below=of model] (symex) {\texttt{goto-symex}\\SSA equation};
-  \node[box,below=of symex] (solver) {SAT/SMT\\solver};
-  \node[box,below=of solver] (trace) {Result and\\counterexample};
+  \node[box,right=of src] (goto) {Front-end\\and \texttt{goto-cc}};
+  \node[box,right=of goto] (model) {GOTO program};
+  \node[box,below=of model] (symex) {Symbolic\\execution};
+  \node[box,left=of symex] (solver) {SAT/SMT\\solver};
+  \node[box,left=of solver] (trace) {Verification result\\or counterexample};
 
   \draw[arrow] (src) -- (goto);
   \draw[arrow] (goto) -- (model);

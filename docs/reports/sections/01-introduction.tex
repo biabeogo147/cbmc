@@ -1,57 +1,27 @@
 \section{Introduction}
 \label{sec:introduction}
 
-OSEK applications are not just sequential C programs with a few library calls. They combine
-task-level control flow, scheduler-visible operating-system APIs, event synchronization, and
-interrupt service routines (ISRs) whose interference is both asynchronous and highly
-domain-specific. The OSEK/VDX operating-system specification models a single-processor,
-resource-aware, event-driven execution environment with explicit task states, scheduling
-policies, and a standard API surface for services such as \texttt{ActivateTask},
-\texttt{TerminateTask}, \texttt{SetEvent}, and \texttt{WaitEvent}~\cite{osek_spec}. Real
-RTOS code bases such as Trampoline make heavy use of exactly this execution model and are
-therefore poor fits for a verification flow that assumes ordinary function-call semantics or
-unstructured asynchronous interference~\cite{trampoline_repo}.
+OSEK/VDX is an operating-system standard for vehicle-mounted software~\cite{osek_spec}. An
+application developed on OSEK/VDX OS consists of multiple tasks. To concurrently execute
+multiple tasks on one CPU, OSEK/VDX scheduler uses task states, priorities, and a ready
+queue to determine the running task. In contrast with many forms of concurrent software in
+which the running thread is not explicitly controlled by the application, OSEK/VDX applications are dispatched by a deterministic scheduler. OSEK/VDX OS also provides standardized application interfaces (APIs), such as \texttt{ActivateTask}, \texttt{TerminateTask}, \texttt{SetEvent}, and \texttt{WaitEvent}, through which tasks can dynamically change task states, events, and the task execution order.
 
-CBMC already offers a strong baseline for C verification. Its normal architecture builds a
-GOTO model from source code, symbolically executes that model, and discharges the resulting
-equation with a SAT or SMT solver~\cite{cbmc_architecture,cbmc_repo}. However, a stock
-CBMC workflow leaves two important gaps for OSEK-style software.
+To ensure the reliability of OSEK/VDX applications, the behaviours of the OSEK/VDX scheduler should be taken into account in the verification process. Testing is an important checking technique used in industry, but it is difficult to exhaustively check OSEK/VDX applications using testing technique, especially because of incomplete test-cases. In addition, it is hard to reproduce an error trace when an error is detected by testing, due to the concurrency of OSEK/VDX applications.
 
-First, scheduler-facing OS calls are semantically richer than ordinary C functions. Treating
-\texttt{ActivateTask} or \texttt{ChainTask} as plain calls either loses the scheduling meaning
-entirely or forces users to encode scheduler behavior manually inside harness code. Second, a
-naive interrupt model can place ISR interference at many irrelevant source locations. That
-kind of over-approximation may still be sound, but it creates unnecessary state-space growth
-and can produce failures that are artifacts of the modeling style rather than of the program.
+The main difficulty is accuracy. Existing model checking methods for concurrent software
+usually check all of the interleavings of threads. If such methods are applied directly to
+OSEK/VDX applications, the verification process becomes too imprecise because the behaviours
+of OSEK/VDX scheduler are not taken into account. As a result, a large number of unnecessary interleavings of tasks may be checked in the verification stage, which can lead to spurious bugs and increases the checking costs in terms of time and memory. Therefore, a more accurate bounded model checking approach for OSEK/VDX applications should take into account the deterministic scheduler, the ready queue, and the standardized application interfaces (APIs).
 
-The branch documented in this report addresses both problems with a deliberately split design.
-An \texttt{os-api} layer plugs into \texttt{goto-symex} so that recognized OSEK calls affect
-symbolic scheduler state directly. A separate \texttt{interleaving-analysis} library then
-computes a manifest of plausible ISR insertion points from an existing GOTO model, and an
-independent \texttt{aib} rewriter materializes only those guarded calls in a copied project
-tree. The resulting workflow is more modular than embedding every policy into one stage of the
-toolchain, and it exposes a concrete JSON contract between static interference analysis and
-source-to-source instrumentation.
+This report describes a CBMC-based checking approach that addresses this problem in two parts. First, the APIs invoked from tasks are taken into account during the verification process, so that the states of tasks, synchronization events, shared resources, and task execution order can be handled according to the behaviours of the OSEK/VDX scheduler. Second, the checking model is constructed to avoid exploring unnecessary behaviours in the verification stage.
 
-This report is an implementation-facing paper-style summary of that pipeline. It rewrites the
-seed material in \texttt{docs/reports/Introduction.pdf} and
-\texttt{docs/reports/Background.pdf}, but treats the checked-in code as the source of truth
-when the prose and implementation differ. The report makes three concrete contributions:
+The report makes three contributions:
 
 \begin{itemize}[leftmargin=1.5em]
-  \item It explains how OSEK-aware symbolic execution is integrated into CBMC through
-  command-line options, dispatcher logic, and a generic scheduler action interface.
-  \item It documents the manifest-driven ISR pipeline, including target-function discovery,
-  read/write-set analysis, candidate-line reporting, and guarded source rewriting.
-  \item It summarizes the available benchmark evidence, including cases where the improved
-  pipeline is slower, cases where it is audited as the more faithful model, and one Trampoline
-  walkthrough that shows how aggressively the targeted manifest shrinks the naive ISR
-  injection space.
+  \item It describes how bounded model checking can be specialized for OSEK/VDX applications whose tasks are dispatched by a deterministic scheduler.
+  \item It introduces a manifest for building a new checking model with interrupt-service-routine calls only at manifest-listed program locations.
+  \item It presents benchmark results showing that the proposed approach reduces unnecessary task interleavings and removes spurious bugs reported by the baseline.
 \end{itemize}
 
-The rest of the report proceeds from context to mechanism to evidence. \Cref{sec:background}
-briefly reviews the OSEK execution model, the stock CBMC flow, and the main families of
-interrupt-aware model checking. \Cref{sec:method} describes the improved pipeline in detail.
-\Cref{sec:evaluation} summarizes the evidence available in the checked-in benchmark artifacts,
-and \Cref{sec:discussion} closes with practical limitations that matter for future
-maintenance.
+The rest of this report is structured as follows. \Cref{sec:background} presents the OSEK/VDX execution model and the role of bounded model checking. \Cref{sec:method} describes the proposed checking approach. \Cref{sec:evaluation} reports the benchmark results and discusses the accuracy and checking costs of the approach. \Cref{sec:discussion} summarizes the main limitations of the current implementation.

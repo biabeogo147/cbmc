@@ -1,58 +1,101 @@
-\section{Appendix: Interface Examples}
+\section{Appendix: Concrete Interfaces}
 \label{sec:appendix}
+
+\subsection{OSEK/VDX Checking Options}
+
+The methodology in Section~3 refers to OSEK/VDX-specific model construction without listing
+its command-line spellings. The following schematic command shows the documented options for
+selecting the OSEK/VDX checking model and the corresponding OIL configuration file.
+
+\begin{lstlisting}[caption={Schematic OSEK/VDX option usage.}]
+cbmc main.c --os-api osek --osek-oil app.oil
+\end{lstlisting}
 
 \subsection{Example \texttt{goto-cc} Invocation}
 
-The following command matches the project-mode flow documented by the branch. It compiles a
-small ISR benchmark, records the project root, names the ISR source file explicitly, and emits
-an interleaving manifest.
+The following command illustrates the public project-mode flow on the
+\texttt{i8xx-tco-1} benchmark tree. It records the project root, names the interruption
+source file explicitly, and emits an interleaving manifest.
 
 \begin{lstlisting}[caption={Example project-mode interleaving analysis command.}]
 goto-cc \
-  check-src/t_isr_multifile/harness.c \
-  check-src/t_isr_multifile/harness_unity.c \
-  check-src/t_isr_multifile/isr_define/isr.c \
-  check-src/t_isr_multifile/task_define/task.c \
-  --interleaving-project-root check-src/t_isr_multifile \
-  --interleaving-source-files check-src/t_isr_multifile/isr_define/isr.c \
-  --interleaving-output check-src/t_isr_multifile/interleaving_harness.json \
-  -o check-src/t_isr_multifile/t_isr_multifile.out
+  check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline/main.c \
+  check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline/isr_define/isr.c \
+  --interleaving-project-root \
+    check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline \
+  --interleaving-source-files \
+    check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline/isr_define/isr.c \
+  --interleaving-output \
+    check-src/benchmark-sources/intabs/cases/i8xx-tco-1/interleaving_pipeline.json \
+  -o check-src/benchmark-sources/intabs/cases/i8xx-tco-1/i8xx-tco-1.out
 \end{lstlisting}
 
 \subsection{Example \texttt{aib} Invocation}
 
 \begin{lstlisting}[caption={Example AIB rewrite command.}]
 aib \
-  check-src/t_isr_multifile \
-  check-src/t_isr_multifile/interleaving_harness.json \
-  out/t_isr_multifile_injected \
-  out/t_isr_multifile_injected/interleaving_harness_injected.json
+  check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline \
+  check-src/benchmark-sources/intabs/cases/i8xx-tco-1/interleaving_pipeline.json \
+  out/i8xx-tco-1_injected \
+  out/i8xx-tco-1_injected/interleaving_pipeline_effective.json
 \end{lstlisting}
+
+\subsection{Illustrative Guarded Call}
+
+The restricted checking model is created by inserting guarded interruption calls only at the
+selected program points. The example below is illustrative rather than benchmark-specific.
+
+\begin{lstlisting}[caption={Illustrative guarded interruption call.}]
+if (nondet_bool()) isr1(0);
+\end{lstlisting}
+
+\subsection{Documented Selection-Artifact Fields}
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Field & Meaning \\
+    \midrule
+    \texttt{project.project\_root} & Root directory used for path scoping and
+    report-path relativization. \\
+    \texttt{project.interleaving\_source\_files} & Source files whose functions are treated
+    as interleaving functions. \\
+    \texttt{project.translation\_units} & Effective build inputs associated with the initial
+    checking model that produced the selection artifact. \\
+    \texttt{interleaving[*].name} & Interleaving function identifier recorded for rewriting. \\
+    \texttt{interleaving[*].write\_global\_var} & Global symbols that the interleaving
+    function may write. \\
+    \texttt{interleaving[*].line\_added\_block\_with\_file} & Project-relative file and line
+    pairs where guarded calls may be inserted. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Documented fields of the selection artifact used between analysis and rewriting.}
+  \label{tab:manifest-schema}
+\end{table}
 
 \subsection{Manifest Excerpt}
 
-The manifest below is a checked-in example from the simple multi-file ISR benchmark. It shows
-how the project metadata and the interleaving candidates are separated.
+The manifest below is a schematic excerpt showing only the documented public fields. It
+illustrates how project metadata and interleaving candidates are separated.
 
-\begin{lstlisting}[caption={Excerpt from the simple ISR manifest.}]
+\begin{lstlisting}[caption={Schematic manifest excerpt.}]
 {
   "project": {
-    "project_root": "/tmp/cbmc/check-src/simple-benchmarks/t_isr_multifile",
+    "project_root": "/path/to/check-src/benchmark-sources/intabs/cases/i8xx-tco-1/improved-pipeline",
     "interleaving_source_files": ["isr_define/isr.c"],
     "translation_units": [
-      "harness.c",
-      "harness_unity.c",
-      "isr_define/isr.c",
-      "task_define/task.c"
+      "main.c",
+      "isr_define/isr.c"
     ]
   },
   "interleaving": [
     {
       "name": "isr1",
-      "write_global_var": ["enable_irq_1", "x"],
+      "write_global_var": ["<global_1>", "<global_2>"],
       "line_added_block_with_file": [
-        { "file": "harness.c", "line": [10] },
-        { "file": "task_define/task.c", "line": [5, 9] }
+        { "file": "main.c", "line": [<line_a>, <line_b>] }
       ]
     }
   ]

@@ -1,229 +1,179 @@
-\section{Method}
+\section{Methodology}
 \label{sec:method}
 
-\subsection{Baseline CBMC Flow}
+\subsection{Overview of the Proposed Approach}
 
-The baseline flow remains the one shown in \Cref{fig:baseline-cbmc}: source files are parsed,
-linked into a GOTO model, symbolically executed, and solved. The improved branch does not
-replace this structure. Instead, it adds two extension seams:
+The method builds directly on the baseline CBMC architecture described in \Cref{sec:background}
+and summarized in \Cref{fig:baseline-cbmc}. The goal is not to replace bounded model
+checking, symbolic execution, or the solver stage. The goal is to construct a more accurate
+checking model for OSEK/VDX applications before final verification. For ordinary C programs,
+the baseline CBMC flow is often sufficient. For OSEK/VDX applications, however, the
+checking model must also reflect how the deterministic scheduler, the ready queue, and the
+standardized application interfaces (APIs) determine task execution order.
 
-\begin{enumerate}[leftmargin=1.5em]
-  \item an OSEK-aware hook inside symbolic execution, and
-  \item a separate interleaving-analysis-plus-rewrite path that runs around the ordinary
-  compile-and-check loop.
-\end{enumerate}
+This section explains the proposed approach in four parts. First, it explains how the
+checking model takes the OSEK/VDX scheduler and APIs into account. Second, it explains how
+the checking model avoids a large number of unnecessary interleavings. Third, it explains
+how those two ideas are combined to construct the final checking model. 
 
-This separation is the core architectural decision. The symbolic executor remains the authority
-for task scheduling semantics, while source rewriting remains the authority for materializing
-guarded ISR calls.
+Table~\ref{tab:responsibilities} provides a compact comparison between baseline CBMC and the
+proposed approach. Its purpose is to bridge the baseline architecture in Section~2 and the
+methodology developed in the rest of this section.
 
-\begin{table}[t]
+\begin{table}[H]
   \centering
   \small
-  \begin{tabularx}{\linewidth}{@{}lX@{}}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
     \toprule
-    Component & Responsibility \\
+    Aspect & Baseline CBMC & Proposed Approach \\
     \midrule
-    \texttt{goto-cc} & Build the GOTO model from the selected translation units and, when
-    interleaving flags are present, invoke \texttt{interleaving-analysis} on the completed
-    model. \\
-    \texttt{goto-symex} & Execute the GOTO model symbolically, call the OS API hook for
-    recognized services, and translate generic next-step results into stack and state
-    transitions. \\
-    \texttt{os-api} & Parse OSEK metadata, classify recognized API calls, maintain scheduler
-    state, and return API-independent actions such as ``start task now'' or ``pop task and
-    resume caller''. \\
-    \texttt{interleaving-analysis} & Inspect the GOTO model, identify interleaving functions,
-    compute written globals, and emit a JSON manifest of candidate insertion points. \\
-    \texttt{aib} & Copy the project tree, insert guarded ISR calls and forward declarations,
-    apply \texttt{.aibignore}, and write an effective manifest for the rewritten tree. \\
+    Task execution order & Follows ordinary program flow unless scheduling behaviour is
+    explicitly encoded elsewhere. & Follows task states, the ready queue, and the
+    deterministic scheduler inside the checking model. \\
+    Standardized APIs & Can be treated as ordinary function effects if no OSEK/VDX-specific
+    model is added. & Are interpreted as operations that may change task states, events, the
+    ready queue, and therefore the next running task. \\
+    Interruption-related behaviour & Broad asynchronous modelling can expose many possible
+    interference points in the checking model. & Interruption-related behaviour is introduced
+    only at program points where it can influence the checked execution. \\
+    Unnecessary interleavings & Irrelevant interleavings may remain in the checking model and
+    enlarge the verification problem. & Unnecessary interleavings are reduced before final
+    bounded model checking. \\
+    Expected accuracy outcome & May report a spurious bug or miss scheduler-dependent task
+    execution order. & Aims to represent OSEK/VDX executions more faithfully while keeping
+    CBMC's bounded model checking structure. \\
     \bottomrule
   \end{tabularx}
-  \caption{High-level responsibilities of the improved pipeline.}
+  \caption{Conceptual comparison between baseline CBMC and the proposed checking approach.}
   \label{tab:responsibilities}
 \end{table}
 
-\subsection{OSEK-Aware Symbolic Execution}
+The key point in Table~\ref{tab:responsibilities} is that the proposed approach does not
+replace CBMC with a different verifier. It changes how the checking model is constructed
+before final verification so that the solver is applied to a model that better reflects the
+executions of OSEK/VDX applications.
 
-The OSEK-aware path begins at the command line. The \texttt{cbmc} front-end now accepts
-\texttt{--os-api osek} and \texttt{--osek-oil <file>}. The option parser validates this pair
-early and loads the OIL file once as a configuration sanity check. The runtime dispatcher then
-reloads that configuration when \texttt{goto-symex} is constructed so that symbolic execution
-has access to task metadata during function-call handling.
+\subsection{Taking the OSEK/VDX Scheduler into Account}
 
-The actual hook sits in the symbolic function-call path. Before the usual ``inline this callee
-as ordinary C'' behavior is taken, \texttt{goto-symex} calls an internal helper for recognized
-OS API functions. If the active dispatcher is
-enabled and the callee name matches a recognized OSEK API, the handler does not inline the
-original function body. Instead, it classifies the call, updates scheduler state, and returns a
-compact result object.
+The first methodological step is to represent the behaviour of the OSEK/VDX scheduler inside
+the checking model. In an OSEK/VDX application, the running task is not chosen by an
+unstructured interleaving of threads. It is chosen by a deterministic scheduler that depends
+on task states, priorities, events, and the ready queue. If the checking model ignores those
+elements, the resulting task execution order no longer matches the execution order of the
+application.
+
+Consider a small synthetic example used throughout this section. \textit{TaskControl} has
+higher priority and waits for new sensor data. \textit{TaskLogger} can run while no sensor
+data are available. \textit{ISR\_Sensor} writes the shared state that says the sensor data are
+ready and also signals the event expected by \textit{TaskControl}. This example is small, but
+it contains the essential OSEK/VDX behaviours: waiting, readiness, dispatch, and an
+interruption that changes which task may run next.
+
+The example shows why standardized application interfaces (APIs) cannot be treated as
+ordinary C-function effects. When \textit{TaskControl} waits for data, the important effect is
+not merely that a call returns or stores a local value. The important effect is that the task
+may move from the running state to the waiting state. Once that happens, \textit{TaskLogger}
+may become the next runnable task. Later, when \textit{ISR\_Sensor} signals the event and
+makes \textit{TaskControl} ready again, the deterministic scheduler may dispatch
+\textit{TaskControl} instead of leaving \textit{TaskLogger} in control. The checking model
+must therefore represent state changes in the scheduler domain, not just ordinary
+control-flow changes in the current function.
+
+Figure~\ref{fig:osek-sequence} summarizes this idea as a cycle. The figure is not meant to
+show source-code structure. It shows the conceptual path by which a standardized API affects
+task states and events, changes the ready queue, influences the deterministic scheduler, and
+thereby determines the next task execution step in the checking model.
 
 \begin{figure}[t]
   \centering
   \input{figures/osek-dispatch-sequence}
-  \caption{Runtime interaction between \texttt{goto-symex}, the dispatcher, the OSEK backend,
-  and symbolic scheduler state.}
+  \caption{Conceptual cycle from standardized application interfaces (APIs) to task states,
+  the ready queue, the deterministic scheduler, and the next task execution step.}
   \label{fig:osek-sequence}
 \end{figure}
 
-The key runtime data structures are:
+Read from left to right, the cycle says the following. A standardized API can change task
+states or events. Those changes alter the contents of the ready queue. The ready queue is then
+used by the deterministic scheduler to determine task execution order. That task execution
+order determines the next step represented in the checking model, which in turn leads to the
+next API call or state update. Baseline CBMC follows ordinary control-flow effects, whereas
+the proposed approach must also update task state and scheduler state in the checking model.
 
-\begin{itemize}[leftmargin=1.5em]
-  \item \texttt{scheduler\_statet}, which stores the current task, suspended-task stack
-  information, ready queue, and task event state;
-  \item \texttt{task\_infot}, which captures task identity, symbolic function identifier,
-  priority, preemption policy, extended-task flag, and event mask; and
-  \item \texttt{api\_call\_resultt}, whose \texttt{next\_step\_kindt} field tells
-  \texttt{goto-symex} whether to continue the current frame, start a ready task, terminate the
-  active task, or terminate and immediately start another one.
-\end{itemize}
+In the running example, this means that the verification path should not simply continue with
+the syntactically next statement inside \textit{TaskControl} after the wait. Instead, the
+checking model should represent that \textit{TaskControl} is blocked, that
+\textit{TaskLogger} may run while the higher-priority task is waiting, and that
+\textit{ISR\_Sensor} can make \textit{TaskControl} ready again. Only then does the task
+execution order in the verification result reflect the execution order defined by the
+OSEK/VDX scheduler.
 
-The current OSEK backend recognizes the following services:
-\texttt{ActivateTask}, \texttt{TerminateTask}, \texttt{ChainTask}, \texttt{Schedule},
-\texttt{SetEvent}, \texttt{ClearEvent}, \texttt{GetEvent}, and \texttt{WaitEvent}. OIL
-parsing covers the task properties needed by those services: \texttt{TASK},
-\texttt{PRIORITY}, \texttt{SCHEDULE}, \texttt{AUTOSTART}, \texttt{TYPE}, and
-\texttt{EVENT\_MASK}. The \texttt{AUTOSTART} value is parsed and stored, but the current
-runtime still expects explicit activation from the harness or startup logic rather than
-auto-spawning tasks directly from OIL.
+\subsection{Reducing Unnecessary Interleavings}
 
-Two details are worth calling out because they shape the interface between the scheduler model
-and symbolic execution:
+Taking the scheduler into account is not sufficient by itself. The second methodological step
+is to reduce unnecessary interleavings in the checking model. Existing checking approaches for
+concurrent software often consider a very broad set of asynchronous behaviours. In the present
+setting, that can enlarge the verification problem and can also produce a spurious bug when
+interruption-related behaviour is introduced at program points that are irrelevant to the
+property being checked.
 
-\begin{enumerate}[leftmargin=1.5em]
-  \item \textbf{Generic next-step actions.} The OSEK layer does not directly mutate the
-  symbolic call stack. It returns generic actions such as
-  \texttt{START\_TASK\_NOW} or \texttt{POP\_TASK\_AND\_START\_TASK}, and
-  \texttt{goto-symex} realizes those actions by reusing its existing frame and transition
-  machinery.
-  \item \textbf{Memory writeback for \texttt{GetEvent}.} The OSEK layer may need to write a
-  scheduler-derived value back into program memory. Instead of embedding OSEK-specific pointer
-  stores in the executor, the dispatcher returns an optional \texttt{memory\_writebackt}
-  containing the symbolic left-hand side and right-hand side for the assignment.
-\end{enumerate}
+The key question is therefore not ``where could an interruption happen in general?'' The key
+question is ``where can interruption-written state affect the main verification path?'' This is
+a narrower and more useful question because it focuses the checking model on observable
+effects. If interruption-written state cannot influence a later branch, task release, or
+property-relevant computation, then representing interruption-related behaviour at that point
+adds interleavings without improving accuracy.
 
-This design keeps the symbolic executor in charge of frames and SSA while allowing the OS API
-module to own scheduler policy.
+The running example makes this distinction concrete. Suppose \textit{ISR\_Sensor} only changes
+the sensor-ready state and the event awaited by \textit{TaskControl}. Then interruption-related
+behaviour matters near the points where the application tests whether data are ready, waits
+for the event, or resumes after that event becomes available. By contrast, if
+\textit{TaskLogger} is executing a local formatting or checksum computation that neither reads
+the sensor-ready state nor influences a later decision that depends on it, adding
+interruption-related behaviour there expands the checking model without changing the execution
+that matters for the property.
 
-\subsection{Interleaving Analysis}
+This distinction is important for both accuracy and cost. If irrelevant program points are
+included, the checking model may admit behaviours that the application cannot actually observe
+through the scheduler-relevant state. Those extra behaviours consume time and memory, and they
+can create counterexamples whose root cause is the modelling choice rather than the target
+application. Reducing unnecessary interleavings therefore serves two purposes at once: it
+keeps the checking model smaller, and it makes the verification result more faithful.
 
-The second extension seam is the analysis-side half of the interrupt pipeline. Rather than
-rewriting source code immediately, \texttt{interleaving-analysis} runs on an already-built
-GOTO model and emits metadata for a later rewriter. The main options are
-\texttt{--interleaving-project-root}, \texttt{--interleaving-source-files}, and
-\texttt{--interleaving-output}. In \texttt{goto-cc}, these are attached after the effective
-translation units have already been determined, which means the analysis does not enlarge the
-build. It only inspects what is already present in the GOTO model.
+\subsection{Building the Final Checking Model}
 
-The analysis proceeds in four stages.
+The proposed approach combines the previous two ideas by separating two decisions that are
+often mixed together. The first decision is analytical: identify the program points at which
+interruption-related behaviour can influence the checked execution. The second decision is
+constructive: build a new checking model that introduces interruption-related behaviour only
+at those selected points.
 
-\paragraph{1. Resolve project scope.}
-The configuration normalizes project paths, preserves the effective translation units used by
-\texttt{goto-cc}, and converts report paths back to project-relative form when possible.
+This separation matters because the two decisions answer different questions. The analytical
+step asks where interruption-written state can affect task execution order or a
+property-relevant computation. The constructive step asks how to represent those effects in
+the final checking model. Keeping those steps separate avoids a monolithic transformation in
+which relevance and model rebuilding are entangled. As a result, the final checking model can
+remain narrower than a blanket insertion of interruption-related behaviour at many unrelated
+points.
 
-\paragraph{2. Discover target interleaving functions.}
-Only functions whose defining source file appears in
-\texttt{interleaving\_source\_files} are treated as ISR/interleaving functions. If a listed
-source file was not compiled into the current GOTO model, no function from it can be analyzed.
-
-\paragraph{3. Compute written globals.}
-For each target function, the implementation builds an instruction-level read/write footprint
-using \texttt{rw\_set\_loct}. The current filter keeps only writes to static-lifetime global
-symbols and excludes locals, type symbols, auxiliary symbols, and code symbols.
-
-\paragraph{4. Record candidate source lines.}
-The rest of the program is scanned instruction by instruction. For each instruction,
-\texttt{interleaving-analysis} checks whether it reads or writes a global that a target
-interleaving function may write. If so, and if the source location is within the configured
-project root and on a \texttt{.c} file when project scoping is enabled, the corresponding file
-and line number are recorded for that interleaving function.
-
-The result is a JSON manifest rather than a rewritten source tree. The manifest is the contract
-between analysis and rewriting.
-
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabularx}{\linewidth}{@{}lX@{}}
-    \toprule
-    Manifest field & Meaning \\
-    \midrule
-    \texttt{project.project\_root} & Root directory used for path scoping and
-    report-path relativization. \\
-    \texttt{project.interleaving\_source\_files} & Source files whose functions are treated
-    as interleaving functions. \\
-    \texttt{project.translation\_units} & Effective build inputs associated with the GOTO
-    model that produced the manifest. \\
-    \texttt{interleaving[*].name} & Interleaving function identifier taken from the GOTO
-    model. \\
-    \texttt{interleaving[*].write\_global\_var} & Global symbols that the interleaving
-    function may write. \\
-    \texttt{interleaving[*].line\_added\_block\_with\_file} & Project-relative file and line
-    pairs where guarded calls may be inserted. \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Schema of the JSON contract shared by \texttt{interleaving-analysis} and
-  \texttt{aib}.}
-  \label{tab:manifest-schema}
-\end{table}
-
-This split is important because it keeps static reasoning and source rewriting independent.
-Changes to the schema, however, must still be coordinated carefully because the manifest writer
-and reader are both hand-written.
-
-\subsection{AIB Materialization}
-
-\texttt{aib} is the source-to-source rewriting half of the pipeline. It accepts four path
-arguments: \texttt{<project\_root> <input\_config.json> <output\_root> <output\_config.json>}.
-The tool validates that the command-line project root matches the one stored in the manifest,
-copies the project tree into a new output root, and applies only the rewrites described by the
-manifest.
-
-The rewriter itself is intentionally simple:
-
-\begin{itemize}[leftmargin=1.5em]
-  \item It parses the manifest's project metadata and the
-  \texttt{line\_added\_block\_with\_file} arrays for each interleaving function.
-  \item It optionally loads \texttt{.aibignore} to remove ignored files from the copied tree
-  and to reject manifests that point into ignored paths.
-  \item It scans source and header files to determine whether a target ISR should be called as
-  \texttt{isr()} or \texttt{isr(0)}.
-  \item It inserts forward declarations near the top of rewritten C files, including
-  \texttt{extern \_Bool nondet\_bool(void);}.
-  \item It emits guarded calls immediately before the listed source lines, by guarding an ISR
-  call with \texttt{nondet\_bool()} and passing a zero argument when the target signature
-  requires one.
-  \item It writes an effective output manifest whose \texttt{project\_root} now points to the
-  copied output tree and whose translation units reflect any \texttt{.aibignore} filtering.
-\end{itemize}
-
-The key design point is that \texttt{aib} does not recalculate the candidate set. It trusts the
-manifest and limits itself to text rewriting and project-copy bookkeeping.
-
-\subsection{End-to-End Improved Flow}
-
-Putting the pieces together yields the full flow in \Cref{fig:improved-pipeline}.
+In the running example, the analytical step would keep locations near the event wait, the
+sensor-ready decision, or the resumption of \textit{TaskControl}, because those locations can
+observe the state written by \textit{ISR\_Sensor}. It would exclude unrelated local
+computations inside \textit{TaskLogger} that cannot observe that state. The constructive step
+would then build a new checking model in which interruption-related behaviour is represented
+only near the retained locations. In that way, the final checking model preserves the main
+advantage claimed in Sections~1 and~2: it reduces unnecessary interleavings without ignoring
+the OSEK/VDX scheduler.
 
 \begin{figure}[t]
   \centering
   \input{figures/improved-pipeline-flow}
-  \caption{Improved end-to-end pipeline with a static manifest boundary between analysis and
-  rewriting.}
+  \caption{Conceptual two-stage construction of the final checking model.}
   \label{fig:improved-pipeline}
 \end{figure}
 
-For a configured project, the improved path is:
-
-\begin{enumerate}[leftmargin=1.5em]
-  \item build a GOTO model with \texttt{goto-cc};
-  \item during that build, run \texttt{interleaving-analysis} on the completed model;
-  \item emit a project-scoped JSON manifest;
-  \item invoke \texttt{aib} to copy and rewrite the source tree;
-  \item rebuild the rewritten translation units; and
-  \item verify the rebuilt program with \texttt{cbmc}, optionally alongside
-  \texttt{--os-api osek} and \texttt{--osek-oil <file>}.
-\end{enumerate}
-
-This is deliberately different from a monolithic interrupt transform. Scheduler semantics stay
-inside \texttt{goto-symex}, while interference placement is computed statically and only then
-materialized as guarded source edits.
+Figure~\ref{fig:improved-pipeline} illustrates this two-stage construction. From left to
+right, the figure starts with the original source program and configuration data, constructs
+an initial checking model, analyzes where interruption-related behaviour matters, records the
+selected program locations, rebuilds a restricted checking model, and finally applies bounded
+model checking to that narrower model. The figure is therefore a conceptual flow of model
+construction, not a listing of implementation modules.
