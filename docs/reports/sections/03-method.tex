@@ -7,29 +7,32 @@ The method builds directly on the baseline CBMC architecture described in \Cref{
 and summarized in \Cref{fig:baseline-cbmc}. The goal is not to replace bounded model
 checking, symbolic execution, or the solver stage. The goal is to construct a more accurate
 checking model for OSEK/VDX applications before final verification. For ordinary C programs,
-the baseline CBMC flow is often sufficient. For OSEK/VDX applications, however, the
-checking model must also reflect how the deterministic scheduler, the ready queue, and the
-standardized application interfaces (APIs) determine task execution order.
+the baseline CBMC flow is often sufficient. For OSEK/VDX applications, however, the checking
+model must also reflect how the deterministic scheduler, the ready queue, the task states,
+and the standardized application interfaces (APIs) determine task execution order.
 
 This section explains the proposed approach in four parts. First, it explains how the
-checking model takes the OSEK/VDX scheduler and APIs into account. Second, it explains how
-the checking model avoids a large number of unnecessary interleavings. Third, it explains
-how those two ideas are combined to construct the final checking model. 
+checking model takes the OSEK/VDX scheduler into account. Second, it explains how the method
+reduces unnecessary interleavings. Third, it explains how those two ideas are combined to
+construct the final checking model. Fourth, it gives a short implementation note that maps
+the methodology to the current realization in this branch.
 
-Table~\ref{tab:responsibilities} provides a compact comparison between baseline CBMC and the
-proposed approach. Its purpose is to bridge the baseline architecture in Section~2 and the
-methodology developed in the rest of this section.
+Table~\ref{tab:method-comparison} provides the conceptual bridge from the baseline CBMC flow
+in Section~2 to the methodology developed in the rest of this section. The comparison focuses
+on the specific aspects that matter for OSEK/VDX verification: task execution order,
+standardized APIs, interruption-related behaviour, unnecessary interleavings, and the
+expected effect on verification accuracy.
 
-\begin{table}[H]
+\begin{table}[t]
   \centering
   \small
   \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
     \toprule
     Aspect & Baseline CBMC & Proposed Approach \\
     \midrule
-    Task execution order & Follows ordinary program flow unless scheduling behaviour is
-    explicitly encoded elsewhere. & Follows task states, the ready queue, and the
-    deterministic scheduler inside the checking model. \\
+    Task execution order & Follows ordinary program flow unless scheduler behaviour is
+    encoded elsewhere. & Follows task states, the ready queue, and the deterministic
+    scheduler inside the checking model. \\
     Standardized APIs & Can be treated as ordinary function effects if no OSEK/VDX-specific
     model is added. & Are interpreted as operations that may change task states, events, the
     ready queue, and therefore the next running task. \\
@@ -44,100 +47,217 @@ methodology developed in the rest of this section.
     CBMC's bounded model checking structure. \\
     \bottomrule
   \end{tabularx}
-  \caption{Conceptual comparison between baseline CBMC and the proposed checking approach.}
-  \label{tab:responsibilities}
+  \caption{Conceptual comparison between baseline CBMC and the proposed approach.}
+  \label{tab:method-comparison}
 \end{table}
 
-The key point in Table~\ref{tab:responsibilities} is that the proposed approach does not
+The key point in Table~\ref{tab:method-comparison} is that the proposed approach does not
 replace CBMC with a different verifier. It changes how the checking model is constructed
 before final verification so that the solver is applied to a model that better reflects the
 executions of OSEK/VDX applications.
 
+To keep the discussion concrete, the remainder of this section uses one synthetic running
+example. \textit{TaskControl} is a higher-priority task that waits for new sensor data.
+\textit{TaskLogger} is a lower-priority task that can run while \textit{TaskControl} is
+waiting. \textit{ISR\_Sensor} writes the shared sensor state and signals the event awaited by
+\textit{TaskControl}. The example is intentionally small, but it is large enough to show the
+three central decisions in the methodology: how task execution order is determined, how
+unnecessary interleavings are reduced, and how the final checking model is built.
+
 \subsection{Taking the OSEK/VDX Scheduler into Account}
 
 The first methodological step is to represent the behaviour of the OSEK/VDX scheduler inside
-the checking model. In an OSEK/VDX application, the running task is not chosen by an
+the checking model. In an OSEK/VDX application, the next running task is not chosen by an
 unstructured interleaving of threads. It is chosen by a deterministic scheduler that depends
 on task states, priorities, events, and the ready queue. If the checking model ignores those
 elements, the resulting task execution order no longer matches the execution order of the
 application.
 
-Consider a small synthetic example used throughout this section. \textit{TaskControl} has
-higher priority and waits for new sensor data. \textit{TaskLogger} can run while no sensor
-data are available. \textit{ISR\_Sensor} writes the shared state that says the sensor data are
-ready and also signals the event expected by \textit{TaskControl}. This example is small, but
-it contains the essential OSEK/VDX behaviours: waiting, readiness, dispatch, and an
-interruption that changes which task may run next.
+Listing~\ref{lst:running-example} shows the running example used throughout this section.
+The example deliberately combines waiting, event signaling, shared-state update, and an
+unrelated local computation so that each later methodological step can be tied back to the
+same program.
 
-The example shows why standardized application interfaces (APIs) cannot be treated as
-ordinary C-function effects. When \textit{TaskControl} waits for data, the important effect is
-not merely that a call returns or stores a local value. The important effect is that the task
-may move from the running state to the waiting state. Once that happens, \textit{TaskLogger}
-may become the next runnable task. Later, when \textit{ISR\_Sensor} signals the event and
-makes \textit{TaskControl} ready again, the deterministic scheduler may dispatch
-\textit{TaskControl} instead of leaving \textit{TaskLogger} in control. The checking model
-must therefore represent state changes in the scheduler domain, not just ordinary
-control-flow changes in the current function.
+\begin{lstlisting}[language=C,caption={Synthetic running example used throughout Section~3.},label={lst:running-example}]
+volatile int sensor_ready = 0;
+volatile int sensor_value = 0;
 
-Figure~\ref{fig:osek-sequence} summarizes this idea as a cycle. The figure is not meant to
-show source-code structure. It shows the conceptual path by which a standardized API affects
-task states and events, changes the ready queue, influences the deterministic scheduler, and
-thereby determines the next task execution step in the checking model.
+TASK(TaskControl)
+{
+  EventMaskType observed = 0;
+  WaitEvent(EVENT_SENSOR_READY);
+  GetEvent(TASK_ID_Control, &observed);
+  if ((observed & EVENT_SENSOR_READY) != 0u && sensor_ready) {
+    int sample = sensor_value;
+    assert(sample >= 0);
+  }
+  ClearEvent(EVENT_SENSOR_READY);
+  TerminateTask();
+}
+
+TASK(TaskLogger)
+{
+  int checksum = 0;
+  checksum = checksum + 1;
+  checksum = checksum * 2;
+  TerminateTask();
+}
+
+ISR(ISR_Sensor)
+{
+  sensor_value = 7;
+  sensor_ready = 1;
+  SetEvent(TASK_ID_Control, EVENT_SENSOR_READY);
+}
+\end{lstlisting}
+
+Table~\ref{tab:running-config} summarizes the intended execution context for this example.
+The details are simple on purpose: \textit{TaskControl} begins as the running task,
+\textit{TaskLogger} is already ready at a lower priority, and the interruption can make the
+higher-priority task ready again by signaling the awaited event.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.22\linewidth}X@{}}
+    \toprule
+    Entity & Priority / type & Initial status and role \\
+    \midrule
+    \textit{TaskControl} & Higher-priority extended task & Running at the beginning of the
+    path; waits for \texttt{EVENT\_SENSOR\_READY}; later reads the event state and the shared
+    sensor value. \\
+    \textit{TaskLogger} & Lower-priority task & Ready while \textit{TaskControl} is running;
+    may execute while \textit{TaskControl} is waiting; performs only local computation in
+    this example. \\
+    \textit{ISR\_Sensor} & Interruption & Writes \texttt{sensor\_ready} and
+    \texttt{sensor\_value}, then signals the event awaited by \textit{TaskControl}. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Configuration summary for the running example.}
+  \label{tab:running-config}
+\end{table}
+
+The central point is that the standardized APIs in
+Listing~\ref{lst:running-example} cannot be treated as ordinary function effects. When
+\textit{TaskControl} executes \texttt{WaitEvent}, the important effect is not simply that a
+call occurs. The important effect is that the task may move from the running state to the
+waiting state. Once that happens, \textit{TaskLogger} may become the next runnable task.
+Later, when \textit{ISR\_Sensor} executes \texttt{SetEvent}, the event state changes and
+\textit{TaskControl} may become ready again. Because \textit{TaskControl} has higher
+priority, the deterministic scheduler may then dispatch it ahead of \textit{TaskLogger}.
+The checking model must therefore represent state changes in the scheduler domain, not merely
+ordinary control-flow changes in the current C function.
+
+Table~\ref{tab:running-trace} is the output of this first methodological step. It shows how
+the same source program leads to different verification states once the scheduler, the ready
+queue, and the task states are represented explicitly in the checking model.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.07\linewidth}>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Step & Current context & Task states & Ready queue & Event state & Next dispatch decision \\
+    \midrule
+    0 & Start of path & \textit{TaskControl}: running; \textit{TaskLogger}: ready & \textit{TaskLogger} & Clear & Keep \textit{TaskControl} running \\
+    1 & \textit{TaskControl} executes \texttt{WaitEvent} while the event is clear & \textit{TaskControl}: waiting; \textit{TaskLogger}: ready & \textit{TaskLogger} & Clear & Switch to \textit{TaskLogger} \\
+    2 & \textit{TaskLogger} executes local computation & \textit{TaskControl}: waiting; \textit{TaskLogger}: running & Empty & Clear & Keep \textit{TaskLogger} running unless interrupted \\
+    3 & \textit{ISR\_Sensor} writes shared state and signals the event & \textit{TaskControl}: ready; \textit{TaskLogger}: ready or preemptable & \textit{TaskControl}, \textit{TaskLogger} & Set & Preempt with \textit{TaskControl} \\
+    4 & \textit{TaskControl} resumes, observes the event, and reads shared data & \textit{TaskControl}: running; \textit{TaskLogger}: ready & \textit{TaskLogger} & Set, then cleared & Keep \textit{TaskControl} running \\
+    \bottomrule
+  \end{tabularx}
+  \caption{State evolution for the running example when the checking model tracks task states,
+  the ready queue, and the event state explicitly.}
+  \label{tab:running-trace}
+\end{table}
+
+Figure~\ref{fig:osek-sequence} summarizes the same causal chain at a higher level. The
+figure is not a control-flow graph. It is a compact view of how a standardized API changes
+task states and events, how those changes reach the ready queue, and how the deterministic
+scheduler turns that information into the next task execution step in the checking model.
 
 \begin{figure}[t]
   \centering
   \input{figures/osek-dispatch-sequence}
   \caption{Conceptual cycle from standardized application interfaces (APIs) to task states,
-  the ready queue, the deterministic scheduler, and the next task execution step.}
+  the ready queue, the deterministic scheduler, and the next checking step.}
   \label{fig:osek-sequence}
 \end{figure}
 
-Read from left to right, the cycle says the following. A standardized API can change task
-states or events. Those changes alter the contents of the ready queue. The ready queue is then
-used by the deterministic scheduler to determine task execution order. That task execution
-order determines the next step represented in the checking model, which in turn leads to the
-next API call or state update. Baseline CBMC follows ordinary control-flow effects, whereas
-the proposed approach must also update task state and scheduler state in the checking model.
+Read clockwise, the cycle says the following. A standardized API such as \texttt{WaitEvent},
+\texttt{GetEvent}, or \texttt{SetEvent} changes the scheduler-visible state of the
+application. Those changes update the task states and the event information associated with
+the affected tasks. The resulting state determines the contents of the ready queue. The ready
+queue is then interpreted by the deterministic scheduler to determine task execution order.
+That task execution order determines the next checking step, which may in turn lead to
+another standardized API or another scheduler-relevant state update. Baseline CBMC follows
+ordinary control-flow effects, whereas the proposed approach must also update task state and
+scheduler state in the checking model.
 
 In the running example, this means that the verification path should not simply continue with
-the syntactically next statement inside \textit{TaskControl} after the wait. Instead, the
-checking model should represent that \textit{TaskControl} is blocked, that
-\textit{TaskLogger} may run while the higher-priority task is waiting, and that
-\textit{ISR\_Sensor} can make \textit{TaskControl} ready again. Only then does the task
-execution order in the verification result reflect the execution order defined by the
-OSEK/VDX scheduler.
+the syntactically next statement after \texttt{WaitEvent}. Instead, the checking model should
+represent that \textit{TaskControl} is blocked, that \textit{TaskLogger} may run while the
+higher-priority task is waiting, and that \textit{ISR\_Sensor} can make
+\textit{TaskControl} ready again. Only then does the task execution order in the
+verification result reflect the execution order defined by the OSEK/VDX scheduler.
 
 \subsection{Reducing Unnecessary Interleavings}
 
 Taking the scheduler into account is not sufficient by itself. The second methodological step
 is to reduce unnecessary interleavings in the checking model. Existing checking approaches for
-concurrent software often consider a very broad set of asynchronous behaviours. In the present
-setting, that can enlarge the verification problem and can also produce a spurious bug when
-interruption-related behaviour is introduced at program points that are irrelevant to the
-property being checked.
+concurrent software often consider a very broad set of asynchronous behaviours. In the
+present setting, that can enlarge the verification problem and can also produce a spurious
+bug when interruption-related behaviour is introduced at program points that are irrelevant to
+the property being checked.
 
 The key question is therefore not ``where could an interruption happen in general?'' The key
-question is ``where can interruption-written state affect the main verification path?'' This is
-a narrower and more useful question because it focuses the checking model on observable
-effects. If interruption-written state cannot influence a later branch, task release, or
-property-relevant computation, then representing interruption-related behaviour at that point
-adds interleavings without improving accuracy.
+question is ``where can interruption-written state affect the checked execution?'' This is a
+narrower and more useful question because it focuses the checking model on observable effects.
+If interruption-written state cannot influence a later branch, a task-state transition, or a
+property-relevant shared-data read, then representing interruption-related behaviour at that
+point adds interleavings without improving accuracy.
 
-The running example makes this distinction concrete. Suppose \textit{ISR\_Sensor} only changes
-the sensor-ready state and the event awaited by \textit{TaskControl}. Then interruption-related
-behaviour matters near the points where the application tests whether data are ready, waits
-for the event, or resumes after that event becomes available. By contrast, if
-\textit{TaskLogger} is executing a local formatting or checksum computation that neither reads
-the sensor-ready state nor influences a later decision that depends on it, adding
-interruption-related behaviour there expands the checking model without changing the execution
-that matters for the property.
+The running example makes this distinction concrete. \textit{ISR\_Sensor} writes the event
+state observed by \textit{TaskControl} and the shared variables \texttt{sensor\_ready} and
+\texttt{sensor\_value}. Those writes matter near the points where \textit{TaskControl}
+decides whether it should block, where it observes the signaled event, where it branches on
+that information, and where it reads the shared sensor value. By contrast, the two checksum
+updates inside \textit{TaskLogger} are purely local in this example. They do not observe the
+event state, they do not change the ready queue, and they do not influence the later branch
+or shared-data read that matter for the checked path.
 
-This distinction is important for both accuracy and cost. If irrelevant program points are
-included, the checking model may admit behaviours that the application cannot actually observe
-through the scheduler-relevant state. Those extra behaviours consume time and memory, and they
-can create counterexamples whose root cause is the modelling choice rather than the target
-application. Reducing unnecessary interleavings therefore serves two purposes at once: it
-keeps the checking model smaller, and it makes the verification result more faithful.
+Table~\ref{tab:selected-points} shows the output of this second methodological step. The
+table is intentionally human-readable. It does not list raw artifact fields. It records only
+the conceptual question answered by the analysis: which program points must retain
+interruption-related behaviour because they can affect the checked execution?
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.33\linewidth}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}X@{}}
+    \toprule
+    Program point in the running example & Depends on interruption-written state? & Keep / discard & Reason \\
+    \midrule
+    Immediately before \texttt{WaitEvent(EVENT\_SENSOR\_READY)} & Yes & Keep & The interruption can determine whether the task remains running or moves to the waiting state. \\
+    Immediately before \texttt{GetEvent(TASK\_ID\_Control, \&observed)} & Yes & Keep & The returned event mask depends on whether the interruption has already signaled the awaited event. \\
+    Immediately before the branch that checks \texttt{observed} and \texttt{sensor\_ready} & Yes & Keep & The branch condition depends directly on state written by the interruption. \\
+    Immediately before the read of \texttt{sensor\_value} & Yes & Keep & The shared value read by \textit{TaskControl} is produced by the interruption. \\
+    Immediately before \texttt{checksum = checksum + 1} in \textit{TaskLogger} & No & Discard & The computation is local to \textit{TaskLogger} and cannot observe interruption-written state in this example. \\
+    Immediately before \texttt{checksum = checksum * 2} in \textit{TaskLogger} & No & Discard & This step is also local and does not affect task release, event state, or the later shared-data read. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Conceptual selection result for interruption-relevant program points in the
+  running example.}
+  \label{tab:selected-points}
+\end{table}
+
+The point of Table~\ref{tab:selected-points} is not to predict the exact moment of every
+interruption. The point is to keep only those program points where interruption-written state
+can change the path explored by bounded model checking. Baseline CBMC with broad
+asynchronous modelling may still explore both the kept and the discarded points. The
+proposed approach keeps the first group and removes the second group from the final checking
+model, which reduces unnecessary interleavings without discarding the scheduler-relevant
+behaviour.
 
 \subsection{Building the Final Checking Model}
 
@@ -155,25 +275,127 @@ which relevance and model rebuilding are entangled. As a result, the final check
 remain narrower than a blanket insertion of interruption-related behaviour at many unrelated
 points.
 
-In the running example, the analytical step would keep locations near the event wait, the
-sensor-ready decision, or the resumption of \textit{TaskControl}, because those locations can
-observe the state written by \textit{ISR\_Sensor}. It would exclude unrelated local
-computations inside \textit{TaskLogger} that cannot observe that state. The constructive step
-would then build a new checking model in which interruption-related behaviour is represented
-only near the retained locations. In that way, the final checking model preserves the main
-advantage claimed in Sections~1 and~2: it reduces unnecessary interleavings without ignoring
-the OSEK/VDX scheduler.
+For the running example, the analytical result can be summarized in the compact form shown in
+Listing~\ref{lst:selected-summary}. This summary is the bridge between the two stages: it is
+already specific enough to guide reconstruction, but it is still expressed in terms of the
+checked path rather than in low-level artifact details.
+
+\begin{lstlisting}[caption={Human-readable summary of the selected program points for the running example.},label={lst:selected-summary}]
+Selected points
+1. Before WaitEvent(EVENT_SENSOR_READY)
+2. Before GetEvent(TASK_ID_Control, &observed)
+3. Before the branch that checks observed and sensor_ready
+4. Before the read of sensor_value
+
+Excluded points
+- The local checksum updates inside TaskLogger
+\end{lstlisting}
+
+Figure~\ref{fig:improved-pipeline} shows how the final checking model is then built. The
+upper lane shows the baseline CBMC path. The lower lane shows the additional construction
+stages used by the proposed approach before final bounded model checking.
 
 \begin{figure}[t]
   \centering
   \input{figures/improved-pipeline-flow}
-  \caption{Conceptual two-stage construction of the final checking model.}
+  \caption{Baseline and improved checking-model construction. Numbered blocks indicate stages
+  added by the proposed approach.}
   \label{fig:improved-pipeline}
 \end{figure}
 
-Figure~\ref{fig:improved-pipeline} illustrates this two-stage construction. From left to
-right, the figure starts with the original source program and configuration data, constructs
-an initial checking model, analyzes where interruption-related behaviour matters, records the
-selected program locations, rebuilds a restricted checking model, and finally applies bounded
-model checking to that narrower model. The figure is therefore a conceptual flow of model
-construction, not a listing of implementation modules.
+Conceptually, the upper lane starts from the original program and proceeds directly to model
+construction, symbolic execution, and bounded model checking. The lower lane inserts four
+additional responsibilities. The first added block builds a project-scoped view of the
+program rather than a single straight-line execution view. The second added block identifies
+where interruption-written state can affect the checked path. The third added block rebuilds
+a restricted source-level checking model that retains interruption-related behaviour only at
+those selected points. The fourth added block applies scheduler-consistent symbolic execution
+so that standardized APIs change task states, the ready queue, and task execution order in a
+way that matches OSEK/VDX semantics. This is the second major difference from baseline CBMC:
+the proposed approach changes both where interruption-related behaviour appears and how the
+resulting task execution order is interpreted during verification.
+
+Listing~\ref{lst:restricted-checking-model} shows the output of the constructive step for the
+running example. The guarded calls are part of the checking model, not part of the original
+application program. They are placed only at the selected points. No such call is inserted
+inside the local checksum updates of \textit{TaskLogger}, because those updates were excluded
+as unnecessary interleavings in Table~\ref{tab:selected-points}.
+
+\begin{lstlisting}[language=C,caption={Illustrative restricted checking model for the running example.},label={lst:restricted-checking-model}]
+TASK(TaskControl)
+{
+  EventMaskType observed = 0;
+  if (nondet_bool()) ISR_Sensor(0);
+  WaitEvent(EVENT_SENSOR_READY);
+  if (nondet_bool()) ISR_Sensor(0);
+  GetEvent(TASK_ID_Control, &observed);
+  if (nondet_bool()) ISR_Sensor(0);
+  if ((observed & EVENT_SENSOR_READY) != 0u && sensor_ready) {
+    if (nondet_bool()) ISR_Sensor(0);
+    int sample = sensor_value;
+    assert(sample >= 0);
+  }
+  ClearEvent(EVENT_SENSOR_READY);
+  TerminateTask();
+}
+
+TASK(TaskLogger)
+{
+  int checksum = 0;
+  checksum = checksum + 1;
+  checksum = checksum * 2;
+  TerminateTask();
+}
+\end{lstlisting}
+
+The methodological role of Listing~\ref{lst:restricted-checking-model} is straightforward.
+The checking model still admits interruption-related behaviour, but only at points where that
+behaviour can change the execution being checked. This preserves the main advantage claimed
+in Sections~1 and~2: fewer unnecessary interleavings without ignoring the OSEK/VDX
+scheduler or the shared state written by interruptions.
+
+\subsection{Implementation Note}
+
+The current branch realizes this methodology with a small set of focused extensions rather
+than a monolithic verifier rewrite. Table~\ref{tab:implementation-note} summarizes the role
+of each concrete component and the artifact or checking-model effect it produces.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.26\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Component & What it consumes and does & What it produces \\
+    \midrule
+    \shortstack[l]{\texttt{goto-cc}\\extension} & Consumes the source program and configuration data, then
+    builds the initial checking model while preserving the project-level view needed by the
+    later analysis stage. & An initial checking model together with the project-scoped
+    information needed to analyze interruption relevance. \\
+    \shortstack[l]{\texttt{interleaving-}\\\texttt{analysis}} & Consumes the initial checking model and the designated
+    interruption sources, then identifies program points where interruption-written state can
+    affect the checked path. & A selection artifact describing the retained program points for
+    restricted reconstruction. \\
+    \shortstack[l]{\texttt{aib} with\\\texttt{lib-interleaving-block}} & Consumes the original project tree
+    and the selection artifact, then rebuilds a restricted source-level checking model with
+    guarded interruption calls only at the retained points. & A rewritten project view that is
+    narrower than blanket interruption insertion. \\
+    \shortstack[l]{\texttt{goto-symex} with\\\texttt{os-api}} & Consumes the restricted checking model and the
+    OSEK/VDX configuration, then realizes the effects of standardized APIs on task states,
+    events, the ready queue, and dispatch decisions during symbolic execution. & Scheduler-
+    consistent symbolic states for final bounded model checking. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Concrete realization of the methodology in the current branch.}
+  \label{tab:implementation-note}
+\end{table}
+
+Figure~\ref{fig:improved-pipeline} uses these component boundaries implicitly. The added
+blocks in the lower lane correspond, in order, to the project-scoped model-construction
+extension around \texttt{goto-cc}, the separate \texttt{interleaving-analysis} stage, the
+\texttt{aib} rewriting step built on \texttt{lib-interleaving-block}, and the
+\texttt{goto-symex}/\texttt{os-api} realization of OSEK/VDX API effects during symbolic
+execution.
+
+Exact command-line spellings, manifest-field names, and concrete artifact formats are kept
+out of the methodology body and collected in \Cref{sec:appendix}. That appendix is the right
+place for interface-level details once the theoretical flow in this section is understood.

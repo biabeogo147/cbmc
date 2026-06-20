@@ -1,26 +1,28 @@
 \begin{tikzpicture}[
-  node distance=8mm and 10mm,
+  >=Latex,
+  font=\small,
   box/.style={
     draw,
     rounded corners=2pt,
     align=center,
-    text width=35mm,
-    minimum height=10mm,
+    text width=24mm,
+    minimum height=9mm,
+    inner sep=3pt,
     fill=orange!6
   },
-  arrow/.style={-{Latex[length=2mm]},thick}
+  arrow/.style={->, thick}
 ]
-  \node[box] (api) {Standardized\\application\\interfaces (APIs)};
-  \node[box,right=of api] (state) {Task states\\and events};
-  \node[box,right=of state] (queue) {Ready queue};
-  \node[box,below=of queue] (sched) {Deterministic\\scheduler};
-  \node[box,left=of sched] (order) {Task execution\\order};
-  \node[box,left=of order] (step) {Next verification\\step};
+  \node[box] (api) at (0,2.05) {Standardized\\APIs};
+  \node[box] (state) at (3.25,1.05) {Task states\\and events};
+  \node[box] (queue) at (3.25,-1.05) {Ready\\queue};
+  \node[box] (sched) at (0,-2.05) {Deterministic\\scheduler};
+  \node[box] (order) at (-3.25,-1.05) {Task execution\\order};
+  \node[box] (step) at (-3.25,1.05) {Next checking\\step};
 
   \draw[arrow] (api) -- (state);
   \draw[arrow] (state) -- (queue);
   \draw[arrow] (queue) -- (sched);
   \draw[arrow] (sched) -- (order);
   \draw[arrow] (order) -- (step);
-  \draw[arrow] (step.north) |- ++(0,8mm) -| (api.south);
+  \draw[arrow] (step) -- (api);
 \end{tikzpicture}
