@@ -2,55 +2,40 @@
   >=Latex,
   font=\scriptsize,
   lane/.style={font=\small\bfseries, anchor=east},
-  common/.style={
+  box/.style={
     draw,
     rounded corners=2pt,
     align=center,
-    text width=22mm,
-    minimum height=9mm,
-    inner sep=3pt,
-    fill=gray!10
+    minimum height=10mm,
+    inner sep=3pt
   },
-  stock/.style={
-    draw,
-    rounded corners=2pt,
-    align=center,
-    text width=22mm,
-    minimum height=9mm,
-    inner sep=3pt,
-    fill=blue!6
-  },
-  added/.style={
-    draw,
-    rounded corners=2pt,
-    align=center,
-    text width=22mm,
-    minimum height=9mm,
-    inner sep=3pt,
-    fill=green!10
-  },
+  stock/.style={box, text width=18mm, fill=blue!6},
+  added/.style={box, text width=18mm, fill=green!10},
+  source/.style={box, text width=20mm, fill=gray!10},
+  result/.style={box, text width=18mm, fill=purple!6},
   arrow/.style={->, thick}
 ]
-  \node[common] (src) at (0,0) {Source program\\and OSEK/VDX\\configuration};
+  \node[lane] at (-1.8,1.4) {Baseline};
+  \node[source] (b_src) at (0,1.4) {Source program\\and\\configuration};
+  \node[stock] (b_cc) at (2.55,1.4) {Initial\\model};
+  \node[stock] (b_sym) at (4.95,1.4) {Symbolic\\execution};
+  \node[result] (b_bmc) at (7.35,1.4) {Bounded model\\checking};
 
-  \node[lane] at (-1.9,1.55) {Baseline};
-  \node[stock] (b_cc) at (3.0,1.55) {Initial checking\\model};
-  \node[stock] (b_sym) at (6.2,1.55) {Symbolic\\execution};
-  \node[stock] (b_bmc) at (9.4,1.55) {Bounded model\\checking};
-
-  \node[lane] at (-1.9,-1.55) {Proposed};
-  \node[added] (p_cc) at (2.2,-1.55) {(1) Extended\\\texttt{goto-cc}};
-  \node[added] (p_ia) at (5.0,-1.55) {(2) \texttt{interleaving-}\\\texttt{analysis}};
-  \node[added] (p_aib) at (7.8,-1.55) {(3) \texttt{aib} / restricted\\checking model};
-  \node[added] (p_sym) at (10.6,-1.55) {(4) \texttt{goto-symex}\\+ \texttt{os-api}};
-
-  \draw[arrow] (src.east) -- (b_cc.west);
+  \draw[arrow] (b_src) -- (b_cc);
   \draw[arrow] (b_cc) -- (b_sym);
   \draw[arrow] (b_sym) -- (b_bmc);
 
-  \draw[arrow] (src.east) |- (p_cc.west);
+  \node[lane] at (-1.8,-1.55) {Proposed};
+  \node[source] (p_src) at (0,-1.55) {Source program\\and\\configuration};
+  \node[added] (p_cc) at (2.3,-1.55) {(1) Extended\\\texttt{goto-cc}};
+  \node[added] (p_ia) at (4.6,-1.55) {(2) \texttt{interleaving}\\analysis};
+  \node[added] (p_aib) at (6.9,-1.55) {(3) \texttt{aib}\\restricted\\model};
+  \node[added] (p_sym) at (9.2,-1.55) {(4) OSEK-aware\\symex};
+  \node[result] (p_bmc) at (11.5,-1.55) {Bounded model\\checking};
+
+  \draw[arrow] (p_src) -- (p_cc);
   \draw[arrow] (p_cc) -- (p_ia);
   \draw[arrow] (p_ia) -- (p_aib);
   \draw[arrow] (p_aib) -- (p_sym);
-  \draw[arrow] (p_sym.north) |- (b_bmc.south);
+  \draw[arrow] (p_sym) -- (p_bmc);
 \end{tikzpicture}
