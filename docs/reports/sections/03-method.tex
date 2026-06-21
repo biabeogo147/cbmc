@@ -42,11 +42,12 @@ and the proposed approach.
 
 The key point is that the proposed approach does not replace the underlying verification tool. Instead, it changes the checking model given to the final verification step. Rather than checking a model that represents scheduling and ISR occurrences too broadly, the approach constructs a checking model that better reflects the executions of OSEK/VDX applications.
 
-The remainder of this section explains the approach in three steps. \Cref{sec} describes how OSEK/VDX scheduler behaviours and APIs invoked from tasks are represented. \Cref{sec} explains how the manifest is used to reduce unnecessary ISR insertion points. \Cref{sec} explains how the checking model that takes the OSEK/VDX scheduler into account and the manifest-guided insertion step are combined before CBMC performs final verification.
+The remainder of this section explains the approach in three steps. \Cref{sec:method-scheduler} describes how OSEK/VDX scheduler behaviours and APIs invoked from tasks are represented. \Cref{sec:method-interleavings} explains how the manifest is used to reduce unnecessary ISR insertion points. \Cref{sec:method-final-model} explains how the checking model that takes the OSEK/VDX scheduler into account and the manifest-guided insertion step are combined before CBMC performs final verification.
 
 To keep the discussion concrete, the remainder of this section uses one synthetic running example. \textit{Task1} is a higher-priority extended task that waits for an event.\textit{Task2} is a lower-priority task that can run while \textit{Task1} is in waiting state. \textit{ISR1} updates shared state and sets the event awaited by \textit{Task1}. The example is intentionally small, but it is large enough to show the three main decisions in the methodology: how task execution order is determined, how unnecessary interleavings are reduced, and how the final checking model is built.
 
 \subsection{Taking the OSEK/VDX Scheduler into Account}
+\label{sec:method-scheduler}
 
 The first methodological step is to represent the behaviour of the OSEK/VDX scheduler inside the checking model. In an OSEK/VDX application, the next running task is not chosen by an unstructured interleaving of threads. It is chosen by a deterministic scheduler that depends on task states, priorities, events, and the ready queue. If the checking model ignores those elements, the resulting task execution order no longer matches the execution order of the application.
 
@@ -191,11 +192,12 @@ Figure~\ref{fig:osek-sequence} gives a high-level view of how scheduling informa
   \label{fig:osek-sequence}
 \end{figure}
 
-Read clockwise, some OSEK/VDX APIs change task states or event state. For example, \texttt{WaitEvent} may move an extended task from running state to waiting state when the awaited event is not set, while \texttt{SetEvent} may make a waiting task ready again by setting the awaited event. Other APIs, such as \texttt{GetEvent}, read event information that is already stored in the checking model. After each relevant API action, the checking model updates the task states, the event state, and the ready queue. The deterministic scheduler then uses this information to determine the next running task. That task execution order determines the next checking step, which may later reach another API call or another state update. if the verification path reaches its end, the loop stops at the termination branch.
+Read clockwise, some OSEK/VDX APIs change task states or event state. For example, \textit{WaitEvent} may move an extended task from running state to waiting state when the awaited event is not set, while \textit{SetEvent} may make a waiting task ready again by setting the awaited event. Other APIs, such as \textit{GetEvent}, read event information that is already stored in the checking model. After each relevant API action, the checking model updates the task states, the event state, and the ready queue. The deterministic scheduler then uses this information to determine the next running task. That task execution order determines the next checking step, which may later reach another API call or another state update. if the verification path reaches its end, the loop stops at the termination branch.
 
-In the running example, this means that the verification path should not simply continue with the next statement in the C code after \texttt{WaitEvent} when the awaited event is clear. Instead, the checking model should represent that \textit{Task1} moves to waiting state, that \textit{Task2} may run while \textit{Task1} is waiting, and that \textit{ISR1} can set the event and make \textit{Task1} ready again. In this way, the task execution order in the verification result can reflect the execution order determined by the OSEK/VDX scheduler.
+In the running example, this means that the verification path should not simply continue with the next statement in the C code after \textit{WaitEvent} when the awaited event is clear. Instead, the checking model should represent that \textit{Task1} moves to waiting state, that \textit{Task2} may run while \textit{Task1} is waiting, and that \textit{ISR1} can set the event and make \textit{Task1} ready again. In this way, the task execution order in the verification result can reflect the execution order determined by the OSEK/VDX scheduler.
 
 \subsection{Reducing Unnecessary Interleavings}
+\label{sec:method-interleavings}
 
 After the checking model represents the OSEK/VDX scheduler, the next step is to control where interrupt service routine (ISR) calls are inserted. If ISR calls are inserted at too many program locations, the checking model may include many interleavings that do not affect the property being checked. These unnecessary interleavings can increase the checking costs in terms of states, time, and memory, and may also lead to spurious bugs.
 
@@ -274,6 +276,7 @@ The skipped locations are different. In this example, the checksum statements in
 \textit{Task2} only update the local variable \texttt{checksum}. They do not read the event state, they do not read \texttt{shared\_ready} or \texttt{shared\_value}, and they do not change task states or the ready queue. Skipping separate ISR insertions at those locations therefore reduces unnecessary interleavings without removing behaviour that can affect the checked path.
 
 \subsection{Building the Final Checking Model}
+\label{sec:method-final-model}
 
 The proposed approach combines the previous two steps to build the final checking model. First, it selects the program locations where an \textit{ISR1} call can change what \textit{Task1} or the scheduler observes. These locations are recorded in the manifest. Second, it uses the manifest to build a checking model in which ISR calls appear only at the selected locations.
 
@@ -300,7 +303,7 @@ Figure~\ref{fig:improved-pipeline} shows how the proposed approach builds the fi
 
 \begin{figure}[H]
   \centering
-  \input{figures/improved-pipeline-flow}
+  \hspace*{-6mm}\input{figures/improved-pipeline-flow}
   \caption{Baseline and improved checking-model construction.}
   \label{fig:improved-pipeline}
 \end{figure}
@@ -348,5 +351,4 @@ TASK(Task2)
 The role of Listing~\ref{lst:restricted-checking-model} is simple. The final checking model still allows \textit{ISR1} to occur, but only at the selected locations. These locations are kept because \textit{ISR1} can change the event state, the shared variables \texttt{shared\_ready} and \texttt{shared\_value}, or the next running task chosen by the scheduler.
 
 By contrast, no ISR call is inserted inside the local checksum updates of \textit{Task2}. Those statements do not read the event state or the shared variables, and they do not change task states or the ready queue. Skipping them reduces unnecessary interleavings while preserving the OSEK/VDX scheduler behaviours needed for the checked execution.
-
 

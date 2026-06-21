@@ -9,7 +9,7 @@ An application developed on OSEK/VDX OS consists of multiple tasks. To concurren
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/OSEK-VDK scheduler.png}
+  \includegraphics[width=0.8\linewidth]{figures/OSEK-VDK scheduler.png}
   \caption{OSEK/VDX scheduler}
   \label{fig:osek-scheduler}
 \end{figure}
@@ -28,14 +28,14 @@ However, these prominent model checking methods are still unsuitable to accurate
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/diff-schedulers.png}
+  \includegraphics[width=0.8\linewidth]{figures/diff-schedulers.png}
   \caption{The difference of schedulers}
   \label{fig:diff-schedulers}
 \end{figure}
 
 If such methods are applied directly to OSEK/VDX applications, the verification process becomes too imprecise because the behaviours of OSEK/VDX scheduler are not taken into account. As a result, a large number of unnecessary interleavings of tasks may be checked in the verification stage, which can lead to spurious bugs and increases the checking costs in terms of judging time and memory of checking devices. 
 
-\subsection{Thesis Purpose \& Contribution}
+\subsection{Research Purpose \& Contribution}
 
 The purpose of this report is to make model checking more accurate for OSEK/VDX applications. In order to achieve this purpose, we describe and develop an approach to construct a checking model that reflects their execution semantics and avoid checking ISR occurrences at program locations that do not affect the checking results.
 

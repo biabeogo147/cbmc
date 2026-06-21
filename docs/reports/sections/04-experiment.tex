@@ -1,12 +1,40 @@
-\section{Experiments}
+\section{Implementation and Experiments}
 \label{sec:experiment}
 
-\subsection{Implementation}
+\subsection{Tool Implementation}
 
-The current implementation realizes the methodology through four focused components. Each
-component has a separate role: building the initial program view, selecting ISR insertion
-locations, building the checking model with selected ISR calls, and handling OSEK/VDX APIs
-during symbolic execution.
+CBMC is a bounded model checker for C programs~\cite{clarke_biere_raimi_zhu_bounded_model_checking_2001,cbmc_2004,cbmc_architecture}.
+Its verification flow includes front-end translation, symbolic execution, and solver-based
+checking. This makes CBMC a suitable implementation target for this work for two reasons.
+
+First, the approach in this report and the benchmark cases used in the evaluation are written in C. Therefore, CBMC can be used directly as the back-end checker after the checking model has been constructed.
+
+Second, CBMC provides clear implementation points for the proposed methodology. The initial
+program representation can be built around \texttt{goto-cc}, selected ISR insertion locations
+can be computed before final verification, and OSEK/VDX API semantics can be handled during
+symbolic execution. Thus, the implementation does not replace the underlying bounded model
+checking engine. It changes the checking model and the symbolic execution behaviour so that
+the final verification step receives a model that better reflects the executions of OSEK/VDX
+applications.
+
+The CBMC verification flow used in this report is shown in \Cref{fig:baseline-cbmc}. Source code is translated by the front-end into an internal program representation, that representation is symbolically executed to construct a solver formula, and the solver determines whether the required property holds under the chosen bound.
+
+\begin{figure}[H]
+  \centering
+  \input{figures/baseline-cbmc-flow}
+  \caption{CBMC architecture used as the implementation target for the proposed approach.}
+  \label{fig:baseline-cbmc}
+\end{figure}
+
+This flow is a strong starting point for C verification, but it is not sufficient by itself for OSEK/VDX applications. The limitation is not symbolic execution itself. The limitation is that the checking model must also represent OSEK/VDX scheduling behaviours and must avoid checking ISR calls at program locations that do not affect the execution path.
+
+The current implementation realizes the methodology inside CBMC by extending the flow in four places.
+The \texttt{goto-cc} extension builds the initial checking model while preserving the OSEK/VDX project context. 
+The \texttt{interleaving-analysis} stage produces a manifest of selected ISR insertion locations. 
+The \texttt{aib} component uses this manifest to build the checking model with guarded ISR calls only at the selected locations. 
+Finally, \texttt{goto-symex} is extended with the \texttt{os-api} layer so that recognized OSEK/VDX APIs update task states, events, the ready queue, and the next running task during symbolic execution.
+
+Table~\ref{tab:cbmc-implementation-map} maps these implementation choices to the original CBMC stages. The purpose of the table is to show which parts of the CBMC flow are extended and which part remains unchanged.
 
 \begin{table}[H]
   \centering
@@ -14,182 +42,122 @@ during symbolic execution.
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.15}
   \begin{tabularx}{\linewidth}{@{}
-    >{\raggedright\arraybackslash}p{0.25\linewidth}
-    >{\raggedright\arraybackslash}X
+    >{\raggedright\arraybackslash}p{0.18\linewidth}
+    >{\raggedright\arraybackslash}p{0.16\linewidth}
+    >{\raggedright\arraybackslash}p{0.26\linewidth}
     >{\raggedright\arraybackslash}X@{}}
     \toprule
-    Component & Role in the implementation & Output \\
+    CBMC stage & Component role & Implemented extension & Effect on the checking model \\
     \midrule
+    Front-end and \texttt{goto-cc}
+    & Translate C into CBMC's internal representation.
+    & Read the OSEK/VDX configuration and preserves project context.
+    & Produces the initial checking model used by the later stages. \\
 
-    \texttt{goto-cc} extension
-    & Reads the source program and OSEK/VDX configuration. It builds the initial checking
-    model while preserving the project-level view needed by later stages.
-    & Initial checking model and project-level information for later analysis. \\
+    \specialrule{0.2pt}{2pt}{2pt}
+
+    Interleaving analysis
+    & Not present in the CBMC flow..
+    & Run \texttt{interleaving-analysis} before final verification.
+    & Produces a manifest that records selected ISR insertion locations. \\
 
     \specialrule{0.2pt}{2pt}{2pt}
 
-    \texttt{interleaving-analysis}
-    & Reads the initial checking model and analyzes where ISR calls should be inserted.
-    It selects only the program locations where an ISR call can affect the checking model.
-    & A manifest that records the selected ISR insertion locations. \\
+    Model building with selected ISR calls
+    & Not present in the CBMC flow..
+    & Use \texttt{aib} with \texttt{lib-interleaving-block}.
+    & Builds a checking model with ISR calls only at the locations recorded in the manifest. \\
 
     \specialrule{0.2pt}{2pt}{2pt}
-    
-    \texttt{aib} with \texttt{lib-interleaving-block}
-    & Reads the source program and the manifest. It builds the checking model by inserting
-    guarded ISR calls only at the locations recorded in the manifest.
-    & A checking model with selected guarded ISR calls, instead of ISR calls inserted broadly
-    across the program. \\
+
+    Symbolic execution and \texttt{goto-symex}
+    & Build the solver formula by symbolic execution.
+    & Use the \texttt{os-api} layer to handle recognized OSEK/VDX APIs.
+    & Updates task states, events, the ready queue, and the next running task according to OSEK/VDX scheduling behaviours. \\
 
     \specialrule{0.2pt}{2pt}{2pt}
-    
-    \texttt{goto-symex} with \texttt{os-api}
-    & Symbolically executes the checking model. When it reaches OSEK/VDX APIs, the
-    \texttt{os-api} layer handles their effects on task states, events, the ready queue,
-    and the next running task.
-    & Symbolic execution states that reflect the OSEK/VDX scheduler and are then checked by
-    CBMC. \\
 
+    Solver back end
+    & Solve the bounded query and reconstruct counterexamples.
+    & Unchanged.
+    & The final solving step stays the same; the input model has already been refined before solving. \\
     \bottomrule
   \end{tabularx}
-  \caption{Concrete implementation of the proposed methodology.}
-  \label{tab:implementation-note}
+  \caption{Implementation map from CBMC stages to the proposed approach.}
+  \label{tab:cbmc-implementation-map}
 \end{table}
 
-Figure~\ref{fig:improved-pipeline} follows the same component order. The lower lane first
-extends \texttt{goto-cc} to build the initial checking model with project-level information.
-It then runs \texttt{interleaving-analysis} to produce the manifest. Next, \texttt{aib} uses
-the manifest to build the checking model with selected guarded ISR calls. Finally,
-\texttt{goto-symex} and \texttt{os-api} perform symbolic execution while treating OSEK/VDX
-APIs as scheduler operations rather than ordinary C function calls.
+\subsection{Benchmark Corpus and Experimental Setup}
 
-Command-line options, manifest fields, and concrete artifact formats are not part of the
-methodology discussion. They are collected in \Cref{sec:appendix}, after the main checking
-flow has been explained.
+The experimental corpus is drawn from two public benchmark: i-CBMC~\cite{icbmc_site} and IntAbs~\cite{intabs_repo}.
+The corpus contains 43 public benchmark cases: 22 i-CBMC cases and 21 IntAbs cases.
 
-\subsection{Baseline CBMC Architecture}
+The experimental setup follows the methodology described in \Cref{sec:method}. For each public case, two versions are checked under the same entry function, checked properties, and unwind bound. The CBMC version represents ISR calls broadly, while the proposed version uses the manifest-guided model-building step.
 
-CBMC is a bounded model checker for C programs~\cite{cbmc_architecture}. Its checking process can be viewed in three main stages. First, the front-end and \texttt{goto-cc} translate C source files into a GOTO program. Second, \texttt{goto-symex} symbolically executes the GOTO program and constructs an SSA-style equation. Third, the solver backend checks the generated equation and, when a property is violated, CBMC can reconstruct a counterexample trace.
+The main difference is how ISR calls are represented in the checking model. The proposed flow first identifies the ISR entry functions and the program locations that matter for each case. It then builds the checking model with ISR calls only at the selected locations, where
+they can affect the execution path. Other locations are skipped because they only add unnecessary interleavings.
 
-\begin{figure}[H]
-  \centering
-  \input{figures/baseline-cbmc-flow}
-  \caption{Baseline CBMC flow before the OSEK-aware and manifest-driven extensions described
-  in this report.}
-  \label{fig:baseline-cbmc}
-\end{figure}
+\subsection{Experiments}
 
-This architecture is a strong baseline for C verification because bounded model checking can construct a transition system under a given bound and use a solver to check safety properties. However, this baseline is not sufficient by itself for OSEK/VDX applications. The limitation is not that CBMC lacks symbolic execution. The limitation is that the baseline CBMC flow does not automatically model the behaviours of the OSEK/VDX scheduler. In particular, APIs invoked from tasks can change task states, synchronization events, shared resources, and the ready queue. If these behaviours are not represented in the checking model, the verification process may not reflect the task execution order determined by the OSEK/VDX scheduler.
-
-This section uses only the public benchmark families in the repository. Internal smoke
-benchmarks and the internal Trampoline benchmark are intentionally excluded. The goal is not
-to claim that the revised flow is always faster than the stock baseline. The checked-in
-evidence shows the opposite in many cases because the manifest, injection, and rebuild stages
-add cost. The evaluation instead answers two narrower questions:
+The evaluation addresses three questions:
 
 \begin{enumerate}[leftmargin=1.5em]
-  \item Do the public benchmark artifacts contain cases where the revised flow is judged more
-  faithful than the stock asynchronous baseline?
-  \item What cost is paid for that increase in accuracy?
+\item Does the proposed flow remove spurious bugs caused by unnecessary interleavings in the CBMC version?
+\item Does the proposed flow reveal ISR-related behaviours that are not represented by the CBMC version?
+\item What time and memory cost is introduced by the additional model-building stages?
 \end{enumerate}
 
-\subsection{Public Benchmark Scope}
+To answer these questions, each public case is reported in one of five outcome classes. 
+A case has the \emph{same verification outcome} when both flows end in the same verification class. 
+A case \emph{CBMC spurious bug removed} when the CBMC reports failure but the proposed model succeeds and the case audit supports the proposed version as the more accurate checking model. 
+A case \emph{new error exposed by the proposed model} when the CBMC succeeds but the improved model reaches an error trace that the public audit supports. 
+An \emph{unresolved mismatch} is a case where the two versions disagree, but the available evidence is not sufficient to decide which checking model is more accurate.
+Finally, a case is \emph{not directly comparable} when the comparison is blocked by a resource limit or when the proposed flow cannot produce usable selected ISR insertion locations.
 
-The checked-in public report \texttt{check-src/benchmark.md} covers five public suites used in
-this section: \texttt{icbmc-large}, \texttt{icbmc-timeout-30m},
-\texttt{icbmc-timeout-30m-blink-highmem}, \texttt{icbmc-timeout-30m-logger-stable}, and
-\texttt{intabs-large}. Together they contribute 43 measured cases.
+The end-to-end time for the CBMC version includes compilation and verification. 
+The end-to-end time for the proposed version includes interleaving analysis, model building, compilation, and verification. 
+Per-case time values are reported using median measured phase times, while peak memory is reported from the verification phase.
 
-\begin{table}[t]
+\begin{table}[H]
   \centering
   \small
-  \begin{tabularx}{\linewidth}{@{}l c c X@{}}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\linewidth}{@{}
+>{\raggedright\arraybackslash}p{0.28\linewidth}
+>{\centering\arraybackslash}p{0.10\linewidth}
+>{\raggedright\arraybackslash}X@{}}
     \toprule
-    Suite & Cases & Headline-ready & Notes \\
+    Comparison outcome & Cases & Interpretation \\
     \midrule
-    \texttt{icbmc-large} & 12 & yes & Larger i-CBMC-derived public cases. \\
-    \texttt{icbmc-timeout-30m} & 4 & no & Public diagnostic cases kept outside the automatic
-    suite. \\
-    \texttt{icbmc-timeout-30m-blink-highmem} & 2 & no & Public high-memory blink cases. \\
-    \texttt{icbmc-timeout-30m-logger-stable} & 4 & no & Public logger-focused diagnostic
-    cases. \\
-    \texttt{intabs-large} & 21 & yes & Larger public IntAbs-derived cases. \\
+    Same verification outcome
+    & 18
+    & Both flows reach the same verification result. \\
+
+    CBMC spurious bug removed
+    & 8
+    & The CBMC version reports a failure, but the proposed version succeeds because it removes unnecessary ISR interleavings. \\
+
+    Unresolved mismatch
+    & 8
+    & The two versions produce different results, but the available evidence is not sufficient to decide which checking model is more accurate. \\
+
+    Not comparable
+    & 9
+    & The comparison cannot be made directly because of resource limits or because no usable selected ISR insertion locations are produced. \\
     \bottomrule
   \end{tabularx}
-  \caption{Public benchmark suites used in this section.}
-  \label{tab:public-suites}
+  \caption{Outcome classes across the 43 public measured cases.}
+  \label{tab:overall-outcome-summary}
 \end{table}
 
-\subsection{Public Correctness Summary}
+\Cref{tab:overall-outcome-summary} shows that the proposed approach is mainly useful for building a more accurate checking model. At the same time, by reducing unnecessary interleavings, it can also substantially reduce the checking cost in many cases. The strongest positive result is the group of eight cases where CBMC spurious bugs are removed. In parcular, \textit{logger-oriented} case from the i-CBMC, the CBMC version reports \emph{VERIFICATION FAILED} with a median end-to-end time of 54,984 ms and a median verification-phase peak RSS of 297.4 MB. The proposed flow reports \emph{VERIFICATION SUCCESSFUL} for the same bound in 2\,025 ms and 16.1 MB. The main point is not only that the proposed version has a lower checking cost in this case. The more important point is that the CBMC flow permits an unnecessary ISR interruption point, which leads to a spurious verification failure. The proposed version checks the ISR entry as one atomic region, so this unnecessary interleaving is removed. As a result, the failure reported by the CBMC version is classified as a spurious bug.
 
-The public subset has 43 measured cases. The correctness counts in
-\Cref{tab:benchmark-summary} are recomputed for that public subset only.
+The table also separates cases that should not be counted as clear wins or losses. Seven cases remain unresolved because the available evidence is not sufficient to decide which checking model is more accurate. Nine cases are not directly comparable because the comparison is blocked by resource limits or by missing selected ISR insertion locations. These cases are reported separately as limitations of the current evaluation, rather than being treated as artificial wins for either version. This makes the experimental summary more conservative and easier to interpret.
 
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabularx}{\linewidth}{@{}l c X@{}}
-    \toprule
-    Benchmark verdict & Cases & Interpretation \\
-    \midrule
-    \texttt{same\_outcome\_comparable} & 17 & Stock and improved reached the same
-    verification class. \\
-    \texttt{improved\_correct} & 10 & The improved pipeline is audited as the more faithful
-    model for the case. \\
-    \texttt{no\_injection\_false} & 6 & The improved path reported no injection candidates
-    even though ISR-written state can still affect the main-reachable state. \\
-    \texttt{needs\_manual\_review} & 3 & Output mismatch exists, but the current audit is not
-    strong enough to choose a correct variant. \\
-    \texttt{pending\_manual\_review} & 7 & Mismatch exists and no verdict rule has yet
-    classified the case. \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Correctness summary for the public benchmark subset only.}
-  \label{tab:benchmark-summary}
-\end{table}
+\subsection{Discussion}
 
-Two points stand out. First, the improved pipeline is not merely different from the stock
-baseline; it is often audited as more faithful. Second, the benchmark report explicitly keeps
-manual-review categories instead of silently forcing every mismatch into a win/loss label. That
-is important engineering hygiene for an evolving verification branch.
+The main cost of the proposed flow is the additional model-building work performed before final verification. On the 18 public cases where both versions produce the same verification result, the proposed flow is slower in 11 cases. Across this same-result subset, the median end-to-end time increases from 1,164 ms for the CBMC version to 3,380 ms for the proposed version. This result is expected because the proposed flow adds interleaving analysis and model-building stages before the final verification step.
 
-\subsection{Representative Public Cases}
+However, this cost is not uniform across all cases. In some benchmark cases, the proposed version performs better than the CBMC flow in terms of checking time or memory usage. This mainly happens when the original program is larger or when the CBMC version explores many unnecessary ISR interleavings. In such cases, the cost of building a more restricted checking model can be compensated by the reduction in behaviours explored during final verification.
 
-Three public cases illustrate the different ways in which the revised flow changes the
-verification result.
-
-\paragraph{\texttt{icbmc-timeout-30m-logger-stable / logger2-bug-conc-cprover}.}
-The stock baseline reports \emph{VERIFICATION FAILED} in 56\,233 ms with 298.2 MB peak RSS,
-while the improved pipeline reports \emph{VERIFICATION SUCCESSFUL} in 2\,017 ms with
-16.6 MB peak RSS. The checked-in audit explains the difference directly: the stock
-\texttt{C\_ASYNC\_PROVER} run exposes an interleaving through \texttt{task\_measure} that
-violates \texttt{numberOfRecords == pos + 1}, whereas the improved pipeline checks the
-extracted interruption entry as one atomic region. This is a clear public example of
-unnecessary interleavings producing a spurious bug.
-
-\paragraph{\texttt{intabs-large / i8xx-tco-1}.}
-The stock baseline reports \emph{VERIFICATION FAILED} in 1202 ms with 13.1 MB peak RSS, while
-the improved pipeline reports \emph{VERIFICATION SUCCESSFUL} in 3395 ms with 15.3 MB peak RSS.
-The benchmark audit again points to unnecessary interleavings in the stock model. The stock
-run allows a non-atomic asynchronous interleaving, whereas the improved pipeline keeps the
-interruption entry atomic and narrows the candidate set to three guarded interleavings. This
-case shows the main accuracy gain of the revised flow even though the full measured time grows
-from 1202 ms to 3395 ms.
-
-\paragraph{\texttt{intabs-large / sc520wdt-2}.}
-The stock baseline reports \emph{VERIFICATION SUCCESSFUL} in 1172 ms with 41.0 MB peak RSS.
-The improved pipeline reports \emph{VERIFICATION FAILED} in 3559 ms with 16.7 MB peak RSS.
-Here the improved pipeline injects closer/writer interleavings and reaches a violated
-property that the stock baseline proves away. This is the opposite public pattern from the
-previous two cases: the revised flow is slower, but it exposes an error trace that is not
-reached by the stock model. The full measured time rises from 1172 ms to 3559 ms, but the
-peak RSS drops from 41.0 MB to 16.7 MB.
-
-Taken together, these public cases show the main cost of the revised flow. Even when the
-verification phase itself is not dramatically slower, the extra manifest, injection, and
-rebuild phases raise the full measured time. The public evidence therefore supports a clear
-trade-off: the revised flow aims at a more accurate verification result, not at a faster one.
-
-For the use case of this report, that trade is acceptable. The objective is not to outperform
-the stock baseline on total wall-clock time, but to reduce unnecessary interleavings and make
-bounded model checking more accurate for OSEK/VDX applications.
+For the purpose of this report, this trade-off is reasonable. The objective is not to guarantee faster verification in every case. The first objective is to build a checking model that better reflects OSEK/VDX execution, especially task states, event state, the ready queue, and ISR-related behaviours that can affect the checked execution. The second objective is to make verification more feasible for larger source programs. In such programs, a broad ISR model may create many unnecessary interleavings, which can lead to high memory usage or timeouts in the CBMC flow. By selecting only the ISR insertion locations that can affect the checked execution, the proposed approach can reduce the behaviours explored during final verification. Therefore, the proposed approach mainly aims to make the checking model more accurate. At the same time, it can make verification more feasible for larger source programs where the CBMC flow is limited by high memory usage or timeout caused by unnecessary interleavings.

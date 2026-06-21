@@ -1,0 +1,41 @@
+\begin{tikzpicture}[
+  >=Latex,
+  font=\scriptsize,
+  lane/.style={font=\small\bfseries, anchor=east},
+  box/.style={
+    draw,
+    rounded corners=2pt,
+    align=center,
+    minimum height=10mm,
+    inner sep=3pt
+  },
+  source/.style={box, text width=17mm, fill=gray!10},
+  stock/.style={box, text width=16.5mm, fill=blue!8},
+  added/.style={box, text width=17mm, fill=green!10},
+  result/.style={box, text width=17mm, fill=purple!8},
+  arrow/.style={->, thick}
+]
+  \node[lane] at (-1.2,1.2) {CBMC};
+  \node[source] (b_src) at (0,1.2) {Source\\program};
+  \node[stock] (b_front) [right=2.5mm of b_src] {Front-end\\\texttt{goto-cc}};
+  \node[stock] (b_symex) [right=2.5mm of b_front] {Symbolic\\execution};
+  \node[result] (b_solver) [right=2.5mm of b_symex] {Solver and\\result};
+
+  \draw[arrow] (b_src) -- (b_front);
+  \draw[arrow] (b_front) -- (b_symex);
+  \draw[arrow] (b_symex) -- (b_solver);
+
+  \node[lane] at (-1.2,-1.5) {Proposed};
+  \node[source] (p_src) at (0,-1.5) {Source +\\OSEK config};
+  \node[added] (p_front) [right=2.5mm of p_src] {(1) Extended\\\texttt{goto-cc}};
+  \node[added] (p_analysis) [right=2.5mm of p_front] {(2) Interleaving\\analysis};
+  \node[added] (p_builder) [right=2.5mm of p_analysis] {(3) Restricted\\model builder};
+  \node[added] (p_symex) [right=2.5mm of p_builder] {(4) OSEK-aware\\\texttt{goto-symex}};
+  \node[result] (p_solver) [right=2.5mm of p_symex] {Solver and\\result};
+
+  \draw[arrow] (p_src) -- (p_front);
+  \draw[arrow] (p_front) -- (p_analysis);
+  \draw[arrow] (p_analysis) -- (p_builder);
+  \draw[arrow] (p_builder) -- (p_symex);
+  \draw[arrow] (p_symex) -- (p_solver);
+\end{tikzpicture}

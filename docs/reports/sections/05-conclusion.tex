@@ -1,0 +1,27 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+OSEK/VDX applications are important in automotive embedded systems, where software errors can
+affect reliability and safety. Because these applications consist of multiple tasks dispatched
+by the OSEK/VDX scheduler, their verification requires a checking model that reflects task
+states, synchronization events, shared resources, the ready queue, and the task execution order
+determined by the scheduler. If these behaviours are not represented explicitly, the checking
+process may explore unnecessary interleavings and may report spurious bugs.
+
+This report presented a checking-model approach for OSEK/VDX applications. The approach has
+two main parts. First, it represents the effects of OSEK/VDX APIs on task states, events,
+shared resources, the ready queue, and task execution order. Second, it uses a manifest to
+record selected program locations where interrupt service routine (ISR) calls should be
+inserted. The final checking model contains guarded ISR calls only at these selected
+locations, instead of inserting ISR calls broadly across the program.
+
+The experimental results show that the proposed approach improves the verification process for
+OSEK/VDX applications. It builds a more accurate checking model, reduces unnecessary
+interleavings, and removes spurious bugs reported by the baseline checking process. The results
+also show an important cost trade-off. The proposed approach adds model-building work before
+final verification, so it is not guaranteed to be faster in every case. However, in some larger
+cases, reducing unnecessary ISR interleavings can also reduce time or memory cost and make
+verification more feasible when the baseline flow is limited by high memory usage or timeout.
+
+Several limitations remain. The supported OSEK/VDX subset can be extended to cover more API behaviours and application patterns. Even with these limitations, the
+results indicate that constructing a more accurate checking model is a practical direction for verifying OSEK/VDX applications with scheduler-dependent task execution and ISR behaviours.

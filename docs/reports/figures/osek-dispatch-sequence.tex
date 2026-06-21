@@ -1,3 +1,6 @@
+% Add this in the preamble if needed:
+% \usetikzlibrary{arrows.meta,shapes.geometric}
+
 \begin{tikzpicture}[
   >=Latex,
   font=\small,
@@ -5,38 +8,61 @@
     draw,
     rounded corners=2pt,
     align=center,
-    text width=24mm,
-    minimum height=9mm,
+    text width=25mm,
+    minimum width=29mm,
+    minimum height=13mm,
     inner sep=3pt,
     fill=orange!6
+  },
+  decision/.style={
+    draw,
+    diamond,
+    aspect=2.1,
+    align=center,
+    text width=17mm,
+    inner sep=1pt,
+    fill=blue!5
   },
   endbox/.style={
     draw,
     rounded corners=2pt,
     align=center,
-    text width=23mm,
-    minimum height=9mm,
+    text width=25mm,
+    minimum width=29mm,
+    minimum height=13mm,
     inner sep=3pt,
     fill=gray!15
   },
-  arrow/.style={->, thick, shorten >=2pt}
+  arrow/.style={->, thick, shorten >=3pt, shorten <=3pt}
 ]
-  \node[box] (api) at (0.85,2.2) {Standardized\\APIs};
-  \node[box] (state) at (4.05,1.1) {Task states\\and events};
-  \node[box] (queue) at (4.05,-1.1) {Ready\\queue};
-  \node[box] (sched) at (0.85,-2.2) {Deterministic\\scheduler};
-  \node[box] (order) at (-2.35,-1.1) {Task execution\\order};
-  \node[box] (step) at (-2.35,1.1) {Next checking\\step};
-  \node[endbox] (end) at (-5.75,1.1) {Verification\\path ends};
 
-  \draw[arrow] (api) -- (state);
-  \draw[arrow] (state) -- (queue);
-  \draw[arrow] (queue) -- (sched);
-  \draw[arrow] (sched) -- (order);
-  \draw[arrow] (order) -- (step);
-  \draw[arrow] (step) -- (end);
-  \draw[arrow] (step) -- 
-    node[midway, above, align=center, fill=white, inner sep=1pt, xshift=-15pt, yshift=3pt]
-    {continues} 
-    (api);
+  % Main cycle
+  \node[box] (api)   at (1.45,3.35) {(1) Standardized\\APIs};
+  \node[box] (state) at (4.65,1.35) {(2) Task states\\and events};
+  \node[box] (queue) at (4.65,-1.35) {(3) Ready\\queue};
+  \node[box] (sched) at (1.45,-3.35) {(4) Deterministic\\scheduler};
+  \node[box] (order) at (-2.50,-1.35) {(5) Task execution\\order};
+  \node[box] (step)  at (-2.50,1.35) {(6) Next checking\\step};
+
+  \node[decision] (more) at (-2.50,3.35) {More\\steps?};
+  \node[endbox] (end) at (-6.25,3.35) {(7) Verification\\path ends};
+
+  % Normal flow
+  \draw[arrow] (api.east) -- (state.west);
+  \draw[arrow] (state.south) -- (queue.north);
+  \draw[arrow] (queue.west) -- (sched.east);
+  \draw[arrow] (sched.west) -- (order.east);
+  \draw[arrow] (order.north) -- (step.south);
+
+  % Decision flow
+  \draw[arrow] (step.north) -- (more.south);
+
+  \draw[arrow] (more.east) --
+    node[midway, above, fill=white, inner sep=1pt] {Yes}
+    (api.west);
+
+  \draw[arrow] (more.west) --
+    node[midway, above, fill=white, inner sep=1pt] {No}
+    (end.east);
+
 \end{tikzpicture}

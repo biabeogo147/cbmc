@@ -7,7 +7,7 @@ A general OSEK/VDX OS consists of a scheduler module, synchronization event proc
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/osek-with-application.png}
+  \includegraphics[width=0.9\linewidth]{figures/osek-with-application.png}
   \caption{The structure of OSEK/VDX OS with an application}
   \label{fig:osek-with-app}
 \end{figure}
@@ -20,7 +20,7 @@ In addition, scheduler module provides several APIs for applications, such as \t
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/activate-task.png}
+  \includegraphics[width=0.6\linewidth]{figures/activate-task.png}
   \caption{The context switch of tasks and API \textit{ActivateTask}}
   \label{fig:activate-task}
 \end{figure}
@@ -31,7 +31,7 @@ In the synchronization event process module, OSEK/VDX OS provides a synchronizat
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/synchronous-behaviors.png}
+  \includegraphics[width=0.6\linewidth]{figures/synchronous-behaviors.png}
   \caption{The synchronous behaviours between tasks}
   \label{fig:synchronous-behaviors}
 \end{figure}
@@ -43,7 +43,7 @@ tasks that access the resource.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/priority-ceiling.png}
+  \includegraphics[width=0.6\linewidth]{figures/priority-ceiling.png}
   \caption{The priority ceiling protocol}
   \label{fig:priority-ceiling}
 \end{figure}
@@ -61,7 +61,7 @@ An application developed based on OSEK/VDX OS consists of two files, one is the 
   \label{fig:osek-app}
 \end{figure}
 
-As shown in Figure~\ref{fig:execution-tree}, when the API \textit{ActivateTask(t2)} is invoked by \textit{t1} (the branch``(b >= a)'' is chosen to symbolically execute), scheduler will be loaded to respond to the API (task \textit{t2} is moved from suspended state to ready state). At this moment, the running task \textit{t1} will be preempted by \textit{t2} since the priority of \textit{t2} is higher than \textit{t1} and the attribute \texttt{SCHEDULE} of \textit{t1} is set to be \texttt{FULL} (the context switch happens after the API \textit{ActivateTask(t2))}. Currently, task \textit{t2} gets run-unit to run, and goes to suspended state when the API \textit{TerminateTask()} is invoked (\textit{TerminateTask()} is used to terminate the executions of a task, and the terminated task will be moved from running state to suspended state by scheduler. If the running task is terminated, scheduler then dispatches the head task in the ready queue to run when ready queue is not empty). When task \textit{t2} terminates itself using API \textit{TerminateTask()}, scheduler will dispatch task \textit{t1} to running state. Then, \textit{t1} continues its executions from the preempted point, and task \textit{t4} is activated by \textit{t1} using API \textit{ActivateTask(t4)} (the context switch will not happen, since the priority of task \textit{t4} is less than \textit{t1}). Finally, task \textit{t4} will be executed when the running task \textit{t1} terminates itself using API \textit{TerminateTask()}. Thus, according to the conducted symbolic executions, we can get a task execution sequence \textit{t1,t2,t1,t4} in the execution path $\pi_1$ and $\pi_2$. However, if the API \textit{ActivateTask(t3)} is invoked by task \textit{t1} (the ``branch !(b >= a)'' is chosen to symbolically execute), we will get a different task execution sequence \textit{t1,t3,t4} in the execution path $\pi_3$.
+As shown in Figure~\ref{fig:execution-tree}, when the API \textit{ActivateTask(t2)} is invoked by \textit{t1} (the branch``(b >= a)'' is chosen to symbolically execute), scheduler will be loaded to respond to the API (task \textit{t2} is moved from suspended state to ready state). At this moment, the running task \textit{t1} will be preempted by \textit{t2} since the priority of \textit{t2} is higher than \textit{t1} and the attribute \texttt{SCHEDULE} of \textit{t1} is set to be \texttt{FULL} (the context switch happens after the API \textit{ActivateTask(t2))}. Currently, task \textit{t2} gets run-unit to run, and goes to suspended state when the API \textit{TerminateTask()} is invoked (\textit{TerminateTask()} is used to terminate the executions of a task, and the terminated task will be moved from running state to suspended state by scheduler. If the running task is terminated, scheduler then dispatches the head task in the ready queue to run when ready queue is not empty). When task \textit{t2} terminates itself using API \textit{TerminateTask()}, scheduler will dispatch task \textit{t1} to running state. Then, \textit{t1} continues its executions from the preempted point, and task \textit{t4} is activated by \textit{t1} using API \textit{ActivateTask(t4)} (the context switch will not happen, since the priority of task \textit{t4} is less than \textit{t1}). Finally, task \textit{t4} will be executed when the running task \textit{t1} terminates itself using API \textit{TerminateTask()}. Thus, according to the conducted symbolic executions, we can get a task execution sequence \textit{t1,t2,t1,t4} in the execution path $\pi_1$, and $\pi_2$, shown in Figure~\ref{fig:execution-tree}. However, if the API \textit{ActivateTask(t3)} is invoked by task \textit{t1} (the ``branch !(b >= a)'' is chosen to symbolically execute), we will get a different task execution sequence \textit{t1,t3,t4} in the execution path $\pi_3$.
 
 \begin{figure}[H]
   \centering
