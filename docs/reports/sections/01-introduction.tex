@@ -1,7 +1,7 @@
 \section{Introduction}
 \label{sec:introduction}
 
-OSEK/VDX [ref][34][43] is an automotive operating-system standard introduced in 1994 by European automobile manufacturers, suppliers, and the University of Karlsruhe ~\cite{osek_spec}. It was created to manage the increasing amount of software in vehicles while improving product quality and reliability. The standard has been adopted by major car manufacturers such as BMW, Opel, and Toyota, and is used to support vehicle applications such as cruise control and temperature control. Because these applications directly affect vehicle operation and driver safety, ensuring their reliability is essential. However, as automotive software becomes more complex, verifying the correctness and reliability of OSEK/VDX applications remains a significant challenge.
+OSEK/VDX~\cite{lemieux_programming_osek_vdx_2001,osek_vdx_spec_223} is an automotive operating-system standard introduced in 1994 by European automobile manufacturers, suppliers, and the University of Karlsruhe. It was created to manage the increasing amount of software in vehicles while improving product quality and reliability. The standard has been adopted by major car manufacturers such as BMW, Opel, and Toyota, and is used to support vehicle applications such as cruise control and temperature control. Because these applications directly affect vehicle operation and driver safety, ensuring their reliability is essential. However, as automotive software becomes more complex, verifying the correctness and reliability of OSEK/VDX applications remains a significant challenge.
 
 \subsection{OSEK/VDX Applications and Model Checking}
 
@@ -18,11 +18,11 @@ OSEK/VDX OS also provides standardized application interfaces (APIs), such as \t
 
 To ensure the reliability of OSEK/VDX applications, testing is an important checking technique used in industry, but it is difficult to exhaustively check OSEK/VDX applications using testing technique, especially because of incomplete test-cases. In addition, it is hard to reproduce an error trace when an error is detected by testing, due to the concurrency of OSEK/VDX applications.
 
-Model checking [ref][2][3], an efficient and exhaustive verification technique for concurrent software, can be applied to verify OSEK/VDX applications instead of testing technique. Particularly, it will return a counterexample when detecting an error. Based on the returned counterexample, developers can easily find the error trace and reproduce the erroneous behaviours.
+Model checking~\cite{clarke_emerson_model_checking_2009,clarke_grumberg_long_model_checking_abstraction_1994}, an efficient and exhaustive verification technique for concurrent software, can be applied to verify OSEK/VDX applications instead of testing technique. Particularly, it will return a counterexample when detecting an error. Based on the returned counterexample, developers can easily find the error trace and reproduce the erroneous behaviours.
 
 \subsection{Shortcomings of Existing Model Checking for OSEK/VDX Applications}
 
-Existing model checking methods [ref][26][50][51], such as the ANSI-C multi-threaded software and SystemC multi-threaded software, have been applied to verify
+Existing model checking methods~\cite{holzmann_spin_model_checker_2003,andrews_qadeer_rajamani_rehof_xie_zing_2004,wachter_kroening_ouaknine_impact_2013}, such as the ANSI-C multi-threaded software and SystemC multi-threaded software, have been applied to verify
 concurrent software. In these methods, the behaviours of scheduler are taken into account in the verification process.
 However, these prominent model checking methods are still unsuitable to accurately verify OSEK/VDX applications because of different scheduling policy. As shown in Figure~\ref{fig:diff-schedulers}, in the existing methods, the running thread within the concurrent software is arbitrarily determined by scheduler (non-deterministic scheduler is used to dispatch threads), but in OSEK/VDX applications which task is to be run is explicitly determined by OSEK/VDX scheduler, a deterministic scheduler used to dispatch tasks.
 
