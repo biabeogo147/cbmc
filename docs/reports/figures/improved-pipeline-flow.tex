@@ -15,8 +15,8 @@
   result/.style={box, text width=18mm, fill=purple!6},
   arrow/.style={->, thick}
 ]
-  \node[lane] at (-1.8,1.4) {Baseline};
-  \node[source] (b_src) at (0,1.4) {Source program\\and\\configuration};
+  \node[lane] at (-1.8,1.4) {\shortstack{Verification\\flow}};
+  \node[source] (b_src) at (0,1.4) {Source program};
   \node[stock] (b_cc) at (2.55,1.4) {Initial\\model};
   \node[stock] (b_sym) at (4.95,1.4) {Symbolic\\execution};
   \node[result] (b_bmc) at (7.35,1.4) {Bounded model\\checking};

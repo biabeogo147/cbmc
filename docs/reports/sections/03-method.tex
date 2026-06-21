@@ -3,22 +3,19 @@
 
 \subsection{Overview of the Proposed Approach}
 
-The proposed approach builds on the baseline CBMC architecture described in \Cref{sec:background} and summarized in \Cref{fig:baseline-cbmc}. It does not replace bounded model checking, symbolic execution, or the solver backend. Instead, it changes how the checking model is constructed before final verification. The goal is to make the model more accurate for OSEK/VDX applications, where task execution order is determined by the deterministic scheduler, the ready queue, task states, and the APIs invoked from tasks.
+The proposed approach focuses on how the checking model is constructed before final verification. It does not depend on replacing a particular verification tool. Instead, the main goal is to build a more accurate checking model for OSEK/VDX applications, where task execution order is determined by the deterministic scheduler, the ready queue, task states, and the APIs invoked from tasks.
 
-The approach has two main parts. The first part is handling OSEK/VDX scheduler behaviours. During verification, the checking model must represent how OSEK/VDX APIs change task states, synchronization events, shared resources, and the ready queue. This allows the next running task to follow the behaviours of the OSEK/VDX scheduler rather than ordinary C control flow alone.
+The approach has two main parts. The first part is to represent the behaviours of the OSEK/VDX scheduler in the checking model. During verification, the model must capture how OSEK/VDX APIs can change task states, synchronization events, shared resources, and the ready queue. This allows the next running task to be determined according to the OSEK/VDX scheduler rather than ordinary C control flow alone.
 
-In terms of the first part, during verification, the checking model must represent how OSEK/VDX APIs change task states, synchronization events, shared resources, and the ready queue. This allows the next running task to follow the behaviours of the OSEK/VDX scheduler rather than ordinary C control flow alone.
+The second part is manifest-guided interrupt service routine (ISR) insertion. In this report, an ISR is a function that may interrupt the normal execution of tasks. In practice, an ISR may occur at many points during task execution. However, the checking model does not need to represent every possible ISR occurrence separately. The proposed approach focuses on the program locations where an ISR call can affect the checked execution, such as by changing task states, event state, shared variables, the ready queue, or the checked assertion. Other locations are skipped because they only add unnecessary interleavings and increase the checking cost. To avoid this, the proposed approach first computes a manifest, which records the selected program locations where ISR calls should be inserted. The final checking model is then built with guarded ISR calls only at the locations recorded in the manifest. Table~\ref{tab:method-comparison} summarizes the difference between verification flow
+and the proposed approach.
 
-The second part is manifest-guided interrupt service routine (ISR) insertion. In this report, an ISR is a function that may interrupt the normal execution of tasks. A naive model may insert ISR calls at many program locations by using \texttt{\_\_CPROVER\_ASYNC\_X}, which can create unnecessary interleavings and increase the checking cost. To avoid this, the proposed approach first computes a manifest, which records the selected program locations where ISR calls should be inserted. The source tree is then rewritten according to this manifest, producing a new checking model for CBMC.
-
-Table~\ref{tab:method-comparison} summarizes the difference between the baseline CBMC flow and the proposed approach.
-
-\begin{table}[H]
+\begin{table}[t]
   \centering
   \small
   \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
     \toprule
-    Aspect & Baseline CBMC & Proposed Approach \\
+    Aspect & Verification flow & Proposed Approach \\
     \midrule
     Task execution order & Follows the ordinary C program model unless OSEK/VDX scheduling is encoded separately. & Follows task states, the ready queue, and the deterministic scheduler inside the checking model. \\
 
@@ -28,22 +25,22 @@ Table~\ref{tab:method-comparison} summarizes the difference between the baseline
 
     \specialrule{0.2pt}{2pt}{2pt}
     
-    Interrupt behaviour & A broad model may allow ISR calls at many program locations. & ISR calls are inserted only at selected locations recorded in the manifest. \\
+    Interrupt behaviour & May represent ISR occurrences broadly at many program locations. & ISR calls are inserted only at selected locations recorded in the manifest. \\
 
     \specialrule{0.2pt}{2pt}{2pt}
     
-    Interleavings & May include unnecessary interleavings that increase the checking cost and may lead to spurious bugs. & Reduces unnecessary interleavings before the final bounded model checking step. \\
+    Interleavings & May include unnecessary interleavings that increase the checking cost and may lead to spurious bugs. & Reduces unnecessary interleavings before the final verification step. \\
 
     \specialrule{0.2pt}{2pt}{2pt}
     
-    Checking model & Represents the program after the standard CBMC front-end and symbolic execution flow. & Represents the OSEK/VDX scheduler, changes caused by APIs invoked from tasks, and selected ISR insertion points before final verification. \\
+    Checking model & Represents the program without explicitly combining OSEK/VDX scheduler behaviours and selected ISR locations. & Represents the OSEK/VDX scheduler, changes caused by APIs invoked from tasks, and selected ISR insertion points before final verification. \\
     \bottomrule
   \end{tabularx}
-  \caption{Conceptual comparison between baseline CBMC and the proposed approach.}
+  \caption{Conceptual comparison between verification flow and the proposed approach.}
   \label{tab:method-comparison}
 \end{table}
 
-The key point is that the proposed approach keeps CBMC as the bounded model checker, but changes the model that CBMC receives. Instead of verifying a model that treats scheduling and interrupt effects too broadly, the approach constructs a checking model that better reflects the executions of OSEK/VDX applications.
+The key point is that the proposed approach does not replace the underlying verification tool. Instead, it changes the checking model given to the final verification step. Rather than checking a model that represents scheduling and ISR occurrences too broadly, the approach constructs a checking model that better reflects the executions of OSEK/VDX applications.
 
 The remainder of this section explains the approach in three steps. \Cref{sec} describes how OSEK/VDX scheduler behaviours and APIs invoked from tasks are represented. \Cref{sec} explains how the manifest is used to reduce unnecessary ISR insertion points. \Cref{sec} explains how the checking model that takes the OSEK/VDX scheduler into account and the manifest-guided insertion step are combined before CBMC performs final verification.
 
@@ -125,7 +122,7 @@ Table~\ref{tab:running-trace} is the output of this first methodological step. I
 
 \begin{table}[H]
   \centering
-  \scriptsize
+  \small
   \setlength{\tabcolsep}{3pt}
   \renewcommand{\arraystretch}{1.15}
   \renewcommand{\tabularxcolumn}[1]{m{#1}}
@@ -184,7 +181,7 @@ Table~\ref{tab:running-trace} is the output of this first methodological step. I
   \label{tab:running-trace}
 \end{table}
 
-Figure~\ref{fig} gives a high-level view of how scheduling information is produced in the checking model. When a task invokes an OSEK/VDX API, the API may change task states or events. These changes update the ready queue, and the deterministic scheduler uses the ready queue to decide which task should execute next. Therefore, the checking model must represent this cycle explicitly instead of treating API calls as ordinary function calls.
+Figure~\ref{fig:osek-sequence} gives a high-level view of how scheduling information is produced in the checking model. When a task invokes an OSEK/VDX API, the API may change task states or events. These changes update the ready queue, and the deterministic scheduler uses the ready queue to decide which task should execute next. Therefore, the checking model must represent this cycle explicitly instead of treating API calls as ordinary function calls.
 
 \begin{figure}[H]
   \centering
@@ -194,7 +191,7 @@ Figure~\ref{fig} gives a high-level view of how scheduling information is produc
   \label{fig:osek-sequence}
 \end{figure}
 
-Read clockwise, some OSEK/VDX APIs change task states or event state. For example, \texttt{WaitEvent} may move an extended task from running state to waiting state when the awaited event is not set, while \texttt{SetEvent} may make a waiting task ready again by setting the awaited event. Other APIs, such as \texttt{GetEvent}, read event information that is already stored in the checking model. After each relevant API action, the checking model updates the task states, the event state, and the ready queue. The deterministic scheduler then uses this information to determine the next running task. That task execution order determines the next checking step, which may later reach another API call or another state update.
+Read clockwise, some OSEK/VDX APIs change task states or event state. For example, \texttt{WaitEvent} may move an extended task from running state to waiting state when the awaited event is not set, while \texttt{SetEvent} may make a waiting task ready again by setting the awaited event. Other APIs, such as \texttt{GetEvent}, read event information that is already stored in the checking model. After each relevant API action, the checking model updates the task states, the event state, and the ready queue. The deterministic scheduler then uses this information to determine the next running task. That task execution order determines the next checking step, which may later reach another API call or another state update. if the verification path reaches its end, the loop stops at the termination branch.
 
 In the running example, this means that the verification path should not simply continue with the next statement in the C code after \texttt{WaitEvent} when the awaited event is clear. Instead, the checking model should represent that \textit{Task1} moves to waiting state, that \textit{Task2} may run while \textit{Task1} is waiting, and that \textit{ISR1} can set the event and make \textit{Task1} ready again. In this way, the task execution order in the verification result can reflect the execution order determined by the OSEK/VDX scheduler.
 
@@ -216,13 +213,13 @@ Table~\ref{tab:selected-points} shows gives a readable summary of the selected p
 
 \begin{table}[H]
   \centering
-  \scriptsize
+  \small
   \setlength{\tabcolsep}{3pt}
   \renewcommand{\arraystretch}{1.15}
   \begin{tabularx}{\linewidth}{@{}>
-  {\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}X@{}}
+  {\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.10\linewidth}X@{}}
     \toprule
-    Candidate program location & Can \textit{ISR1} change what is read here? & Decision & Reason \\
+    Candidate program location & Can \textit{ISR1} change results here? & Decision & Reason \\
     \midrule
     
     Immediately before \texttt{WaitEvent(EVENT\_SHARED\_READY)} 
@@ -280,7 +277,7 @@ The skipped locations are different. In this example, the checksum statements in
 
 The proposed approach combines the previous two steps to build the final checking model. First, it selects the program locations where an \textit{ISR1} call can change what \textit{Task1} or the scheduler observes. These locations are recorded in the manifest. Second, it uses the manifest to build a checking model in which ISR calls appear only at the selected locations.
 
-This separation makes the method easier to control. The selection step answers the question: ``where can an ISR call affect the event state, the ready queue, the shared variables, or the assertion checked by CBMC?'' The model-building step answers a different question: how should the final checking model represent only those selected ISR calls?
+This separation makes the method easier to control. The selection step answers the question: ``where can an ISR call affect the event state, the ready queue, the shared variables, or the assertion checked?'' The model-building step answers a different question: how should the final checking model represent only those selected ISR calls?
 
 As a result, the final checking model does not insert ISR calls at every possible program location. It keeps the locations that can affect the checked path and skips locations that only add unnecessary interleavings. This reduces the checking cost while preserving the behaviours needed for the running example.
 
@@ -299,111 +296,57 @@ Selected ISR insertion locations:
 Skipped locations: The local checksum updates inside Task2
 \end{lstlisting}
 
-Figure~\ref{fig:improved-pipeline} shows how the final checking model is then built. The
-upper lane shows the baseline CBMC path. The lower lane shows the additional construction
-stages used by the proposed approach before final bounded model checking.
+Figure~\ref{fig:improved-pipeline} shows how the proposed approach builds the final checking model before bounded model checking. The upper lane is the verification flow. The lower lane adds four stages before the final verification step.
 
 \begin{figure}[H]
   \centering
   \input{figures/improved-pipeline-flow}
-  \caption{Baseline and improved checking-model construction. Numbered blocks indicate stages
-  added by the proposed approach.}
+  \caption{Baseline and improved checking-model construction.}
   \label{fig:improved-pipeline}
 \end{figure}
 
-Conceptually, the upper lane starts from the original program and proceeds directly to model
-construction, symbolic execution, and bounded model checking. The lower lane inserts four
-additional responsibilities. The first added block builds a project-scoped view of the
-program rather than a single straight-line execution view. The second added block identifies
-where interruption-written state can affect the checked path. The third added block rebuilds
-a restricted source-level checking model that retains interruption-related behaviour only at
-those selected points. The fourth added block applies scheduler-consistent symbolic execution
-so that standardized APIs change task states, the ready queue, and task execution order in a
-way that matches OSEK/VDX semantics. This is the second major difference from baseline CBMC:
-the proposed approach changes both where interruption-related behaviour appears and how the
-resulting task execution order is interpreted during verification.
+In the verification flow, the source program and the OSEK/VDX configuration are translated into an initial checking model, then we performs symbolic execution and model checking. This path is useful for ordinary C programs, but it does not by itself explain how OSEK/VDX APIs should change task states, events, the ready queue, and task execution order.
 
-Listing~\ref{lst:restricted-checking-model} shows the output of the constructive step for the
-running example. The guarded calls are part of the checking model, not part of the original
-application program. They are placed only at the selected points. No such call is inserted
-inside the local checksum updates of \textit{Task2}, because those updates were excluded
-as unnecessary interleavings in Table~\ref{tab:selected-points}.
+The proposed flow adds four stages. First, the extended \texttt{goto-cc} stage builds the initial program representation from the source program and the OSEK/VDX configuration.
+Second, \texttt{interleaving-analysis} selects the program locations where ISR calls may affect the checking model. 
+Third, \texttt{aib} uses those selected locations to build a restricted checking model, so ISR calls are added only where they are needed. 
+Fourth, \texttt{goto-symex} with the \texttt{os-api} layer symbolically executes the model while handling OSEK/VDX APIs as scheduler operations rather than ordinary C function calls.
 
-\begin{lstlisting}[language=C,caption={Illustrative restricted checking model for the running example.},label={lst:restricted-checking-model}]
+Listing~\ref{lst:restricted-checking-model} shows the output of the model-building step for the running example. The inserted calls are part of the checking model, not part of the original application program. Each inserted call is guarded by \texttt{nondet\_bool()}, so model checking may choose whether \textit{ISR1} occurs at that selected location. No ISR call is inserted inside the local checksum updates of \textit{Task2}, because those updates only change the local variable \texttt{checksum} and were skipped in Table~\ref{tab:selected-points}.
+
+\begin{lstlisting}[language=C,caption={Illustrative checking model with selected ISR calls for the running example.},label={lst:restricted-checking-model}]
 TASK(Task1)
 {
-  EventMaskType observed = 0;
-  if (nondet_bool()) ISR_Sensor(0);
-  WaitEvent(EVENT_SENSOR_READY);
-  if (nondet_bool()) ISR_Sensor(0);
-  GetEvent(TASK_ID_Control, &observed);
-  if (nondet_bool()) ISR_Sensor(0);
-  if ((observed & EVENT_SENSOR_READY) != 0u && sensor_ready) {
-    if (nondet_bool()) ISR_Sensor(0);
-    int sample = sensor_value;
-    assert(sample >= 0);
-  }
-  ClearEvent(EVENT_SENSOR_READY);
-  TerminateTask();
+    EventMaskType observed = 0;
+    
+    if (nondet_bool()) ISR1();
+    WaitEvent(EVENT_SHARED_READY);
+    
+    if (nondet_bool()) ISR1();
+    GetEvent(TASK_1_ID, &observed);
+    
+    if (nondet_bool()) ISR1();
+    if ((observed & EVENT_SHARED_READY) != 0u && shared_ready) {
+        if (nondet_bool()) ISR1();
+        int sample = shared_value;
+        assert(sample >= 0);
+    }
+
+    ClearEvent(EVENT_SHARED_READY);
+    TerminateTask();
 }
 
 TASK(Task2)
 {
-  int checksum = 0;
-  checksum = checksum + 1;
-  checksum = checksum * 2;
-  TerminateTask();
+    int checksum = 0;
+    checksum = checksum + 1;
+    checksum = checksum * 2;
+    TerminateTask();
 }
 \end{lstlisting}
 
-The methodological role of Listing~\ref{lst:restricted-checking-model} is straightforward.
-The checking model still admits interruption-related behaviour, but only at points where that
-behaviour can change the execution being checked. This preserves the main advantage claimed
-in Sections~1 and~2: fewer unnecessary interleavings without ignoring the OSEK/VDX
-scheduler or the shared state written by interruptions.
+The role of Listing~\ref{lst:restricted-checking-model} is simple. The final checking model still allows \textit{ISR1} to occur, but only at the selected locations. These locations are kept because \textit{ISR1} can change the event state, the shared variables \texttt{shared\_ready} and \texttt{shared\_value}, or the next running task chosen by the scheduler.
 
-\subsection{Implementation Note}
+By contrast, no ISR call is inserted inside the local checksum updates of \textit{Task2}. Those statements do not read the event state or the shared variables, and they do not change task states or the ready queue. Skipping them reduces unnecessary interleavings while preserving the OSEK/VDX scheduler behaviours needed for the checked execution.
 
-The current branch realizes this methodology with a small set of focused extensions rather
-than a monolithic verifier rewrite. Table~\ref{tab:implementation-note} summarizes the role
-of each concrete component and the artifact or checking-model effect it produces.
 
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
-    \toprule
-    Component & What it consumes and does & What it produces \\
-    \midrule
-    \texttt{goto-cc} extension & Consumes the source program and configuration data, then
-    builds the initial checking model while preserving the project-level view needed by the
-    later analysis stage. & An initial checking model together with the project-scoped
-    information needed to analyze interruption relevance. \\
-    \texttt{interleaving-analysis} & Consumes the initial checking model and the designated
-    interruption sources, then identifies program points where interruption-written state can
-    affect the checked path. & A selection artifact describing the retained program points for
-    restricted reconstruction. \\
-    \texttt{aib} with \texttt{lib-interleaving-block} & Consumes the original project tree
-    and the selection artifact, then rebuilds a restricted source-level checking model with
-    guarded interruption calls only at the retained points. & A rewritten project view that is
-    narrower than blanket interruption insertion. \\
-    \texttt{goto-symex} with \texttt{os-api} & Consumes the restricted checking model and the
-    OSEK/VDX configuration, then realizes the effects of standardized APIs on task states,
-    events, the ready queue, and dispatch decisions during symbolic execution. & Scheduler-
-    consistent symbolic states for final bounded model checking. \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Concrete realization of the methodology in the current branch.}
-  \label{tab:implementation-note}
-\end{table}
-
-Figure~\ref{fig:improved-pipeline} uses these component boundaries implicitly. The added
-blocks in the lower lane correspond, in order, to the project-scoped model-construction
-extension around \texttt{goto-cc}, the separate \texttt{interleaving-analysis} stage, the
-\texttt{aib} rewriting step built on \texttt{lib-interleaving-block}, and the
-\texttt{goto-symex}/\texttt{os-api} realization of OSEK/VDX API effects during symbolic
-execution.
-
-Exact command-line spellings, manifest-field names, and concrete artifact formats are kept
-out of the methodology body and collected in \Cref{sec:appendix}. That appendix is the right
-place for interface-level details once the theoretical flow in this section is understood.

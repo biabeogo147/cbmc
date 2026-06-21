@@ -1,0 +1,77 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{tikz}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage{float}
+\usepackage{makecell}
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+
+\addbibresource{references.bib}
+
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!60!black,
+  pdftitle={Improved CBMC Pipeline for OSEK-Aware Verification},
+  pdfauthor={CBMC ISR/OSEK Research Branch}
+}
+
+\lstdefinestyle{reportstyle}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\lstset{style=reportstyle}
+
+\title{A Model-Checking Approach for OSEK/VDX Application Verification}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+OSEK/VDX applications consist of multiple tasks whose execution order is determined by the OSEK/VDX scheduler. During execution, tasks invoke standardized application interfaces (APIs), such as \texttt{ActivateTask}, \texttt{TerminateTask}, \texttt{WaitEvent}, and \texttt{SetEvent}, to change task states, synchronization events, shared resources, and the ready queue. Therefore, a checking model for OSEK/VDX applications should reflect the behaviours of the scheduler instead of treating these APIs as ordinary function calls only.
+
+Existing model checking methods can exhaustively check concurrent software, but they may become imprecise when the OSEK/VDX scheduler is not represented explicitly. If unnecessary task interleavings are explored during verification, the checker may report spurious bugs. This increases the effort required from developers, because they must determine whether a reported bug is a real error or only an artifact of an inaccurate checking model.
+
+This report presents a checking-model construction approach for OSEK/VDX applications. The approach has two main parts. First, it represents the effects of OSEK/VDX APIs on task states, events, shared resources, the ready queue, and task execution order. Second, it uses a manifest to record selected program locations where interrupt service routine (ISR) calls should be inserted. The final checking model contains guarded ISR calls only at these selected locations, rather than inserting ISR calls broadly across the program.
+
+The experimental results show that the proposed approach improves the verification process for OSEK/VDX applications. It builds a more accurate checking model, reduces unnecessary interleavings, removes spurious bugs reported by the baseline checking process, and makes the checking process clearer.
+
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-method}
+% \input{sections/04-experiment}
+% \input{sections/05-discussion}
+% \input{sections/06-conclusion}
+
+% \appendix
+% \input{sections/appendix}
+
+% \printbibliography
+    
+\end{document}

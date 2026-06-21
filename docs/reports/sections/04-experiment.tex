@@ -1,8 +1,88 @@
-\section{Experiment}
+\section{Experiments}
 \label{sec:experiment}
 
-This section uses only the public benchmark families in the repository. Internal benchmark
-families are intentionally excluded. The goal is not
+\subsection{Implementation}
+
+The current implementation realizes the methodology through four focused components. Each
+component has a separate role: building the initial program view, selecting ISR insertion
+locations, building the checking model with selected ISR calls, and handling OSEK/VDX APIs
+during symbolic execution.
+
+\begin{table}[H]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\linewidth}{@{}
+    >{\raggedright\arraybackslash}p{0.25\linewidth}
+    >{\raggedright\arraybackslash}X
+    >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Component & Role in the implementation & Output \\
+    \midrule
+
+    \texttt{goto-cc} extension
+    & Reads the source program and OSEK/VDX configuration. It builds the initial checking
+    model while preserving the project-level view needed by later stages.
+    & Initial checking model and project-level information for later analysis. \\
+
+    \specialrule{0.2pt}{2pt}{2pt}
+
+    \texttt{interleaving-analysis}
+    & Reads the initial checking model and analyzes where ISR calls should be inserted.
+    It selects only the program locations where an ISR call can affect the checking model.
+    & A manifest that records the selected ISR insertion locations. \\
+
+    \specialrule{0.2pt}{2pt}{2pt}
+    
+    \texttt{aib} with \texttt{lib-interleaving-block}
+    & Reads the source program and the manifest. It builds the checking model by inserting
+    guarded ISR calls only at the locations recorded in the manifest.
+    & A checking model with selected guarded ISR calls, instead of ISR calls inserted broadly
+    across the program. \\
+
+    \specialrule{0.2pt}{2pt}{2pt}
+    
+    \texttt{goto-symex} with \texttt{os-api}
+    & Symbolically executes the checking model. When it reaches OSEK/VDX APIs, the
+    \texttt{os-api} layer handles their effects on task states, events, the ready queue,
+    and the next running task.
+    & Symbolic execution states that reflect the OSEK/VDX scheduler and are then checked by
+    CBMC. \\
+
+    \bottomrule
+  \end{tabularx}
+  \caption{Concrete implementation of the proposed methodology.}
+  \label{tab:implementation-note}
+\end{table}
+
+Figure~\ref{fig:improved-pipeline} follows the same component order. The lower lane first
+extends \texttt{goto-cc} to build the initial checking model with project-level information.
+It then runs \texttt{interleaving-analysis} to produce the manifest. Next, \texttt{aib} uses
+the manifest to build the checking model with selected guarded ISR calls. Finally,
+\texttt{goto-symex} and \texttt{os-api} perform symbolic execution while treating OSEK/VDX
+APIs as scheduler operations rather than ordinary C function calls.
+
+Command-line options, manifest fields, and concrete artifact formats are not part of the
+methodology discussion. They are collected in \Cref{sec:appendix}, after the main checking
+flow has been explained.
+
+\subsection{Baseline CBMC Architecture}
+
+CBMC is a bounded model checker for C programs~\cite{cbmc_architecture}. Its checking process can be viewed in three main stages. First, the front-end and \texttt{goto-cc} translate C source files into a GOTO program. Second, \texttt{goto-symex} symbolically executes the GOTO program and constructs an SSA-style equation. Third, the solver backend checks the generated equation and, when a property is violated, CBMC can reconstruct a counterexample trace.
+
+\begin{figure}[H]
+  \centering
+  \input{figures/baseline-cbmc-flow}
+  \caption{Baseline CBMC flow before the OSEK-aware and manifest-driven extensions described
+  in this report.}
+  \label{fig:baseline-cbmc}
+\end{figure}
+
+This architecture is a strong baseline for C verification because bounded model checking can construct a transition system under a given bound and use a solver to check safety properties. However, this baseline is not sufficient by itself for OSEK/VDX applications. The limitation is not that CBMC lacks symbolic execution. The limitation is that the baseline CBMC flow does not automatically model the behaviours of the OSEK/VDX scheduler. In particular, APIs invoked from tasks can change task states, synchronization events, shared resources, and the ready queue. If these behaviours are not represented in the checking model, the verification process may not reflect the task execution order determined by the OSEK/VDX scheduler.
+
+This section uses only the public benchmark families in the repository. Internal smoke
+benchmarks and the internal Trampoline benchmark are intentionally excluded. The goal is not
 to claim that the revised flow is always faster than the stock baseline. The checked-in
 evidence shows the opposite in many cases because the manifest, injection, and rebuild stages
 add cost. The evaluation instead answers two narrower questions:
@@ -15,8 +95,10 @@ add cost. The evaluation instead answers two narrower questions:
 
 \subsection{Public Benchmark Scope}
 
-The checked-in public report \texttt{check-src/benchmark.md} covers the five suites summarized
-in \Cref{tab:public-suites}. Together they contribute 43 measured cases.
+The checked-in public report \texttt{check-src/benchmark.md} covers five public suites used in
+this section: \texttt{icbmc-large}, \texttt{icbmc-timeout-30m},
+\texttt{icbmc-timeout-30m-blink-highmem}, \texttt{icbmc-timeout-30m-logger-stable}, and
+\texttt{intabs-large}. Together they contribute 43 measured cases.
 
 \begin{table}[t]
   \centering
@@ -55,8 +137,7 @@ The public subset has 43 measured cases. The correctness counts in
     \texttt{improved\_correct} & 10 & The improved pipeline is audited as the more faithful
     model for the case. \\
     \texttt{no\_injection\_false} & 6 & The improved path reported no injection candidates
-    even though state written by an interleaving function can still affect the main-reachable
-    state. \\
+    even though ISR-written state can still affect the main-reachable state. \\
     \texttt{needs\_manual\_review} & 3 & Output mismatch exists, but the current audit is not
     strong enough to choose a correct variant. \\
     \texttt{pending\_manual\_review} & 7 & Mismatch exists and no verdict rule has yet
@@ -80,10 +161,11 @@ verification result.
 \paragraph{\texttt{icbmc-timeout-30m-logger-stable / logger2-bug-conc-cprover}.}
 The stock baseline reports \emph{VERIFICATION FAILED} in 56\,233 ms with 298.2 MB peak RSS,
 while the improved pipeline reports \emph{VERIFICATION SUCCESSFUL} in 2\,017 ms with
-16.6 MB peak RSS. The checked-in audit explains the difference directly: the stock async
-baseline exposes a non-atomic asynchronous interleaving in the logger update, whereas the
-improved pipeline checks the extracted interruption entry as one atomic region. This is a
-clear public example of unnecessary interleavings producing a spurious bug.
+16.6 MB peak RSS. The checked-in audit explains the difference directly: the stock
+\texttt{C\_ASYNC\_PROVER} run exposes an interleaving through \texttt{task\_measure} that
+violates \texttt{numberOfRecords == pos + 1}, whereas the improved pipeline checks the
+extracted interruption entry as one atomic region. This is a clear public example of
+unnecessary interleavings producing a spurious bug.
 
 \paragraph{\texttt{intabs-large / i8xx-tco-1}.}
 The stock baseline reports \emph{VERIFICATION FAILED} in 1202 ms with 13.1 MB peak RSS, while

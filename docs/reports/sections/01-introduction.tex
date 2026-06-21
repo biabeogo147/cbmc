@@ -39,16 +39,16 @@ If such methods are applied directly to OSEK/VDX applications, the verification 
 
 The purpose of this report is to make model checking more accurate for OSEK/VDX applications. In order to achieve this purpose, we describe and develop an approach to construct a checking model that reflects their execution semantics and avoid checking ISR occurrences at program locations that do not affect the checking results.
 
-In our approach, ...
+In our approach, we introduce how the checking model is constructed before the final verification stage. During checking-model construction, a recognized OSEK/VDX API call is not treated only as an ordinary C function call. Instead, it updates the representation of the current execution state, including the running task, the ready queue, the waiting tasks, and the stored event state of each relevant task. After processing a recognized API call, the checking model updates the current scheduling state. From this updated state, the deterministic scheduler determines what is checked next: execution may remain in the current task, switch immediately to a ready task, return to the interrupted context that preceded the current task, or finish the current task and start another ready task. In addition, some recognized API calls write the stored event state back to program variables, so later branch conditions and assertions can depend on that state. As a result, the checking model is constructed from these state updates and the resulting dispatch decisions, rather than from the ordinary local control flow of the current task alone.
+
+To avoid checking unnecessary interleavings, our approach also constructs a manifest, which is an intermediate description used in checking-model construction: for each ISR, the manifest records the shared or global state that the function can write, and the source locations where that function needs to be represented in the checking model. This manifest is built by identifying the ISR or interleaving functions under consideration, summarizing the shared or global state that each of them can modify, and then scanning the remaining program to find the program points where reads, writes, branch conditions, or scheduling effects can be changed by that state. The final checking model then introduces guarded ISR behaviour only at the source locations recorded in the manifest, so that the verification still reflects the task execution order determined by the deterministic scheduler while avoiding unnecessary interleavings and reducing spurious bugs.
 
 The report makes three contributions:
 
 \begin{itemize}[leftmargin=1.5em]
 \item It describes a checking approach for OSEK/VDX applications whose task execution order is determined by a deterministic scheduler, task states, synchronization events, and a ready queue.
 
-\item It introduces a manifest-guided method for selecting ISR insertion locations and building a checking model with guarded ISR calls only at the program locations recorded in the manifest.
+\item It introduces a manifest-guided method for selecting ISR insertion locations and building a checking model with ISR calls only at the program locations recorded in the manifest.
 
-\item It presents benchmark results showing that the proposed approach reduces unnecessary interleavings and removes spurious bugs reported by the baseline checking process, while discussing the additional checking costs introduced by the improved model construction.
+\item It presents benchmark results showing that the proposed approach reduces unnecessary interleavings and removes spurious bugs reported by the baseline checking process.
 \end{itemize}
-
-The rest of this report is structured as follows. \Cref{sec:background} presents the OSEK/VDX execution model and the role of bounded model checking. \Cref{sec:method} describes the proposed checking approach. \Cref{sec:experiment} reports the benchmark results and discusses the accuracy and checking costs of the approach. \Cref{sec:discussion} summarizes the main limitations of the current implementation.
