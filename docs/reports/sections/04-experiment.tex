@@ -89,13 +89,24 @@ Table~\ref{tab:cbmc-implementation-map} maps these implementation choices to the
 
 \subsection{Benchmark Corpus and Experimental Setup}
 
-The experimental corpus is drawn from two public benchmark: i-CBMC~\cite{icbmc_site} and IntAbs~\cite{intabs_repo}.
-The corpus contains 43 public benchmark cases: 22 i-CBMC cases and 21 IntAbs cases.
+The experimental corpus is drawn from two public benchmark families:
+i-CBMC~\cite{icbmc_site} and IntAbs~\cite{intabs_repo}.
+Across the available public measurements, these data reduce to 39 distinct
+benchmark cases after repeated measurements of the same benchmark family and
+case name are merged: 18 i-CBMC cases and 21 IntAbs cases.
 
-The experimental setup follows the methodology described in \Cref{sec:method}. For each public case, two versions are checked under the same entry function, checked properties, and unwind bound. The CBMC version represents ISR calls broadly, while the proposed version uses the manifest-guided model-building step.
+The experimental setup follows the methodology described in \Cref{sec:method}.
+For each distinct benchmark case, two versions are checked under the same
+entry function, checked properties, and unwind bound. The CBMC version
+represents ISR calls broadly, while the proposed version uses the
+restricted model-building step.
 
-The main difference is how ISR calls are represented in the checking model. The proposed flow first identifies the ISR entry functions and the program locations that matter for each case. It then builds the checking model with ISR calls only at the selected locations, where
-they can affect the execution path. Other locations are skipped because they only add unnecessary interleavings.
+The main difference is how ISR calls are represented in the checking model.
+The proposed flow first identifies the ISR entry functions and the program
+locations that matter for each case. It then builds the checking model with
+ISR calls only at the selected locations, where they can affect the execution
+path. Other locations are skipped because they only add unnecessary
+interleavings.
 
 \subsection{Experiments}
 
@@ -109,14 +120,132 @@ The evaluation addresses three questions:
 
 To answer these questions, each public case is reported in one of five outcome classes. 
 A case has the \emph{same verification outcome} when both flows end in the same verification class. 
-A case \emph{CBMC spurious bug removed} when the CBMC reports failure but the proposed model succeeds and the case audit supports the proposed version as the more accurate checking model. 
-A case \emph{new error exposed by the proposed model} when the CBMC succeeds but the improved model reaches an error trace that the public audit supports. 
+A case is in the \emph{CBMC spurious bug removed} class when the CBMC reports failure but the proposed model succeeds and the case audit supports the proposed version as the more accurate checking model. 
+A case is in the \emph{new error exposed by the proposed model} class when the CBMC succeeds but the improved model reaches an error trace that the public audit supports. 
 An \emph{unresolved mismatch} is a case where the two versions disagree, but the available evidence is not sufficient to decide which checking model is more accurate.
 Finally, a case is \emph{not directly comparable} when the comparison is blocked by a resource limit or when the proposed flow cannot produce usable selected ISR insertion locations.
 
-The end-to-end time for the CBMC version includes compilation and verification. 
-The end-to-end time for the proposed version includes interleaving analysis, model building, compilation, and verification. 
-Per-case time values are reported using median measured phase times, while peak memory is reported from the verification phase.
+Table~\ref{tab:per-case-resource-summary} reports one line per distinct
+benchmark case. Repeated public measurements of the same benchmark family and
+case name are merged before reporting. Peak memory is always taken from the
+verification phase. For the CBMC version, the time column reports
+compile-and-verify cost. For the proposed version, the build-model column
+reports the additional pre-verification stages, while the second time column
+reports compile-and-verify cost after the restricted checking model has been
+built.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{8pt}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.30\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.09\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.14\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.09\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.14\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.14\linewidth}|}
+\caption{Per-case resource summary across the 39 distinct public benchmark cases. MB reports median verification-phase peak RSS.}\label{tab:per-case-resource-summary}\\
+\hline
+\multicolumn{1}{|c|}{Benchmark Case} & \multicolumn{2}{c|}{CBMC Version} & \multicolumn{3}{c|}{Proposed Version} \\
+\cline{2-6}
+& MB & Compile + Verify & MB & Build Model & Compile + Verify \\
+\hline
+\endfirsthead
+\multicolumn{6}{l}{\textit{Table \thetable{} continued from the previous page.}}\\
+\hline
+\multicolumn{1}{|c|}{Benchmark Case} & \multicolumn{2}{c|}{CBMC Version} & \multicolumn{3}{c|}{Proposed Version} \\
+\cline{2-6}
+& MB & Compile + Verify & MB & Build Model & Compile + Verify \\
+\hline
+\endhead
+\hline
+\endfoot
+\multicolumn{6}{|l|}{\textbf{i-CBMC}} \\
+\hline
+blink & 14.8 & 506 & 20.0 & 349 & 1\,028 \\
+\hline
+blink-bug & 14.7 & 947 & 19.7 & 547 & 1\,590 \\
+\hline
+blink-bug-conc & 53.4 & 2\,460 & 18.4 & 917 & 1\,662 \\
+\hline
+blink-bug-seq & 14\,000.0 & 99 & 17.3 & 98 & 99 \\
+\hline
+blink-conc & 56.8 & 2\,483 & 18.8 & 1\,225 & 1\,473 \\
+\hline
+blink-seq & 14\,000.2 & 100 & 17.3 & 98 & 99 \\
+\hline
+brake2-1-bug-po & 152.9 & 3\,228 & 18.0 & 1\,514 & 1\,541 \\
+\hline
+brake2-1-po & 148.2 & 2\,579 & 17.7 & 2\,071 & 1\,409 \\
+\hline
+brake2-2-bug-po & 233.6 & 4\,841 & 18.0 & 2\,152 & 1\,557 \\
+\hline
+brake2-2-po & 220.8 & 10\,744 & 17.7 & 2\,052 & 1\,557 \\
+\hline
+brake2-3-bug-po & 291.7 & 5\,202 & 18.1 & 1\,488 & 1\,597 \\
+\hline
+brake2-3-po & 265.3 & 5\,197 & 17.7 & 1\,993 & 1\,451 \\
+\hline
+logger2-bug-conc & 262.2 & 36\,729 & 16.2 & 1\,314 & 1\,221 \\
+\hline
+logger2-bug-conc-cprover & 297.5 & 55\,373 & 16.3 & 1\,390 & 890 \\
+\hline
+logger2-conc & 262.4 & 36\,278 & 16.4 & 1\,456 & 902 \\
+\hline
+logger2-conc-cprover & 381.4 & 90\,172 & 16.2 & 946 & 1\,030 \\
+\hline
+rc-core & 30.6 & 1\,046 & 32.2 & 919 & 2\,349 \\
+\hline
+rc-core-bug & 30.7 & 1\,098 & 32.2 & 880 & 2\,372 \\
+\hline
+\multicolumn{6}{|l|}{\textbf{IntAbs}} \\
+\hline
+i8xx-tco-1 & 13.1 & 1\,149 & 15.3 & 1\,666 & 1\,494 \\
+\hline
+i8xx-tco-2 & 15.3 & 987 & 19.1 & 1\,798 & 2\,141 \\
+\hline
+i8xx-tco-3 & 15.9 & 790 & 19.2 & 1\,799 & 2\,140 \\
+\hline
+i8xx-tco-src-2 & 15.5 & 789 & 19.5 & 2\,313 & 1\,519 \\
+\hline
+i8xx-tco-src-3 & 17.7 & 1\,062 & 19.7 & 2\,327 & 1\,527 \\
+\hline
+rcmain & 30.7 & 1\,223 & 31.5 & 1\,220 & 2\,184 \\
+\hline
+sc1200wdt-1 & 12.8 & 801 & 15.8 & 1\,759 & 1\,735 \\
+\hline
+sc1200wdt-2 & 13.0 & 1\,337 & 15.9 & 1\,985 & 1\,754 \\
+\hline
+sc520wdt-1 & 14.8 & 1\,176 & 15.5 & 1\,997 & 2\,150 \\
+\hline
+sc520wdt-2 & 41.0 & 1\,386 & 16.7 & 1\,882 & 1\,624 \\
+\hline
+wdt-pci-1 & 14.5 & 933 & 15.8 & 1\,921 & 2\,209 \\
+\hline
+wdt-pci-1-main2 & 15.3 & 1\,118 & 18.6 & 2\,766 & 1\,707 \\
+\hline
+wdt-pci-2 & 10.9 & 1\,200 & 15.9 & 2\,360 & 1\,976 \\
+\hline
+wdt-pci-2-main2 & 14.7 & 333 & 18.6 & 860 & 557 \\
+\hline
+wdt-pci-3 & 14.5 & 940 & 16.6 & 1\,402 & 2\,533 \\
+\hline
+wdt-pci-3-main2 & 14.7 & 417 & 18.6 & 2\,841 & 2\,065 \\
+\hline
+wdt-pci-src-1 & 16.1 & 1\,492 & 18.8 & 2\,351 & 2\,194 \\
+\hline
+wdt-pci-src-1-main2 & 15.2 & 985 & 18.6 & 1\,780 & 1\,221 \\
+\hline
+wdt-pci-src-2-main2 & 14.7 & 1\,108 & 18.6 & 2\,365 & 1\,832 \\
+\hline
+wdt-pci-src-3 & 14.2 & 645 & 16.2 & 2\,118 & 2\,561 \\
+\hline
+wdt-pci-src-3-main2 & 15.0 & 1\,257 & 18.4 & 2\,939 & 1\,123 \\
+\hline
+\end{longtable}
+\endgroup
 
 \begin{table}[H]
   \centering
@@ -130,15 +259,19 @@ Per-case time values are reported using median measured phase times, while peak 
     Comparison outcome & Cases & Interpretation \\
     \midrule
     Same verification outcome
-    & 18
+    & 14
     & Both flows reach the same verification result. \\
 
     CBMC spurious bug removed
     & 8
     & The CBMC version reports a failure, but the proposed version succeeds because it removes unnecessary ISR interleavings. \\
 
+    New error exposed by the proposed model
+    & 1
+    & The proposed version reaches an error trace that is supported by the public audit, while the CBMC version reports success. \\
+
     Unresolved mismatch
-    & 8
+    & 7
     & The two versions produce different results, but the available evidence is not sufficient to decide which checking model is more accurate. \\
 
     Not comparable
@@ -146,17 +279,68 @@ Per-case time values are reported using median measured phase times, while peak 
     & The comparison cannot be made directly because of resource limits or because no usable selected ISR insertion locations are produced. \\
     \bottomrule
   \end{tabularx}
-  \caption{Outcome classes across the 43 public measured cases.}
+  \caption{Outcome classes across the 39 distinct public benchmark cases.}
   \label{tab:overall-outcome-summary}
 \end{table}
 
-\Cref{tab:overall-outcome-summary} shows that the proposed approach is mainly useful for building a more accurate checking model. At the same time, by reducing unnecessary interleavings, it can also substantially reduce the checking cost in many cases. The strongest positive result is the group of eight cases where CBMC spurious bugs are removed. In parcular, \textit{logger-oriented} case from the i-CBMC, the CBMC version reports \emph{VERIFICATION FAILED} with a median end-to-end time of 54,984 ms and a median verification-phase peak RSS of 297.4 MB. The proposed flow reports \emph{VERIFICATION SUCCESSFUL} for the same bound in 2\,025 ms and 16.1 MB. The main point is not only that the proposed version has a lower checking cost in this case. The more important point is that the CBMC flow permits an unnecessary ISR interruption point, which leads to a spurious verification failure. The proposed version checks the ISR entry as one atomic region, so this unnecessary interleaving is removed. As a result, the failure reported by the CBMC version is classified as a spurious bug.
+\Cref{tab:per-case-resource-summary,tab:overall-outcome-summary} show that
+the proposed approach is mainly useful for building a more accurate checking
+model. At the same time, by reducing unnecessary interleavings, it can also
+substantially reduce the checking cost in many cases. The strongest positive
+result is the group of eight cases where CBMC spurious bugs are removed. In a
+\textit{logger-oriented} i-CBMC case, the CBMC version reports
+\emph{VERIFICATION FAILED} with 55\,373 ms of compile-and-verify time and
+297.5 MB of verification-phase peak RSS. The proposed flow reports
+\emph{VERIFICATION SUCCESSFUL} for the same bound with 1\,390 ms of
+build-model cost, 890 ms of compile-and-verify time, and 16.3 MB of
+verification-phase peak RSS. The main point is not only that the proposed
+version has a lower checking cost in this case. The more important point is
+that the CBMC flow permits an unnecessary ISR interruption point, which leads
+to a spurious verification failure. The proposed version checks the ISR entry
+as one atomic region, so this unnecessary interleaving is removed. As a
+result, the failure reported by the CBMC version is classified as a spurious
+bug. The summary also contains one public case where the proposed model
+exposes an interrupt-sensitive behavior that is missed by the CBMC version.
 
-The table also separates cases that should not be counted as clear wins or losses. Seven cases remain unresolved because the available evidence is not sufficient to decide which checking model is more accurate. Nine cases are not directly comparable because the comparison is blocked by resource limits or by missing selected ISR insertion locations. These cases are reported separately as limitations of the current evaluation, rather than being treated as artificial wins for either version. This makes the experimental summary more conservative and easier to interpret.
+The summary also separates cases that should not be counted as clear wins or
+losses. Seven cases remain unresolved because the available evidence is not
+sufficient to decide which checking model is more accurate. Nine cases are not
+directly comparable because the comparison is blocked by resource limits or by
+missing selected ISR insertion locations. These cases are reported separately
+as limitations of the current evaluation, rather than being treated as
+artificial wins for either version. This makes the experimental summary more
+conservative and easier to interpret.
+
+The columns in \Cref{tab:per-case-resource-summary} should be read as two
+different views of the checking cost. \emph{MB} reports median
+verification-phase peak RSS for the checked model. \emph{Compile + Verify}
+reports the cost of the final checking step. The proposed flow separates
+\emph{Build Model} from \emph{Compile + Verify} so that the reader can see
+which cost comes from constructing the restricted checking model and which
+cost remains in the final verification stage.
+
+The main conclusion from the table is therefore not that the proposed version
+is uniformly faster. The proposed flow always introduces an upfront
+\emph{Build Model} cost. However, when the baseline model explores many
+unnecessary interleavings, the narrower checking model can reduce both
+verification-phase memory and final compile-and-verify time. When the
+baseline already has a relatively narrow search space, the reduction during
+verification may not compensate for the additional model-building cost. The
+table should therefore be read by considering \emph{Build Model} as the new
+overhead, \emph{Compile + Verify} as the direct checking cost, and
+\emph{MB} as an indicator of how much state-space pressure remains during
+verification.
 
 \subsection{Discussion}
 
-The main cost of the proposed flow is the additional model-building work performed before final verification. On the 18 public cases where both versions produce the same verification result, the proposed flow is slower in 11 cases. Across this same-result subset, the median end-to-end time increases from 1,164 ms for the CBMC version to 3,380 ms for the proposed version. This result is expected because the proposed flow adds interleaving analysis and model-building stages before the final verification step.
+The main cost of the proposed flow is the additional model-building work
+performed before final verification. On the 14 distinct benchmark cases where
+both versions produce the same verification result, the proposed flow is
+slower in 11 cases. Across this same-result subset, the median end-to-end
+time increases from 1,113 ms for the CBMC version to 4,001 ms for the
+proposed version. This result is expected because the proposed flow adds
+interleaving analysis and model-building stages before the final verification
+step.
 
 However, this cost is not uniform across all cases. In some benchmark cases, the proposed version performs better than the CBMC flow in terms of checking time or memory usage. This mainly happens when the original program is larger or when the CBMC version explores many unnecessary ISR interleavings. In such cases, the cost of building a more restricted checking model can be compensated by the reduction in behaviours explored during final verification.
 
