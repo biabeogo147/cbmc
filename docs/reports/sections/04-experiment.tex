@@ -125,14 +125,57 @@ A case is in the \emph{new error exposed by the proposed model} class when the C
 An \emph{unresolved mismatch} is a case where the two versions disagree, but the available evidence is not sufficient to decide which checking model is more accurate.
 Finally, a case is \emph{not directly comparable} when the comparison is blocked by a resource limit or when the proposed flow cannot produce usable selected ISR insertion locations.
 
-Table~\ref{tab:per-case-resource-summary} reports one line per distinct
-benchmark case. Repeated public measurements of the same benchmark family and
-case name are merged before reporting. Peak memory is always taken from the
-verification phase. For the CBMC version, the time column reports
-compile-and-verify cost. For the proposed version, the build-model column
-reports the additional pre-verification stages, while the second time column
-reports compile-and-verify cost after the restricted checking model has been
-built.
+\begin{table}[H]
+  \centering
+  \small
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\linewidth}{@{}
+>{\centering\arraybackslash}p{0.08\linewidth}
+>{\raggedright\arraybackslash}p{0.28\linewidth}
+>{\centering\arraybackslash}p{0.10\linewidth}
+>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    ID & Comparison outcome & Cases & Interpretation \\
+    \midrule
+    O1
+    & Same verification outcome
+    & 14
+    & Both flows reach the same verification result. \\
+
+    O2
+    & CBMC spurious bug removed
+    & 8
+    & The CBMC version reports a failure, but the proposed version succeeds because it removes unnecessary ISR interleavings. \\
+
+    O3
+    & New error exposed by the proposed model
+    & 1
+    & The proposed version reaches an error trace that is supported by the public audit, while the CBMC version reports success. \\
+
+    O4
+    & Unresolved mismatch
+    & 7
+    & The two versions produce different results, but the available evidence is not sufficient to decide which checking model is more accurate. \\
+
+    O5
+    & Not directly comparable
+    & 9
+    & The comparison cannot be made directly because of resource limits or because no usable selected ISR insertion locations are produced. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Outcome classes and their IDs across the 39 distinct public benchmark cases.}
+  \label{tab:overall-outcome-summary}
+\end{table}
+
+Table~\ref{tab:per-case-resource-summary} then reports one line per distinct
+benchmark case and uses the outcome ID from
+\Cref{tab:overall-outcome-summary} to link each case back to its verification
+class. Repeated public measurements of the same benchmark family and case name
+are merged before reporting. Peak memory is always taken from the verification
+phase. For the CBMC version, the time column reports compile-and-verify cost.
+For the proposed version, the build-model column reports the additional
+pre-verification stages, while the second time column reports
+compile-and-verify cost after the restricted checking model has been built.
 
 \begingroup
 \small
@@ -140,154 +183,119 @@ built.
 \renewcommand{\arraystretch}{1.12}
 \setlength{\LTpre}{0pt}
 \setlength{\LTpost}{8pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{0.30\linewidth}
-  |>{\raggedleft\arraybackslash}p{0.09\linewidth}
-  |>{\raggedleft\arraybackslash}p{0.14\linewidth}
-  |>{\raggedleft\arraybackslash}p{0.09\linewidth}
-  |>{\raggedleft\arraybackslash}p{0.14\linewidth}
-  |>{\raggedleft\arraybackslash}p{0.14\linewidth}|}
-\caption{Per-case resource summary across the 39 distinct public benchmark cases. MB reports median verification-phase peak RSS.}\label{tab:per-case-resource-summary}\\
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.25\linewidth}
+  |>{\centering\arraybackslash}p{0.07\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.07\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.11\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.07\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.11\linewidth}
+  |>{\raggedleft\arraybackslash}p{0.11\linewidth}|}
+\caption{Per-case resource summary keyed by the outcome IDs defined in \Cref{tab:overall-outcome-summary}. MB reports median verification-phase peak RSS.}\label{tab:per-case-resource-summary}\\
 \hline
-\multicolumn{1}{|c|}{Benchmark Case} & \multicolumn{2}{c|}{CBMC Version} & \multicolumn{3}{c|}{Proposed Version} \\
-\cline{2-6}
-& MB & Compile + Verify & MB & Build Model & Compile + Verify \\
+\multicolumn{1}{|c|}{Benchmark Case} & \multicolumn{1}{c|}{Outcome ID} & \multicolumn{2}{c|}{CBMC Version} & \multicolumn{3}{c|}{Proposed Version} \\
+\cline{3-7}
+& & MB & Compile + Verify & MB & Build Model & Compile + Verify \\
 \hline
 \endfirsthead
-\multicolumn{6}{l}{\textit{Table \thetable{} continued from the previous page.}}\\
+\multicolumn{7}{l}{\textit{Table \thetable{} continued from the previous page.}}\\
 \hline
-\multicolumn{1}{|c|}{Benchmark Case} & \multicolumn{2}{c|}{CBMC Version} & \multicolumn{3}{c|}{Proposed Version} \\
-\cline{2-6}
-& MB & Compile + Verify & MB & Build Model & Compile + Verify \\
+\multicolumn{1}{|c|}{Benchmark Case} & \multicolumn{1}{c|}{Outcome ID} & \multicolumn{2}{c|}{CBMC Version} & \multicolumn{3}{c|}{Proposed Version} \\
+\cline{3-7}
+& & MB & Compile + Verify & MB & Build Model & Compile + Verify \\
 \hline
 \endhead
 \hline
 \endfoot
-\multicolumn{6}{|l|}{\textbf{i-CBMC}} \\
+\multicolumn{7}{|l|}{\textbf{i-CBMC}} \\
 \hline
-blink & 14.8 & 506 & 20.0 & 349 & 1\,028 \\
+blink & O5 & 14.8 & 506 & 20.0 & 349 & 1\,028 \\
 \hline
-blink-bug & 14.7 & 947 & 19.7 & 547 & 1\,590 \\
+blink-bug & O5 & 14.7 & 947 & 19.7 & 547 & 1\,590 \\
 \hline
-blink-bug-conc & 53.4 & 2\,460 & 18.4 & 917 & 1\,662 \\
+blink-bug-conc & O5 & 53.4 & 2\,460 & 18.4 & 917 & 1\,662 \\
 \hline
-blink-bug-seq & 14\,000.0 & 99 & 17.3 & 98 & 99 \\
+blink-bug-seq & O5 & 14\,000.0 & 99 & 17.3 & 98 & 99 \\
 \hline
-blink-conc & 56.8 & 2\,483 & 18.8 & 1\,225 & 1\,473 \\
+blink-conc & O5 & 56.8 & 2\,483 & 18.8 & 1\,225 & 1\,473 \\
 \hline
-blink-seq & 14\,000.2 & 100 & 17.3 & 98 & 99 \\
+blink-seq & O5 & 14\,000.2 & 100 & 17.3 & 98 & 99 \\
 \hline
-brake2-1-bug-po & 152.9 & 3\,228 & 18.0 & 1\,514 & 1\,541 \\
+brake2-1-bug-po & O4 & 152.9 & 3\,228 & 18.0 & 1\,514 & 1\,541 \\
 \hline
-brake2-1-po & 148.2 & 2\,579 & 17.7 & 2\,071 & 1\,409 \\
+brake2-1-po & O4 & 148.2 & 2\,579 & 17.7 & 2\,071 & 1\,409 \\
 \hline
-brake2-2-bug-po & 233.6 & 4\,841 & 18.0 & 2\,152 & 1\,557 \\
+brake2-2-bug-po & O4 & 233.6 & 4\,841 & 18.0 & 2\,152 & 1\,557 \\
 \hline
-brake2-2-po & 220.8 & 10\,744 & 17.7 & 2\,052 & 1\,557 \\
+brake2-2-po & O4 & 220.8 & 10\,744 & 17.7 & 2\,052 & 1\,557 \\
 \hline
-brake2-3-bug-po & 291.7 & 5\,202 & 18.1 & 1\,488 & 1\,597 \\
+brake2-3-bug-po & O4 & 291.7 & 5\,202 & 18.1 & 1\,488 & 1\,597 \\
 \hline
-brake2-3-po & 265.3 & 5\,197 & 17.7 & 1\,993 & 1\,451 \\
+brake2-3-po & O4 & 265.3 & 5\,197 & 17.7 & 1\,993 & 1\,451 \\
 \hline
-logger2-bug-conc & 262.2 & 36\,729 & 16.2 & 1\,314 & 1\,221 \\
+logger2-bug-conc & O1 & 262.2 & 36\,729 & 16.2 & 1\,314 & 1\,221 \\
 \hline
-logger2-bug-conc-cprover & 297.5 & 55\,373 & 16.3 & 1\,390 & 890 \\
+logger2-bug-conc-cprover & O2 & 297.5 & 55\,373 & 16.3 & 1\,390 & 890 \\
 \hline
-logger2-conc & 262.4 & 36\,278 & 16.4 & 1\,456 & 902 \\
+logger2-conc & O1 & 262.4 & 36\,278 & 16.4 & 1\,456 & 902 \\
 \hline
-logger2-conc-cprover & 381.4 & 90\,172 & 16.2 & 946 & 1\,030 \\
+logger2-conc-cprover & O1 & 381.4 & 90\,172 & 16.2 & 946 & 1\,030 \\
 \hline
-rc-core & 30.6 & 1\,046 & 32.2 & 919 & 2\,349 \\
+rc-core & O5 & 30.6 & 1\,046 & 32.2 & 919 & 2\,349 \\
 \hline
-rc-core-bug & 30.7 & 1\,098 & 32.2 & 880 & 2\,372 \\
+rc-core-bug & O5 & 30.7 & 1\,098 & 32.2 & 880 & 2\,372 \\
 \hline
-\multicolumn{6}{|l|}{\textbf{IntAbs}} \\
+\multicolumn{7}{|l|}{\textbf{IntAbs}} \\
 \hline
-i8xx-tco-1 & 13.1 & 1\,149 & 15.3 & 1\,666 & 1\,494 \\
+i8xx-tco-1 & O2 & 13.1 & 1\,149 & 15.3 & 1\,666 & 1\,494 \\
 \hline
-i8xx-tco-2 & 15.3 & 987 & 19.1 & 1\,798 & 2\,141 \\
+i8xx-tco-2 & O2 & 15.3 & 987 & 19.1 & 1\,798 & 2\,141 \\
 \hline
-i8xx-tco-3 & 15.9 & 790 & 19.2 & 1\,799 & 2\,140 \\
+i8xx-tco-3 & O2 & 15.9 & 790 & 19.2 & 1\,799 & 2\,140 \\
 \hline
-i8xx-tco-src-2 & 15.5 & 789 & 19.5 & 2\,313 & 1\,519 \\
+i8xx-tco-src-2 & O2 & 15.5 & 789 & 19.5 & 2\,313 & 1\,519 \\
 \hline
-i8xx-tco-src-3 & 17.7 & 1\,062 & 19.7 & 2\,327 & 1\,527 \\
+i8xx-tco-src-3 & O2 & 17.7 & 1\,062 & 19.7 & 2\,327 & 1\,527 \\
 \hline
-rcmain & 30.7 & 1\,223 & 31.5 & 1\,220 & 2\,184 \\
+rcmain & O5 & 30.7 & 1\,223 & 31.5 & 1\,220 & 2\,184 \\
 \hline
-sc1200wdt-1 & 12.8 & 801 & 15.8 & 1\,759 & 1\,735 \\
+sc1200wdt-1 & O1 & 12.8 & 801 & 15.8 & 1\,759 & 1\,735 \\
 \hline
-sc1200wdt-2 & 13.0 & 1\,337 & 15.9 & 1\,985 & 1\,754 \\
+sc1200wdt-2 & O4 & 13.0 & 1\,337 & 15.9 & 1\,985 & 1\,754 \\
 \hline
-sc520wdt-1 & 14.8 & 1\,176 & 15.5 & 1\,997 & 2\,150 \\
+sc520wdt-1 & O1 & 14.8 & 1\,176 & 15.5 & 1\,997 & 2\,150 \\
 \hline
-sc520wdt-2 & 41.0 & 1\,386 & 16.7 & 1\,882 & 1\,624 \\
+sc520wdt-2 & O3 & 41.0 & 1\,386 & 16.7 & 1\,882 & 1\,624 \\
 \hline
-wdt-pci-1 & 14.5 & 933 & 15.8 & 1\,921 & 2\,209 \\
+wdt-pci-1 & O2 & 14.5 & 933 & 15.8 & 1\,921 & 2\,209 \\
 \hline
-wdt-pci-1-main2 & 15.3 & 1\,118 & 18.6 & 2\,766 & 1\,707 \\
+wdt-pci-1-main2 & O1 & 15.3 & 1\,118 & 18.6 & 2\,766 & 1\,707 \\
 \hline
-wdt-pci-2 & 10.9 & 1\,200 & 15.9 & 2\,360 & 1\,976 \\
+wdt-pci-2 & O1 & 10.9 & 1\,200 & 15.9 & 2\,360 & 1\,976 \\
 \hline
-wdt-pci-2-main2 & 14.7 & 333 & 18.6 & 860 & 557 \\
+wdt-pci-2-main2 & O1 & 14.7 & 333 & 18.6 & 860 & 557 \\
 \hline
-wdt-pci-3 & 14.5 & 940 & 16.6 & 1\,402 & 2\,533 \\
+wdt-pci-3 & O1 & 14.5 & 940 & 16.6 & 1\,402 & 2\,533 \\
 \hline
-wdt-pci-3-main2 & 14.7 & 417 & 18.6 & 2\,841 & 2\,065 \\
+wdt-pci-3-main2 & O1 & 14.7 & 417 & 18.6 & 2\,841 & 2\,065 \\
 \hline
-wdt-pci-src-1 & 16.1 & 1\,492 & 18.8 & 2\,351 & 2\,194 \\
+wdt-pci-src-1 & O2 & 16.1 & 1\,492 & 18.8 & 2\,351 & 2\,194 \\
 \hline
-wdt-pci-src-1-main2 & 15.2 & 985 & 18.6 & 1\,780 & 1\,221 \\
+wdt-pci-src-1-main2 & O1 & 15.2 & 985 & 18.6 & 1\,780 & 1\,221 \\
 \hline
-wdt-pci-src-2-main2 & 14.7 & 1\,108 & 18.6 & 2\,365 & 1\,832 \\
+wdt-pci-src-2-main2 & O1 & 14.7 & 1\,108 & 18.6 & 2\,365 & 1\,832 \\
 \hline
-wdt-pci-src-3 & 14.2 & 645 & 16.2 & 2\,118 & 2\,561 \\
+wdt-pci-src-3 & O1 & 14.2 & 645 & 16.2 & 2\,118 & 2\,561 \\
 \hline
-wdt-pci-src-3-main2 & 15.0 & 1\,257 & 18.4 & 2\,939 & 1\,123 \\
+wdt-pci-src-3-main2 & O1 & 15.0 & 1\,257 & 18.4 & 2\,939 & 1\,123 \\
 \hline
 \end{longtable}
 \endgroup
 
-\begin{table}[H]
-  \centering
-  \small
-  \renewcommand{\arraystretch}{1.15}
-  \begin{tabularx}{\linewidth}{@{}
->{\raggedright\arraybackslash}p{0.28\linewidth}
->{\centering\arraybackslash}p{0.10\linewidth}
->{\raggedright\arraybackslash}X@{}}
-    \toprule
-    Comparison outcome & Cases & Interpretation \\
-    \midrule
-    Same verification outcome
-    & 14
-    & Both flows reach the same verification result. \\
-
-    CBMC spurious bug removed
-    & 8
-    & The CBMC version reports a failure, but the proposed version succeeds because it removes unnecessary ISR interleavings. \\
-
-    New error exposed by the proposed model
-    & 1
-    & The proposed version reaches an error trace that is supported by the public audit, while the CBMC version reports success. \\
-
-    Unresolved mismatch
-    & 7
-    & The two versions produce different results, but the available evidence is not sufficient to decide which checking model is more accurate. \\
-
-    Not comparable
-    & 9
-    & The comparison cannot be made directly because of resource limits or because no usable selected ISR insertion locations are produced. \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Outcome classes across the 39 distinct public benchmark cases.}
-  \label{tab:overall-outcome-summary}
-\end{table}
-
-\Cref{tab:per-case-resource-summary,tab:overall-outcome-summary} show that
+\Cref{tab:overall-outcome-summary,tab:per-case-resource-summary} show that
 the proposed approach is mainly useful for building a more accurate checking
 model. At the same time, by reducing unnecessary interleavings, it can also
 substantially reduce the checking cost in many cases. The strongest positive
-result is the group of eight cases where CBMC spurious bugs are removed. In a
+result is the group of eight cases classified as O2. In a
 \textit{logger-oriented} i-CBMC case, the CBMC version reports
 \emph{VERIFICATION FAILED} with 55\,373 ms of compile-and-verify time and
 297.5 MB of verification-phase peak RSS. The proposed flow reports
@@ -299,7 +307,7 @@ that the CBMC flow permits an unnecessary ISR interruption point, which leads
 to a spurious verification failure. The proposed version checks the ISR entry
 as one atomic region, so this unnecessary interleaving is removed. As a
 result, the failure reported by the CBMC version is classified as a spurious
-bug. The summary also contains one public case where the proposed model
+bug. The summary also contains one public case in O3, where the proposed model
 exposes an interrupt-sensitive behavior that is missed by the CBMC version.
 
 The summary also separates cases that should not be counted as clear wins or
